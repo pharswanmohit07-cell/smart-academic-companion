@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Safe Attendance Calculator</title>
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">Smart Academic Companion</a>
+        <a class="btn btn-outline-light btn-sm" href="/">Home</a>
+    </div>
+</nav>
+
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h3 mb-2">Safe Attendance Calculator</h1>
+                    <p class="text-muted">
+                        Calculate the classes needed to reach your attendance
+                        target and how many upcoming classes you can miss.
+                    </p>
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="attended" class="form-label">
+                                Classes attended
+                            </label>
+                            <input
+                                type="number" class="form-control"
+                                id="attended" name="attended"
+                                min="0" required value="{{ request.form.get('attended', '30') }}"
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="total" class="form-label">
+                                Total classes held
+                            </label>
+                            <input
+                                type="number" class="form-control"
+                                id="total" name="total"
+                                min="1" required value="{{ request.form.get('total', '40') }}"
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="upcoming" class="form-label">
+                                Upcoming classes
+                            </label>
+                            <input
+                                type="number" class="form-control"
+                                id="upcoming" name="upcoming"
+                                min="0" required value="{{ request.form.get('upcoming', '12') }}"
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="target" class="form-label">
+                                Target attendance (%)
+                            </label>
+                            <input
+                                type="number" class="form-control"
+                                id="target" name="target"
+                                min="1" max="100" step="0.1"
+                                required value="{{ request.form.get('target', '75') }}"
+                            >
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">
+                            Calculate attendance
+                        </button>
+                    </form>
+
+                    {% if error %}
+                    <div class="alert alert-danger mt-4" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    {% if result %}
+                    <div class="mt-4">
+                        <h2 class="h5">Your results</h2>
+                        <p>
+                            Current attendance:
+                            <strong>{{ "%.2f"|format(result.current_percent) }}%</strong>
+                        </p>
+                        <p>
+                            Classes needed to reach
+                            {{ result.target_percent }}%:
+                            <strong>{{ result.needed }}</strong>
+                        </p>
+
+                        {% if result.missable == -1 %}
+                        <div class="alert alert-warning">
+                            Your target cannot be reached within the upcoming
+                            {{ result.upcoming }} classes, even if you attend
+                            every one of them.
+                        </div>
+                        {% else %}
+                        <p>
+                            Maximum upcoming classes you can miss while
+                            meeting the target:
+                            <strong>{{ result.missable }}</strong>
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

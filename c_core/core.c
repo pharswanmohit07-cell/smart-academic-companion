@@ -5,39 +5,111 @@
 #include "core.h"
 
 /*
- * Sort bookings by day, then room, then start time.
- * Algorithm: Insertion sort.
- * Time complexity: O(n^2)
- * Space complexity: O(1)
+ * Merge two sorted portions of the bookings array.
+ *
+ * The comparison uses <= so equal start times retain their
+ * original relative order. This makes the merge sort stable.
+ *
+ * Time complexity: O(n) for this merge operation.
+ * Space complexity: O(n) for the temporary buffer overall.
  */
-void sort_bookings(Booking bookings[], int count) {
-    for (int i = 1; i < count; i++) {
-        Booking current = bookings[i];
-        int j = i - 1;
+static void merge(
+    Booking bookings[],
+    Booking temp[],
+    int left,
+    int middle,
+    int right
+) {
+    int i = left;
+    int j = middle + 1;
+    int k = left;
 
-        while (j >= 0 &&
-               (bookings[j].day_of_week > current.day_of_week ||
-                (bookings[j].day_of_week == current.day_of_week &&
-                 strcmp(bookings[j].room, current.room) > 0) ||
-                (bookings[j].day_of_week == current.day_of_week &&
-                 strcmp(bookings[j].room, current.room) == 0 &&
-                 bookings[j].start_minute > current.start_minute))) {
-            bookings[j + 1] = bookings[j];
-            j--;
+    while (i <= middle && j <= right) {
+        if (bookings[i].start_minute <= bookings[j].start_minute) {
+            temp[k++] = bookings[i++];
+        } else {
+            temp[k++] = bookings[j++];
         }
+    }
 
-        bookings[j + 1] = current;
+    while (i <= middle) {
+        temp[k++] = bookings[i++];
+    }
+
+    while (j <= right) {
+        temp[k++] = bookings[j++];
+    }
+
+    for (i = left; i <= right; i++) {
+        bookings[i] = temp[i];
     }
 }
 
 /*
- * Return 1 if two bookings overlap in the same room and on the same day.
- * Adjacent bookings, such as 09:00-10:00 and 10:00-11:00,
- * are allowed.
- * Time complexity: O(1)
- * Space complexity: O(1)
+ * Recursively sort bookings by start_minute using merge sort.
+ *
+ * Time complexity: O(n log n).
+ * Space complexity: O(n) for the temporary buffer, plus
+ * O(log n) recursion stack space.
+ */
+static void merge_sort_recursive(
+    Booking bookings[],
+    Booking temp[],
+    int left,
+    int right
+) {
+    if (left >= right) {
+        return;
+    }
+
+    int middle = left + (right - left) / 2;
+
+    merge_sort_recursive(bookings, temp, left, middle);
+    merge_sort_recursive(bookings, temp, middle + 1, right);
+
+    merge(bookings, temp, left, middle, right);
+}
+
+/*
+ * Sort bookings by start time, earliest first.
+ *
+ * This is a stable merge sort. Bookings with equal start times
+ * keep their original relative order.
+ *
+ * Time complexity: O(n log n).
+ * Space complexity: O(n).
+ */
+void sort_bookings(Booking bookings[], int count) {
+    if (bookings == NULL || count <= 1) {
+        return;
+    }
+
+    Booking *temp = malloc((size_t)count * sizeof(Booking));
+
+    if (temp == NULL) {
+        /* Allocation failed; leave the original array unchanged. */
+        return;
+    }
+
+    merge_sort_recursive(bookings, temp, 0, count - 1);
+
+    free(temp);
+}
+
+/*
+ * Return 1 if two bookings overlap in the same room and on the
+ * same day. Adjacent half-open intervals do not overlap.
+ *
+ * Time complexity: O(1).
+ * Space complexity: O(1).
+ *
+ * Validation will be added in Step 2.
  */
 int bookings_overlap(const Booking *a, const Booking *b) {
+    if (a == NULL || b == NULL) {
+        return 0;
+    }
+
     if (strcmp(a->room, b->room) != 0 ||
         a->day_of_week != b->day_of_week) {
         return 0;
@@ -48,9 +120,13 @@ int bookings_overlap(const Booking *a, const Booking *b) {
 }
 
 /*
- * Return 1 if a requested interval is free in the specified room/day.
- * Time complexity: O(n)
- * Space complexity: O(1)
+ * Return 1 if the requested interval is free in the specified
+ * room and day; otherwise return 0.
+ *
+ * Time complexity: O(n).
+ * Space complexity: O(1).
+ *
+ * Full validation will be added in Step 2.
  */
 int is_room_available(
     const Booking bookings[],
@@ -62,6 +138,10 @@ int is_room_available(
 ) {
     if (count < 0 || room == NULL || start < 0 ||
         end > 1440 || start >= end) {
+        return 0;
+    }
+
+    if (count > 0 && bookings == NULL) {
         return 0;
     }
 

@@ -97,20 +97,58 @@ void sort_bookings(Booking bookings[], int count) {
 }
 
 /*
- * Return 1 if two bookings overlap in the same room and on the
- * same day. Adjacent half-open intervals do not overlap.
+ * Validate a booking's building, room, weekday and time interval.
  *
  * Time complexity: O(1).
  * Space complexity: O(1).
- *
- * Validation will be added in Step 2.
  */
-int bookings_overlap(const Booking *a, const Booking *b) {
-    if (a == NULL || b == NULL) {
+int validate_booking(const Booking *booking) {
+    if (booking == NULL) {
         return 0;
     }
 
-    if (strcmp(a->room, b->room) != 0 ||
+    if (booking->building[0] == '\0' ||
+        booking->room[0] == '\0') {
+        return 0;
+    }
+
+    /*
+     * Ensure both fixed-size character arrays contain a
+     * terminating null character before using string functions.
+     */
+    if (memchr(booking->building, '\0', MAX_BUILDING_LEN) == NULL ||
+        memchr(booking->room, '\0', MAX_ROOM_LEN) == NULL) {
+        return 0;
+    }
+
+    if (booking->day_of_week < 1 ||
+        booking->day_of_week > 5) {
+        return 0;
+    }
+
+    if (booking->start_minute < 0 ||
+        booking->end_minute > 1440 ||
+        booking->start_minute >= booking->end_minute) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/*
+ * Return 1 when two valid bookings overlap in the same building,
+ * room and day. Adjacent half-open intervals do not overlap.
+ *
+ * Time complexity: O(1).
+ * Space complexity: O(1).
+ */
+int bookings_overlap(const Booking *a, const Booking *b) {
+    if (!validate_booking(a) || !validate_booking(b)) {
+        return 0;
+    }
+
+    if (strcmp(a->building, b->building) != 0 ||
+        strcmp(a->room, b->room) != 0 ||
         a->day_of_week != b->day_of_week) {
         return 0;
     }
@@ -120,24 +158,33 @@ int bookings_overlap(const Booking *a, const Booking *b) {
 }
 
 /*
- * Return 1 if the requested interval is free in the specified
- * room and day; otherwise return 0.
+ * Return 1 if a requested interval is free in the specified
+ * building, room and day; return 0 otherwise.
+ *
+ * Invalid arguments or invalid existing bookings return 0.
  *
  * Time complexity: O(n).
  * Space complexity: O(1).
- *
- * Full validation will be added in Step 2.
  */
 int is_room_available(
     const Booking bookings[],
     int count,
+    const char *building,
     const char *room,
     int day,
     int start,
     int end
 ) {
-    if (count < 0 || room == NULL || start < 0 ||
-        end > 1440 || start >= end) {
+    if (count < 0 ||
+        building == NULL ||
+        room == NULL ||
+        building[0] == '\0' ||
+        room[0] == '\0' ||
+        day < 1 ||
+        day > 5 ||
+        start < 0 ||
+        end > 1440 ||
+        start >= end) {
         return 0;
     }
 
@@ -146,7 +193,12 @@ int is_room_available(
     }
 
     for (int i = 0; i < count; i++) {
-        if (strcmp(bookings[i].room, room) == 0 &&
+        if (!validate_booking(&bookings[i])) {
+            return 0;
+        }
+
+        if (strcmp(bookings[i].building, building) == 0 &&
+            strcmp(bookings[i].room, room) == 0 &&
             bookings[i].day_of_week == day &&
             start < bookings[i].end_minute &&
             bookings[i].start_minute < end) {

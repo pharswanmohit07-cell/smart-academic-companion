@@ -35,6 +35,12 @@ typedef struct {
     int end_minute;
 } Booking;
 
+/* A free time interval represented as [start, end), in minutes. */
+typedef struct {
+    int start_minute;
+    int end_minute;
+} FreeSlot;
+
 /* A topic that can be ranked by weakness in the study planner. */
 typedef struct {
     int topic_id;
@@ -62,6 +68,41 @@ int bookings_overlap(const Booking *a, const Booking *b);
  * Time complexity: O(n); space complexity: O(1).
  */
 int is_room_available(
+    const Booking bookings[],
+    int count,
+    const char *building,
+    const char *room,
+    int day,
+    int start,
+    int end
+);
+
+/*
+ * Find free intervals for a building, room and weekday within
+ * [day_start, day_end). Returns the number of slots found.
+ * Returns a negative value for invalid input or insufficient
+ * output capacity.
+ *
+ * Time complexity: O(n log n).
+ * Space complexity: O(n) for the working copy and merge-sort buffer.
+ */
+int find_free_slots(
+    const Booking bookings[],
+    int count,
+    const char *building,
+    const char *room,
+    int day,
+    int day_start,
+    int day_end,
+    FreeSlot output[],
+    int output_capacity
+);
+
+/*
+ * Return 1 if the requested interval is free, otherwise 0.
+ * Time complexity: O(n); space complexity: O(1).
+ */
+int is_room_free(
     const Booking bookings[],
     int count,
     const char *building,

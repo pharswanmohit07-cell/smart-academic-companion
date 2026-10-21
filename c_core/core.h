@@ -50,6 +50,12 @@ typedef struct {
 } StudyTopic;
 
 /*
+ * Sort bookings by start time using stable merge sort.
+ * Time complexity: O(n log n); space complexity: O(n).
+ */
+void sort_bookings(Booking bookings[], int count);
+
+/*
  * Returns 1 if the booking is valid, otherwise 0.
  * Time complexity: O(1); space complexity: O(1).
  */

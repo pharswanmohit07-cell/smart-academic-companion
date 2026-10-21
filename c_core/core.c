@@ -1,5 +1,4 @@
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "core.h"
@@ -96,33 +95,22 @@ void sort_bookings(Booking bookings[], int count) {
     free(temp);
 }
 
-/*
- * Validate a booking's building, room, weekday and time interval.
- *
- * Time complexity: O(1).
- * Space complexity: O(1).
- */
+/* Return 1 for valid input; otherwise return 0. O(1) time/space. */
 int validate_booking(const Booking *booking) {
     if (booking == NULL) {
         return 0;
     }
 
-    if (booking->building[0] == '\0' ||
-        booking->room[0] == '\0') {
-        return 0;
-    }
-
-    /*
-     * Ensure both fixed-size character arrays contain a
-     * terminating null character before using string functions.
-     */
     if (memchr(booking->building, '\0', MAX_BUILDING_LEN) == NULL ||
         memchr(booking->room, '\0', MAX_ROOM_LEN) == NULL) {
         return 0;
     }
 
-    if (booking->day_of_week < 1 ||
-        booking->day_of_week > 5) {
+    if (booking->building[0] == '\0' || booking->room[0] == '\0') {
+        return 0;
+    }
+
+    if (booking->day_of_week < 1 || booking->day_of_week > 5) {
         return 0;
     }
 
@@ -207,4 +195,160 @@ int is_room_available(
     }
 
     return 1;
+}
+
+/*
+ * Find free intervals for one building, room and day.
+ *
+ * Return:
+ *   >= 0 : number of slots written
+ *   -1   : invalid input
+ *   -2   : insufficient output capacity
+ *   -3   : memory allocation failed
+ *
+ * Time: O(n log n); extra space: O(n).
+ */
+int find_free_slots(
+    const Booking bookings[],
+    int count,
+    const char *building,
+    const char *room,
+    int day,
+    int day_start,
+    int day_end,
+    FreeSlot output[],
+    int output_capacity
+) {
+    if (count < 0 || building == NULL || room == NULL ||
+        building[0] == '\0' || room[0] == '\0' ||
+        day < 1 || day > 5 ||
+        day_start < 0 || day_end > 1440 ||
+        day_start >= day_end || output_capacity < 0) {
+        return -1;
+    }
+
+    if (count > 0 && bookings == NULL) {
+        return -1;
+    }
+
+    if (output_capacity > 0 && output == NULL) {
+        return -1;
+    }
+
+    /*
+     * Validate every input booking before allocating or writing output.
+     * This avoids silently accepting malformed booking records.
+     */
+    for (int i = 0; i < count; i++) {
+        if (!validate_booking(&bookings[i])) {
+            return -1;
+        }
+    }
+
+    if (count == 0) {
+        if (output_capacity < 1) {
+            return -2;
+        }
+
+        output[0].start_minute = day_start;
+        output[0].end_minute = day_end;
+        return 1;
+    }
+
+    Booking *selected = malloc((size_t)count * sizeof(Booking));
+    Booking *temp = malloc((size_t)count * sizeof(Booking));
+
+    if (selected == NULL || temp == NULL) {
+        free(selected);
+        free(temp);
+        return -3;
+    }
+
+    int selected_count = 0;
+
+    for (int i = 0; i < count; i++) {
+        if (strcmp(bookings[i].building, building) == 0 &&
+            strcmp(bookings[i].room, room) == 0 &&
+            bookings[i].day_of_week == day &&
+            bookings[i].start_minute < day_end &&
+            bookings[i].end_minute > day_start) {
+            selected[selected_count++] = bookings[i];
+        }
+    }
+
+    if (selected_count > 1) {
+        merge_sort_recursive(
+            selected, temp, 0, selected_count - 1
+        );
+    }
+
+    int slot_count = 0;
+    int cursor = day_start;
+
+    for (int i = 0; i < selected_count; i++) {
+        int start = selected[i].start_minute;
+        int end = selected[i].end_minute;
+
+        /* Clip bookings to the requested day window. */
+        if (start < day_start) {
+            start = day_start;
+        }
+        if (end > day_end) {
+            end = day_end;
+        }
+
+        if (start > cursor) {
+            if (slot_count >= output_capacity) {
+                free(selected);
+                free(temp);
+                return -2;
+            }
+
+            output[slot_count].start_minute = cursor;
+            output[slot_count].end_minute = start;
+            slot_count++;
+        }
+
+        /* Merge overlapping bookings by advancing the cursor. */
+        if (end > cursor) {
+            cursor = end;
+        }
+
+        if (cursor >= day_end) {
+            break;
+        }
+    }
+
+    if (cursor < day_end) {
+        if (slot_count >= output_capacity) {
+            free(selected);
+            free(temp);
+            return -2;
+        }
+
+        output[slot_count].start_minute = cursor;
+        output[slot_count].end_minute = day_end;
+        slot_count++;
+    }
+
+    free(selected);
+    free(temp);
+    return slot_count;
+}
+
+/* Return 1 if the requested interval is free, else 0.
+ * O(n) time and O(1) extra space.
+ */
+int is_room_free(
+    const Booking bookings[],
+    int count,
+    const char *building,
+    const char *room,
+    int day,
+    int start,
+    int end
+) {
+    return is_room_available(
+        bookings, count, building, room, day, start, end
+    );
 }

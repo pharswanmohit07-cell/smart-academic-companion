@@ -40,7 +40,11 @@ class TestAttendanceCalculator(unittest.TestCase):
 
     def test_target_of_100_percent(self):
         self.assertEqual(classes_needed(10, 10, 1.0), 0)
-        self.assertEqual(classes_needed(9, 10, 1.0), -1)
+        with self.assertRaisesRegex(
+            ValueError,
+            "100% attendance target is unreachable"
+        ):
+            classes_needed(9, 10, 1.0)
 
     def test_negative_upcoming_classes(self):
         with self.assertRaises(ValueError):
@@ -48,6 +52,23 @@ class TestAttendanceCalculator(unittest.TestCase):
 
     def test_already_above_target(self):
         self.assertEqual(classes_needed(38, 40), 0)
+
+    def test_100_percent_target_with_no_absences(self):
+        self.assertEqual(classes_needed(10, 10, 1.0), 0)
+
+    def test_100_percent_target_with_one_absence(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "100% attendance target is unreachable"
+        ):
+            classes_needed(9, 10, 1.0)
+
+    def test_target_above_100_percent(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "Target must be greater than 0 and at most 1"
+        ):
+            classes_needed(9, 10, 1.01)
 
 
 if __name__ == "__main__":

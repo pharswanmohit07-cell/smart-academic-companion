@@ -4,6 +4,16 @@
 
 #include <stddef.h>
 
+#ifdef _WIN32
+    #ifdef CORE_BUILD
+        #define CORE_API __declspec(dllexport)
+    #else
+        #define CORE_API __declspec(dllimport)
+    #endif
+#else
+    #define CORE_API
+#endif
+
 #define MAX_NAME_LEN 100
 #define MAX_ROOM_LEN 16
 #define MAX_BUILDING_LEN 64
@@ -53,27 +63,27 @@ typedef struct {
  * Sort bookings by start time using stable merge sort.
  * Time complexity: O(n log n); space complexity: O(n).
  */
-void sort_bookings(Booking bookings[], int count);
+CORE_API void sort_bookings(Booking bookings[], int count);
 
 /*
  * Returns 1 if the booking is valid, otherwise 0.
  * Time complexity: O(1); space complexity: O(1).
  */
-int validate_booking(const Booking *booking);
+CORE_API int validate_booking(const Booking *booking);
 
 /*
  * Returns 1 if two valid bookings overlap in the same building,
  * room and day; otherwise returns 0.
  * Time complexity: O(1); space complexity: O(1).
  */
-int bookings_overlap(const Booking *a, const Booking *b);
+CORE_API int bookings_overlap(const Booking *a, const Booking *b);
 
 /*
  * Returns 1 if the requested interval is available, 0 otherwise.
  * Invalid input or invalid existing bookings also return 0.
  * Time complexity: O(n); space complexity: O(1).
  */
-int is_room_available(
+CORE_API int is_room_available(
     const Booking bookings[],
     int count,
     const char *building,
@@ -92,7 +102,7 @@ int is_room_available(
  * Time complexity: O(n log n).
  * Space complexity: O(n) for the working copy and merge-sort buffer.
  */
-int find_free_slots(
+CORE_API int find_free_slots(
     const Booking bookings[],
     int count,
     const char *building,
@@ -108,7 +118,7 @@ int find_free_slots(
  * Return 1 if the requested interval is free, otherwise 0.
  * Time complexity: O(n); space complexity: O(1).
  */
-int is_room_free(
+CORE_API int is_room_free(
     const Booking bookings[],
     int count,
     const char *building,

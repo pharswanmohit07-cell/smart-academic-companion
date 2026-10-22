@@ -20,7 +20,9 @@ def classes_needed(attended, total, target=0.75):
         return 0
 
     if target == 1:
-        return -1  # 100% is unreachable if attendance is already imperfect
+        raise ValueError(
+            "A 100% attendance target is unreachable after any past absence."
+        )
 
     return math.ceil((target * total - attended) / (1 - target))
 

@@ -9,10 +9,9 @@ static Booking make_booking(
     const char *room,
     int day,
     int start,
-    int end
-) {
+    int end)
+{
     Booking b = {0};
-
     b.booking_id = id;
     snprintf(b.building, sizeof(b.building), "%s", building);
     snprintf(b.room, sizeof(b.room), "%s", room);
@@ -23,7 +22,8 @@ static Booking make_booking(
     return b;
 }
 
-static void test_validation_and_overlap(void) {
+static void test_validation_and_overlap(void)
+{
     Booking a = make_booking(1, "CSIT", "CR-1", 1, 540, 600);
     Booking adjacent = make_booking(2, "CSIT", "CR-1", 1, 600, 660);
     Booking overlapping = make_booking(3, "CSIT", "CR-1", 1, 590, 630);
@@ -41,12 +41,12 @@ static void test_validation_and_overlap(void) {
     puts("PASS: validation and overlap rules");
 }
 
-static void test_sorting(void) {
+static void test_sorting(void)
+{
     Booking items[] = {
         {0},
         {0},
-        {0}
-    };
+        {0}};
 
     items[0] = make_booking(1, "CSIT", "CR-1", 1, 700, 740);
     items[1] = make_booking(2, "CSIT", "CR-1", 1, 540, 580);
@@ -63,10 +63,10 @@ static void test_sorting(void) {
     puts("PASS: sorting unsorted bookings");
 }
 
-static void test_availability(void) {
+static void test_availability(void)
+{
     Booking items[] = {
-        {0}
-    };
+        {0}};
 
     items[0] = make_booking(1, "CSIT", "CR-1", 1, 540, 600);
 
@@ -79,11 +79,11 @@ static void test_availability(void) {
     puts("PASS: room availability");
 }
 
-static void test_free_slots(void) {
+static void test_free_slots(void)
+{
     Booking items[] = {
         {0},
-        {0}
-    };
+        {0}};
     FreeSlot slots[5];
 
     items[0] = make_booking(1, "CSIT", "CR-1", 1, 600, 660);
@@ -91,8 +91,7 @@ static void test_free_slots(void) {
 
     /* Unsorted input; adjacent bookings should form one occupied block. */
     int count = find_free_slots(
-        items, 2, "CSIT", "CR-1", 1, 540, 720, slots, 5
-    );
+        items, 2, "CSIT", "CR-1", 1, 540, 720, slots, 5);
 
     assert(count == 1);
     assert(slots[0].start_minute == 660);
@@ -100,8 +99,7 @@ static void test_free_slots(void) {
 
     /* Empty list: the whole requested window is free. */
     count = find_free_slots(
-        NULL, 0, "CSIT", "CR-1", 1, 540, 720, slots, 5
-    );
+        NULL, 0, "CSIT", "CR-1", 1, 540, 720, slots, 5);
     assert(count == 1);
     assert(slots[0].start_minute == 540);
     assert(slots[0].end_minute == 720);
@@ -111,8 +109,7 @@ static void test_free_slots(void) {
     items[1] = make_booking(4, "CSIT", "CR-1", 1, 660, 690);
 
     count = find_free_slots(
-        items, 2, "CSIT", "CR-1", 1, 540, 720, slots, 5
-    );
+        items, 2, "CSIT", "CR-1", 1, 540, 720, slots, 5);
 
     assert(count == 3);
     assert(slots[0].start_minute == 540 && slots[0].end_minute == 570);
@@ -122,26 +119,23 @@ static void test_free_slots(void) {
     puts("PASS: free-slot discovery and boundaries");
 }
 
-static void test_full_day_and_invalid_input(void) {
+static void test_full_day_and_invalid_input(void)
+{
     Booking full_day[] = {
-        {0}
-    };
+        {0}};
     FreeSlot slots[3];
 
     full_day[0] = make_booking(1, "CSIT", "CR-1", 1, 0, 1440);
 
     int count = find_free_slots(
-        full_day, 1, "CSIT", "CR-1", 1, 0, 1440, slots, 3
-    );
+        full_day, 1, "CSIT", "CR-1", 1, 0, 1440, slots, 3);
     assert(count == 0);
 
     assert(find_free_slots(
-        NULL, -1, "CSIT", "CR-1", 1, 0, 1440, slots, 3
-    ) == -1);
+               NULL, -1, "CSIT", "CR-1", 1, 0, 1440, slots, 3) == -1);
 
     assert(find_free_slots(
-        NULL, 0, "CSIT", "CR-1", 1, 0, 1440, slots, 0
-    ) == -2);
+               NULL, 0, "CSIT", "CR-1", 1, 0, 1440, slots, 0) == -2);
 
     Booking invalid = make_booking(2, "CSIT", "CR-1", 1, -1, 100);
     assert(validate_booking(&invalid) == 0);
@@ -149,7 +143,8 @@ static void test_full_day_and_invalid_input(void) {
     puts("PASS: full-day booking and invalid inputs");
 }
 
-int main(void) {
+int main(void)
+{
     test_validation_and_overlap();
     test_sorting();
     test_availability();

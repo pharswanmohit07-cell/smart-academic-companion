@@ -4,12 +4,8 @@
 
 #include <stddef.h>
 
-#ifdef _WIN32
-    #ifdef CORE_BUILD
-        #define CORE_API __declspec(dllexport)
-    #else
-        #define CORE_API __declspec(dllimport)
-    #endif
+#if defined(_WIN32) && defined(CORE_BUILD_DLL)
+    #define CORE_API __declspec(dllexport)
 #else
     #define CORE_API
 #endif
@@ -51,6 +47,12 @@ typedef struct {
     int end_minute;
 } FreeSlot;
 
+/* A pair of bookings that overlap in the same room and day. */
+typedef struct {
+    int booking_id_a;
+    int booking_id_b;
+} BookingClash;
+
 /* A topic that can be ranked by weakness in the study planner. */
 typedef struct {
     int topic_id;
@@ -64,6 +66,23 @@ typedef struct {
  * Time complexity: O(n log n); space complexity: O(n).
  */
 CORE_API void sort_bookings(Booking bookings[], int count);
+
+/*
+ * Detect every pair of overlapping bookings on a given weekday.
+ * Returns the number of clashes, -1 for invalid input,
+ * or -2 if the output buffer is too small.
+ *
+ * Time complexity: O(n log n + k), where k is the number
+ * of candidate pairs checked by the sweep line.
+ * Space complexity: O(n) for events and sorting buffers.
+ */
+CORE_API int detect_booking_clashes(
+    const Booking bookings[],
+    int count,
+    int day,
+    BookingClash output[],
+    int output_capacity
+);
 
 /*
  * Returns 1 if the booking is valid, otherwise 0.

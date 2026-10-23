@@ -352,3 +352,173 @@ int is_room_free(
         bookings, count, building, room, day, start, end
     );
 }
+
+/* Start/end event used by the sweep-line clash detector. */
+typedef struct {
+    int minute;
+    int is_start;  /* End events are processed before starts at equal times. */
+    int booking_index;
+} BookingEvent;
+
+/*
+ * Stable merge sort for sweep-line events.
+ * Sort by time, with end events before start events at equal times.
+ * Time: O(n log n); auxiliary space: O(n).
+ */
+static void merge_events(
+    BookingEvent events[],
+    BookingEvent temp[],
+    int left,
+    int middle,
+    int right
+) {
+    int i = left;
+    int j = middle + 1;
+    int k = left;
+
+    while (i <= middle && j <= right) {
+        int take_left =
+            events[i].minute < events[j].minute ||
+            (events[i].minute == events[j].minute &&
+             events[i].is_start <= events[j].is_start);
+
+        if (take_left) {
+            temp[k++] = events[i++];
+        } else {
+            temp[k++] = events[j++];
+        }
+    }
+
+    while (i <= middle) temp[k++] = events[i++];
+    while (j <= right) temp[k++] = events[j++];
+
+    for (i = left; i <= right; i++) {
+        events[i] = temp[i];
+    }
+}
+
+static void merge_sort_events_recursive(
+    BookingEvent events[],
+    BookingEvent temp[],
+    int left,
+    int right
+) {
+    if (left >= right) return;
+
+    int middle = left + (right - left) / 2;
+
+    merge_sort_events_recursive(events, temp, left, middle);
+    merge_sort_events_recursive(events, temp, middle + 1, right);
+    merge_events(events, temp, left, middle, right);
+}
+
+/*
+ * Detect every overlapping pair for the requested day.
+ * Only bookings in the same building and room can clash.
+ *
+ * Time: O(n log n + k), where k is the number of same-day
+ * candidate pairs considered by the sweep line.
+ * Worst-case time: O(n^2) when many bookings overlap.
+ * Space: O(n) for events and the active booking list.
+ */
+int detect_booking_clashes(
+    const Booking bookings[],
+    int count,
+    int day,
+    BookingClash output[],
+    int output_capacity
+) {
+    if (count < 0 || day < 1 || day > 5 ||
+        output_capacity < 0 ||
+        (count > 0 && bookings == NULL) ||
+        (output_capacity > 0 && output == NULL)) {
+        return -1;
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (!validate_booking(&bookings[i])) return -1;
+    }
+
+    if (count == 0) return 0;
+
+    BookingEvent *events =
+        malloc((size_t)count * 2 * sizeof(BookingEvent));
+    BookingEvent *temp =
+        malloc((size_t)count * 2 * sizeof(BookingEvent));
+    int *active = malloc((size_t)count * sizeof(int));
+
+    if (events == NULL || temp == NULL || active == NULL) {
+        free(events);
+        free(temp);
+        free(active);
+        return -1;
+    }
+
+    int event_count = 0;
+
+    for (int i = 0; i < count; i++) {
+        if (bookings[i].day_of_week != day) continue;
+
+        events[event_count++] = (BookingEvent){
+            bookings[i].start_minute, 1, i
+        };
+        events[event_count++] = (BookingEvent){
+            bookings[i].end_minute, 0, i
+        };
+    }
+
+    if (event_count > 1) {
+        merge_sort_events_recursive(
+            events, temp, 0, event_count - 1
+        );
+    }
+
+    int active_count = 0;
+    int clash_count = 0;
+
+    for (int e = 0; e < event_count; e++) {
+        BookingEvent event = events[e];
+        int current = event.booking_index;
+
+        if (!event.is_start) {
+            for (int a = 0; a < active_count; a++) {
+                if (active[a] == current) {
+                    active[a] = active[--active_count];
+                    break;
+                }
+            }
+            continue;
+        }
+
+        for (int a = 0; a < active_count; a++) {
+            int other = active[a];
+
+            if (strcmp(bookings[current].building,
+                       bookings[other].building) != 0 ||
+                strcmp(bookings[current].room,
+                       bookings[other].room) != 0) {
+                continue;
+            }
+
+            if (clash_count >= output_capacity || output == NULL) {
+                free(events);
+                free(temp);
+                free(active);
+                return -2;
+            }
+
+            output[clash_count].booking_id_a =
+                bookings[other].booking_id;
+            output[clash_count].booking_id_b =
+                bookings[current].booking_id;
+            clash_count++;
+        }
+
+        active[active_count++] = current;
+    }
+
+    free(events);
+    free(temp);
+    free(active);
+    return clash_count;
+}

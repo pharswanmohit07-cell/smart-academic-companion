@@ -1,0 +1,136 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Faculty Academic Dashboard</h1>
+        <p class="text-muted mb-0">
+            Review attendance, marks and assignment completion in one place.
+        </p>
+    </div>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% elif summary %}
+  
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Total students</p>
+                    <h2 class="h3 mb-0">{{ summary.total_students }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Attendance below 75%</p>
+                    <h2 class="h3 mb-0">{{ summary.low_attendance }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Average marks below 50%</p>
+                    <h2 class="h3 mb-0">{{ summary.low_marks }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Incomplete records</p>
+                    <h2 class="h3 mb-0">{{ summary.incomplete_records }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Student academic overview</h2>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student</th>
+                            <th>Semester</th>
+                            <th>Section</th>
+                            <th>Attendance</th>
+                            <th>Average marks</th>
+                            <th>Assignments submitted</th>
+                            <th>Attention needed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in summary.students %}
+                        <tr>
+                            <td>{{ student.student_id }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.semester or "—" }}</td>
+                            <td>{{ student.section or "—" }}</td>
+                            <td>
+                                {% if student.attendance_pct is not none %}
+                                    {{ "%.1f"|format(student.attendance_pct) }}%
+                                {% else %}
+                                    <span class="text-muted">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if student.average_marks_pct is not none %}
+                                    {{ "%.1f"|format(student.average_marks_pct) }}%
+                                {% else %}
+                                    <span class="text-muted">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if student.assignment_submission_ratio is not none %}
+                                    {{ "%.0f"|format(student.assignment_submission_ratio * 100) }}%
+                                {% else %}
+                                    <span class="text-muted">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not student.data_complete %}
+                                    <span class="badge text-bg-secondary">
+                                        Incomplete data
+                                    </span>
+                                {% elif student.rule_flags %}
+                                    {% for flag in student.rule_flags %}
+                                        <span class="badge text-bg-warning mb-1">
+                                            {{ flag }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="badge text-bg-success">
+                                        No rule-based flag
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                No students found in the database.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="small text-muted mb-0">
+                Assignment completion is the percentage of recorded assignments
+                submitted. It does not establish whether an assignment is overdue.
+                Rule-based flags are separate from the machine-learning model.
+            </p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

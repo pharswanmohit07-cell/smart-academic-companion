@@ -6,6 +6,7 @@ from flask import Flask, render_template, request
 
 from attendance_calculator import classes_needed, classes_missable
 from database import get_connection, initialize_database
+from modules.faculty_dashboard import get_faculty_summary
 
 # The classroom finder needs the compiled C library (c_core/core.dll).
 # If it can't be loaded, the rest of the app should still work.
@@ -168,6 +169,25 @@ def classrooms():
         "classrooms.html",
         form=form, days=DAY_NAMES, results=results,
         summary=summary, error=error,
+    )
+
+@app.route("/risk")
+def risk_dashboard():
+    error = None
+    summary = None
+
+    try:
+        summary = get_faculty_summary()
+    except sqlite3.Error:
+        error = (
+            "Could not load student records. "
+            "Check that the database is initialized."
+        )
+
+    return render_template(
+        "risk.html",
+        summary=summary,
+        error=error,
     )
 
 

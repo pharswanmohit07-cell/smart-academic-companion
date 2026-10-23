@@ -12,12 +12,36 @@
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-primary">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/">Smart Academic Companion</a>
-        <a class="btn btn-outline-light btn-sm" href="/">Home</a>
+        <a class="navbar-brand fw-semibold" href="/">
+            Smart Academic Companion
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#attendanceNavigation"
+            aria-controls="attendanceNavigation"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="attendanceNavigation">
+            <div class="navbar-nav ms-auto align-items-lg-center">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="{{ url_for('attendance') }}">Attendance</a>
+                <a class="nav-link" href="{{ url_for('classrooms') }}">Classrooms</a>
+                <a class="nav-link" href="{{ url_for('risk_dashboard') }}">Faculty Dashboard</a>
+            </div>
+        </div>
     </div>
 </nav>
+
 
 <main class="container py-5">
     <div class="row justify-content-center">
@@ -120,6 +144,6 @@
         </div>
     </div>
 </main>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -130,6 +130,8 @@ def prepare_schema(connection):
 def clear_old_data(connection):
     """Delete existing records in foreign-key-safe order."""
     for table in [
+        "assessment_submissions",
+        "assessment_items",
         "assignments",
         "marks",
         "attendance",
@@ -390,6 +392,8 @@ def print_summary(connection):
         "assignments",
         "exams",
         "timetable",
+        "assessment_items",
+        "assessment_submissions",
     ]:
         count = connection.execute(
             f"SELECT COUNT(*) FROM {table}"

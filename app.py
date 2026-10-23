@@ -2,11 +2,11 @@
 import sqlite3
 from contextlib import closing
 
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 
 from attendance_calculator import classes_needed, classes_missable
 from database import get_connection, initialize_database
-from modules.faculty_dashboard import get_faculty_summary
+from modules.faculty_dashboard import get_assessment_overview, get_faculty_summary
 
 # The classroom finder needs the compiled C library (c_core/core.dll).
 # If it can't be loaded, the rest of the app should still work.
@@ -171,13 +171,183 @@ def classrooms():
         summary=summary, error=error,
     )
 
+
+@app.route("/faculty/manage", methods=["GET", "POST"])
+def faculty_manage():
+    """Allow faculty to maintain students, attendance, marks and assessments."""
+    message = request.args.get("message")
+    error = None
+
+    if request.method == "POST":
+        action = request.form.get("action", "")
+        try:
+            with closing(get_connection()) as conn:
+                if action == "add_student":
+                    name = request.form.get("name", "").strip()
+                    semester = int(request.form.get("semester", ""))
+                    section = request.form.get("section", "").strip().upper()
+                    email = request.form.get("email", "").strip() or None
+                    if not name or semester < 1 or not section:
+                        raise ValueError("Enter a name, valid semester and section.")
+                    conn.execute(
+                        "INSERT INTO students (name, email, semester, section) VALUES (?, ?, ?, ?)",
+                        (name, email, semester, section),
+                    )
+                    message = "Student added successfully."
+
+                elif action == "edit_student":
+                    student_id = int(request.form.get("student_id", ""))
+                    name = request.form.get("name", "").strip()
+                    semester = int(request.form.get("semester", ""))
+                    section = request.form.get("section", "").strip().upper()
+                    email = request.form.get("email", "").strip() or None
+                    if not name or semester < 1 or not section:
+                        raise ValueError("Enter a name, valid semester and section.")
+                    conn.execute(
+                        "UPDATE students SET name = ?, email = ?, semester = ?, section = ? WHERE student_id = ?",
+                        (name, email, semester, section, student_id),
+                    )
+                    message = "Student details updated."
+
+                elif action == "create_subject":
+                    subject_name = request.form.get("subject_name", "").strip()
+                    subject_code = request.form.get("subject_code", "").strip().upper() or None
+                    if not subject_name:
+                        raise ValueError("Enter a subject name.")
+                    conn.execute(
+                        "INSERT INTO subjects (subject_name, subject_code) VALUES (?, ?)",
+                        (subject_name, subject_code),
+                    )
+                    message = "Subject added."
+
+                elif action == "save_attendance":
+                    student_id = int(request.form.get("student_id", ""))
+                    subject_id = int(request.form.get("subject_id", ""))
+                    total = int(request.form.get("total_classes", ""))
+                    attended = int(request.form.get("attended_classes", ""))
+                    if total < 1 or attended < 0 or attended > total:
+                        raise ValueError("Attendance must satisfy 0 <= attended classes <= total classes.")
+                    conn.execute(
+                        """INSERT INTO attendance
+                           (student_id, subject_id, total_classes, attended_classes)
+                           VALUES (?, ?, ?, ?)
+                           ON CONFLICT(student_id, subject_id) DO UPDATE SET
+                           total_classes = excluded.total_classes,
+                           attended_classes = excluded.attended_classes""",
+                        (student_id, subject_id, total, attended),
+                    )
+                    message = "Attendance saved."
+
+                elif action == "save_marks":
+                    student_id = int(request.form.get("student_id", ""))
+                    subject_id = int(request.form.get("subject_id", ""))
+                    exam_name = request.form.get("exam_name", "")
+                    obtained = float(request.form.get("marks_obtained", ""))
+                    maximum = float(request.form.get("max_marks", ""))
+                    if exam_name not in ("Midterm", "End Term"):
+                        raise ValueError("Choose Midterm or End Term.")
+                    if maximum <= 0 or obtained < 0 or obtained > maximum:
+                        raise ValueError("Marks must be between zero and the maximum marks.")
+                    conn.execute(
+                        "DELETE FROM marks WHERE student_id = ? AND subject_id = ? AND exam_name = ?",
+                        (student_id, subject_id, exam_name),
+                    )
+                    conn.execute(
+                        """INSERT INTO marks
+                           (student_id, subject_id, exam_name, marks_obtained, max_marks, exam_date)
+                           VALUES (?, ?, ?, ?, ?, date('now'))""",
+                        (student_id, subject_id, exam_name, obtained, maximum),
+                    )
+                    message = f"{exam_name} marks saved."
+
+                elif action == "create_assessment":
+                    subject_id = int(request.form.get("subject_id", ""))
+                    assessment_type = request.form.get("assessment_type", "")
+                    title = request.form.get("title", "").strip()
+                    due_date = request.form.get("due_date", "").strip() or None
+                    if assessment_type not in ("assignment", "term_work") or not title:
+                        raise ValueError("Choose an assessment type and enter a title.")
+                    cursor = conn.execute(
+                        """INSERT INTO assessment_items
+                           (subject_id, assessment_type, title, due_date)
+                           VALUES (?, ?, ?, ?)""",
+                        (subject_id, assessment_type, title, due_date),
+                    )
+                    assessment_id = cursor.lastrowid
+                    conn.execute(
+                        """INSERT INTO assessment_submissions (assessment_id, student_id, submitted)
+                           SELECT ?, student_id, 0 FROM students""",
+                        (assessment_id,),
+                    )
+                    message = "Assessment created for all current students."
+
+                elif action == "save_submission":
+                    assessment_id = int(request.form.get("assessment_id", ""))
+                    student_id = int(request.form.get("student_id", ""))
+                    submitted = 1 if request.form.get("submitted") == "1" else 0
+                    conn.execute(
+                        """INSERT INTO assessment_submissions
+                           (assessment_id, student_id, submitted, updated_at)
+                           VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                           ON CONFLICT(assessment_id, student_id) DO UPDATE SET
+                           submitted = excluded.submitted, updated_at = CURRENT_TIMESTAMP""",
+                        (assessment_id, student_id, submitted),
+                    )
+                    message = "Submission status updated."
+                else:
+                    raise ValueError("Choose a valid action.")
+
+                conn.commit()
+        except (ValueError, TypeError):
+            error = "Please enter valid values in all required fields."
+        except sqlite3.IntegrityError as exc:
+            if "UNIQUE constraint failed: assessment_items" in str(exc):
+                error = "That assessment title already exists for this subject and type."
+            elif "UNIQUE constraint failed: subjects.subject_code" in str(exc):
+                error = "That subject code is already in use."
+            elif "UNIQUE constraint failed: students.email" in str(exc):
+                error = "That email address is already in use."
+            else:
+                error = "Could not save the record. Check the selected student, subject and assessment."
+        except sqlite3.Error:
+            error = "Could not save the record. Make sure the database is initialized."
+
+    with closing(get_connection()) as conn:
+        students = [dict(row) for row in conn.execute(
+            "SELECT student_id, name, semester, section FROM students ORDER BY name"
+        ).fetchall()]
+        subjects = [dict(row) for row in conn.execute(
+            "SELECT subject_id, subject_name FROM subjects ORDER BY subject_name"
+        ).fetchall()]
+        assessments = [dict(row) for row in conn.execute(
+            """SELECT ai.assessment_id, ai.title, ai.assessment_type, sub.subject_name
+               FROM assessment_items ai JOIN subjects sub ON sub.subject_id = ai.subject_id
+               ORDER BY ai.assessment_type, ai.title"""
+        ).fetchall()]
+        submissions = [dict(row) for row in conn.execute(
+            """SELECT ss.assessment_id, ss.student_id, ss.submitted,
+                      s.name AS student_name, ai.title, ai.assessment_type
+               FROM assessment_submissions ss
+               JOIN students s ON s.student_id = ss.student_id
+               JOIN assessment_items ai ON ai.assessment_id = ss.assessment_id
+               ORDER BY ai.assessment_type, ai.title, s.name"""
+        ).fetchall()]
+
+    return render_template(
+        "faculty_manage.html", students=students, subjects=subjects,
+        assessments=assessments, submissions=submissions,
+        message=message, error=error,
+    )
+
 @app.route("/risk")
 def risk_dashboard():
     error = None
     summary = None
+    assessments = []
 
     try:
         summary = get_faculty_summary()
+        assessments = get_assessment_overview()
     except sqlite3.Error:
         error = (
             "Could not load student records. "
@@ -187,6 +357,7 @@ def risk_dashboard():
     return render_template(
         "risk.html",
         summary=summary,
+        assessments=assessments,
         error=error,
     )
 

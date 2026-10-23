@@ -81,13 +81,23 @@ _lib.is_room_free.argtypes = [
 _lib.is_room_free.restype = ctypes.c_int
 
 
-class FreeSlot(ctypes.Structure):
-    """Must match the FreeSlot struct in c_core/core.h exactly."""
+class BookingClash(ctypes.Structure):
+    """Must match the BookingClash struct in c_core/core.h exactly."""
 
     _fields_ = [
-        ("start_minute", ctypes.c_int),
-        ("end_minute", ctypes.c_int),
+        ("booking_id_a", ctypes.c_int),
+        ("booking_id_b", ctypes.c_int),
     ]
+
+
+_lib.detect_booking_clashes.argtypes = [
+    ctypes.POINTER(Booking),
+    ctypes.c_int,
+    ctypes.c_int,  # day
+    ctypes.POINTER(BookingClash),
+    ctypes.c_int,
+]
+_lib.detect_booking_clashes.restype = ctypes.c_int
 
 
 def _to_ctypes_bookings(rows):
@@ -193,30 +203,23 @@ def find_free_slots(bookings, room, day, day_start, day_end, building=None):
     """Return free [start, end) intervals for a room on `day`.
 
     Times are minutes after midnight. Returns a list of dicts with
-    start_minute and end_minute keys.
-    `building` is optional; when omitted it defaults to "Main".
+    start_minute and end_minute keys, or [] for invalid input.
     """
     array = _to_ctypes_bookings(bookings)
 
-    # First call with zero capacity to count how many slots are needed.
+    # k bookings leave at most k + 1 gaps, so len + 1 is always enough.
+    capacity = len(array) + 1
+    output = (FreeSlot * capacity)()
+
     count = _lib.find_free_slots(
         array, len(array),
         str(building or "Main").encode("utf-8"),
         str(room).encode("utf-8"),
         int(day), int(day_start), int(day_end),
-        None, 0,
+        output, capacity,
     )
     if count < 0:
         return []
-
-    output = (FreeSlot * count)()
-    count = _lib.find_free_slots(
-        array, len(array),
-        str(building or "Main").encode("utf-8"),
-        str(room).encode("utf-8"),
-        int(day), int(day_start), int(day_end),
-        output, count,
-    )
 
     return [
         {"start_minute": s.start_minute, "end_minute": s.end_minute}
@@ -240,6 +243,28 @@ def is_room_free(bookings, room, day, start, end, building=None):
         int(start),
         int(end),
     ))
+
+
+def detect_clashes(bookings, day):
+    """Return a list of {booking_id_a, booking_id_b} pairs that overlap.
+
+    Uses the C sweep-line detector. Raises ValueError on invalid input.
+    """
+    array = _to_ctypes_bookings(bookings)
+    n = len(array)
+
+    # Worst case: every pair of bookings clashes.
+    capacity = max(1, n * (n - 1) // 2)
+    output = (BookingClash * capacity)()
+
+    count = _lib.detect_booking_clashes(array, n, int(day), output, capacity)
+    if count < 0:
+        raise ValueError(f"Clash detection failed with error code {count}.")
+
+    return [
+        {"booking_id_a": c.booking_id_a, "booking_id_b": c.booking_id_b}
+        for c in output[:count]
+    ]
 
 
 if __name__ == "__main__":

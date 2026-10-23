@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-1">Faculty Data Management</h1>
+    <p class="text-secondary mb-0">Maintain student records, attendance, exam marks and assessment submissions.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('risk_dashboard') }}">Back to dashboard</a>
+</div>
+
+{% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+
+<div class="row g-4">
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Add student</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="add_student">
+        <div class="col-12"><label class="form-label" for="student-name">Full name</label><input class="form-control" id="student-name" name="name" required maxlength="120"></div>
+        <div class="col-12"><label class="form-label" for="student-email">Email (optional)</label><input class="form-control" id="student-email" type="email" name="email" maxlength="254"></div>
+        <div class="col-6"><label class="form-label" for="semester">Semester</label><input class="form-control" id="semester" type="number" name="semester" min="1" max="12" value="3" required></div>
+        <div class="col-6"><label class="form-label" for="section">Section</label><input class="form-control" id="section" name="section" value="A" maxlength="10" required></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Add student</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Record attendance</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="save_attendance">
+        <div class="col-12"><label class="form-label" for="attendance-student">Student</label><select class="form-select" id="attendance-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="attendance-subject">Subject</label><select class="form-select" id="attendance-subject" name="subject_id" required><option value="">Choose subject</option>{% for subject in subjects %}<option value="{{ subject.subject_id }}">{{ subject.subject_name }}</option>{% endfor %}</select></div>
+        <div class="col-6"><label class="form-label" for="total-classes">Total classes</label><input class="form-control" id="total-classes" type="number" min="1" name="total_classes" required></div>
+        <div class="col-6"><label class="form-label" for="attended-classes">Attended classes</label><input class="form-control" id="attended-classes" type="number" min="0" name="attended_classes" required></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Save attendance</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Record exam marks</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="save_marks">
+        <div class="col-12"><label class="form-label" for="marks-student">Student</label><select class="form-select" id="marks-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="marks-subject">Subject</label><select class="form-select" id="marks-subject" name="subject_id" required><option value="">Choose subject</option>{% for subject in subjects %}<option value="{{ subject.subject_id }}">{{ subject.subject_name }}</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="exam-name">Exam</label><select class="form-select" id="exam-name" name="exam_name" required><option value="Midterm">Midterm</option><option value="End Term">End Term</option></select></div>
+        <div class="col-6"><label class="form-label" for="marks-obtained">Marks obtained</label><input class="form-control" id="marks-obtained" type="number" min="0" step="0.5" name="marks_obtained" required></div>
+        <div class="col-6"><label class="form-label" for="max-marks">Maximum marks</label><input class="form-control" id="max-marks" type="number" min="0.5" step="0.5" name="max_marks" required></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Save marks</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Create assignment or term work</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="create_assessment">
+        <div class="col-12"><label class="form-label" for="assessment-type">Type</label><select class="form-select" id="assessment-type" name="assessment_type" required><option value="assignment">Assignment</option><option value="term_work">Term Work</option></select></div>
+        <div class="col-12"><label class="form-label" for="assessment-title">Title / number</label><input class="form-control" id="assessment-title" name="title" placeholder="Assignment 1" maxlength="120" required></div>
+        <div class="col-12"><label class="form-label" for="assessment-subject">Subject</label><select class="form-select" id="assessment-subject" name="subject_id" required><option value="">Choose subject</option>{% for subject in subjects %}<option value="{{ subject.subject_id }}">{{ subject.subject_name }}</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="due-date">Due date (optional)</label><input class="form-control" id="due-date" type="date" name="due_date"></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Create for all students</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12">
+    <section class="card shadow-sm"><div class="card-body">
+      <h2 class="h5 mb-3">Update submission status</h2>
+      {% if assessments and students %}
+      <form method="post" class="row g-3 align-items-end">
+        <input type="hidden" name="action" value="save_submission">
+        <div class="col-12 col-md-5"><label class="form-label" for="submission-assessment">Assessment</label><select class="form-select" id="submission-assessment" name="assessment_id" required><option value="">Choose assessment</option>{% for assessment in assessments %}<option value="{{ assessment.assessment_id }}">{{ assessment.subject_name }} · {{ assessment.title }} ({{ 'Term Work' if assessment.assessment_type == 'term_work' else 'Assignment' }})</option>{% endfor %}</select></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="submission-student">Student</label><select class="form-select" id="submission-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="submission-status">Status</label><select class="form-select" id="submission-status" name="submitted"><option value="1">Submitted</option><option value="0">Pending</option></select></div>
+        <div class="col-12 col-md-1"><button class="btn btn-primary w-100" type="submit" aria-label="Save submission status">Save</button></div>
+      </form>
+      {% else %}<p class="text-secondary mb-0">Create an assessment and add students before recording submissions.</p>{% endif %}
+    </div></section>
+  </div>
+</div>
+{% endblock %}

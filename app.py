@@ -343,9 +343,11 @@ def faculty_manage():
 def risk_dashboard():
     error = None
     summary = None
+    assessments = []
 
     try:
         summary = get_faculty_summary()
+        assessments = get_assessment_overview()
     except sqlite3.Error:
         error = (
             "Could not load student records. "
@@ -355,6 +357,7 @@ def risk_dashboard():
     return render_template(
         "risk.html",
         summary=summary,
+        assessments=assessments,
         error=error,
     )
 

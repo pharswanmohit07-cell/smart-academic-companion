@@ -195,6 +195,31 @@ def faculty_manage():
                     )
                     message = "Student added successfully."
 
+                elif action == "edit_student":
+                    student_id = int(request.form.get("student_id", ""))
+                    name = request.form.get("name", "").strip()
+                    semester = int(request.form.get("semester", ""))
+                    section = request.form.get("section", "").strip().upper()
+                    email = request.form.get("email", "").strip() or None
+                    if not name or semester < 1 or not section:
+                        raise ValueError("Enter a name, valid semester and section.")
+                    conn.execute(
+                        "UPDATE students SET name = ?, email = ?, semester = ?, section = ? WHERE student_id = ?",
+                        (name, email, semester, section, student_id),
+                    )
+                    message = "Student details updated."
+
+                elif action == "create_subject":
+                    subject_name = request.form.get("subject_name", "").strip()
+                    subject_code = request.form.get("subject_code", "").strip().upper() or None
+                    if not subject_name:
+                        raise ValueError("Enter a subject name.")
+                    conn.execute(
+                        "INSERT INTO subjects (subject_name, subject_code) VALUES (?, ?)",
+                        (subject_name, subject_code),
+                    )
+                    message = "Subject added."
+
                 elif action == "save_attendance":
                     student_id = int(request.form.get("student_id", ""))
                     subject_id = int(request.form.get("subject_id", ""))
@@ -223,6 +248,10 @@ def faculty_manage():
                         raise ValueError("Choose Midterm or End Term.")
                     if maximum <= 0 or obtained < 0 or obtained > maximum:
                         raise ValueError("Marks must be between zero and the maximum marks.")
+                    conn.execute(
+                        "DELETE FROM marks WHERE student_id = ? AND subject_id = ? AND exam_name = ?",
+                        (student_id, subject_id, exam_name),
+                    )
                     conn.execute(
                         """INSERT INTO marks
                            (student_id, subject_id, exam_name, marks_obtained, max_marks, exam_date)
@@ -274,6 +303,8 @@ def faculty_manage():
         except sqlite3.IntegrityError as exc:
             if "UNIQUE constraint failed: assessment_items" in str(exc):
                 error = "That assessment title already exists for this subject and type."
+            elif "UNIQUE constraint failed: subjects.subject_code" in str(exc):
+                error = "That subject code is already in use."
             elif "UNIQUE constraint failed: students.email" in str(exc):
                 error = "That email address is already in use."
             else:

@@ -11,6 +11,10 @@
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
+<datalist id="student-options">
+  {% for student in students %}<option value="{{ student.name }} (ID {{ student.student_id }})"></option>{% endfor %}
+</datalist>
+
 <div class="row g-4">
   <div class="col-12 col-xl-6">
     <section class="card shadow-sm h-100"><div class="card-body">
@@ -31,7 +35,9 @@
       <h2 class="h5 mb-3">Edit student details</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="edit_student">
-        <div class="col-12"><label class="form-label" for="edit-student">Student</label><select class="form-select" id="edit-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="edit-student">Student</label><input class="form-control student-picker" id="edit-student-search" list="student-options" placeholder="Type a name or ID to search..." autocomplete="off" required aria-describedby="edit-student-help">
+        <input type="hidden" id="edit-student" name="student_id" required>
+        <div class="form-text" id="edit-student-help">Start typing a name or student ID, then choose the matching result.</div></div>
         <div class="col-12"><label class="form-label" for="edit-name">Correct name</label><input class="form-control" id="edit-name" name="name" required maxlength="120"></div>
         <div class="col-6"><label class="form-label" for="edit-semester">Semester</label><input class="form-control" id="edit-semester" type="number" name="semester" min="1" max="12" required></div>
         <div class="col-6"><label class="form-label" for="edit-section">Section</label><input class="form-control" id="edit-section" name="section" maxlength="10" required></div>
@@ -58,7 +64,9 @@
       <h2 class="h5 mb-3">Record attendance</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="save_attendance">
-        <div class="col-12"><label class="form-label" for="attendance-student">Student</label><select class="form-select" id="attendance-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="attendance-student">Student</label><input class="form-control student-picker" id="attendance-student-search" list="student-options" placeholder="Type a name or ID to search..." autocomplete="off" required aria-describedby="attendance-student-help">
+        <input type="hidden" id="attendance-student" name="student_id" required>
+        <div class="form-text" id="attendance-student-help">Start typing a name or student ID, then choose the matching result.</div></div>
         <div class="col-12"><label class="form-label" for="attendance-subject">Subject</label><select class="form-select" id="attendance-subject" name="subject_id" required><option value="">Choose subject</option>{% for subject in subjects %}<option value="{{ subject.subject_id }}">{{ subject.subject_name }}</option>{% endfor %}</select></div>
         <div class="col-6"><label class="form-label" for="total-classes">Total classes</label><input class="form-control" id="total-classes" type="number" min="1" name="total_classes" required></div>
         <div class="col-6"><label class="form-label" for="attended-classes">Attended classes</label><input class="form-control" id="attended-classes" type="number" min="0" name="attended_classes" required></div>
@@ -72,7 +80,9 @@
       <h2 class="h5 mb-3">Record exam marks</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="save_marks">
-        <div class="col-12"><label class="form-label" for="marks-student">Student</label><select class="form-select" id="marks-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="marks-student">Student</label><input class="form-control student-picker" id="marks-student-search" list="student-options" placeholder="Type a name or ID to search..." autocomplete="off" required aria-describedby="marks-student-help">
+        <input type="hidden" id="marks-student" name="student_id" required>
+        <div class="form-text" id="marks-student-help">Start typing a name or student ID, then choose the matching result.</div></div>
         <div class="col-12"><label class="form-label" for="marks-subject">Subject</label><select class="form-select" id="marks-subject" name="subject_id" required><option value="">Choose subject</option>{% for subject in subjects %}<option value="{{ subject.subject_id }}">{{ subject.subject_name }}</option>{% endfor %}</select></div>
         <div class="col-12"><label class="form-label" for="exam-name">Exam</label><select class="form-select" id="exam-name" name="exam_name" required><option value="Midterm">Midterm</option><option value="End Term">End Term</option></select></div>
         <div class="col-6"><label class="form-label" for="marks-obtained">Marks obtained</label><input class="form-control" id="marks-obtained" type="number" min="0" step="0.5" name="marks_obtained" required></div>
@@ -103,7 +113,9 @@
       <form method="post" class="row g-3 align-items-end">
         <input type="hidden" name="action" value="save_submission">
         <div class="col-12 col-md-5"><label class="form-label" for="submission-assessment">Assessment</label><select class="form-select" id="submission-assessment" name="assessment_id" required><option value="">Choose assessment</option>{% for assessment in assessments %}<option value="{{ assessment.assessment_id }}">{{ assessment.subject_name }} · {{ assessment.title }} ({{ 'Term Work' if assessment.assessment_type == 'term_work' else 'Assignment' }})</option>{% endfor %}</select></div>
-        <div class="col-12 col-md-4"><label class="form-label" for="submission-student">Student</label><select class="form-select" id="submission-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="submission-student">Student</label><input class="form-control student-picker" id="submission-student-search" list="student-options" placeholder="Type a name or ID to search..." autocomplete="off" required aria-describedby="submission-student-help">
+        <input type="hidden" id="submission-student" name="student_id" required>
+        <div class="form-text" id="submission-student-help">Start typing a name or student ID, then choose the matching result.</div></div>
         <div class="col-12 col-md-2"><label class="form-label" for="submission-status">Status</label><select class="form-select" id="submission-status" name="submitted"><option value="1">Submitted</option><option value="0">Pending</option></select></div>
         <div class="col-12 col-md-1"><button class="btn btn-primary w-100" type="submit" aria-label="Save submission status">Save</button></div>
       </form>
@@ -111,4 +123,34 @@
     </div></section>
   </div>
 </div>
+
+<script>
+(() => {
+  const students = [
+    {% for student in students %}
+    { id: "{{ student.student_id }}", label: {{ (student.name ~ ' (ID ' ~ student.student_id ~ ')')|tojson }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  document.querySelectorAll(".student-picker").forEach((picker) => {
+    const hidden = document.getElementById(picker.id.replace("-search", ""));
+    const form = picker.closest("form");
+    function syncStudent() {
+      const match = students.find((student) => student.label.toLowerCase() === picker.value.trim().toLowerCase());
+      hidden.value = match ? match.id : "";
+      picker.setCustomValidity(picker.value.trim() && !match ? "Choose a student from the suggestions." : "");
+    }
+    picker.addEventListener("input", syncStudent);
+    picker.addEventListener("change", syncStudent);
+    form.addEventListener("submit", (event) => {
+      syncStudent();
+      if (!hidden.value) {
+        event.preventDefault();
+        picker.reportValidity();
+        picker.focus();
+      }
+    });
+  });
+})();
+</script>
+
 {% endblock %}

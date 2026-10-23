@@ -28,6 +28,33 @@
 
   <div class="col-12 col-xl-6">
     <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Edit student details</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="edit_student">
+        <div class="col-12"><label class="form-label" for="edit-student">Student</label><select class="form-select" id="edit-student" name="student_id" required><option value="">Choose student</option>{% for student in students %}<option value="{{ student.student_id }}">{{ student.name }} (ID {{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label" for="edit-name">Correct name</label><input class="form-control" id="edit-name" name="name" required maxlength="120"></div>
+        <div class="col-6"><label class="form-label" for="edit-semester">Semester</label><input class="form-control" id="edit-semester" type="number" name="semester" min="1" max="12" required></div>
+        <div class="col-6"><label class="form-label" for="edit-section">Section</label><input class="form-control" id="edit-section" name="section" maxlength="10" required></div>
+        <div class="col-12"><label class="form-label" for="edit-email">Email (optional)</label><input class="form-control" id="edit-email" type="email" name="email" maxlength="254"></div>
+        <div class="col-12"><button class="btn btn-outline-primary" type="submit">Update student</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Add subject</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="create_subject">
+        <div class="col-12"><label class="form-label" for="subject-name">Subject name</label><input class="form-control" id="subject-name" name="subject_name" required maxlength="120"></div>
+        <div class="col-12"><label class="form-label" for="subject-code">Subject code (optional)</label><input class="form-control" id="subject-code" name="subject_code" maxlength="30"></div>
+        <div class="col-12"><button class="btn btn-outline-primary" type="submit">Add subject</button></div>
+      </form>
+    </div></section>
+  </div>
+
+  <div class="col-12 col-xl-6">
+    <section class="card shadow-sm h-100"><div class="card-body">
       <h2 class="h5 mb-3">Record attendance</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="save_attendance">

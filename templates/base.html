@@ -18,10 +18,15 @@
             <a class="navbar-brand" href="/">
                 Smart Academic Companion
             </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="{{ url_for('attendance') }}">Attendance</a>
+                <a class="nav-link" href="{{ url_for('classrooms') }}">Classrooms</a>
+            </div>
         </div>
     </nav>
 
     <main class="container py-5">
+        {% block content %}
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h1 class="h3">Welcome!</h1>
@@ -35,6 +40,7 @@
         Open Safe Attendance Calculator
     </a>
 </div>
+        {% endblock %}
     </main>
 
 </body>

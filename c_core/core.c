@@ -451,7 +451,7 @@ int detect_booking_clashes(
         free(events);
         free(temp);
         free(active);
-        return -1;
+        return -3;
     }
 
     int event_count = 0;

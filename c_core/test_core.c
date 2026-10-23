@@ -143,6 +143,58 @@ static void test_full_day_and_invalid_input(void)
     puts("PASS: full-day booking and invalid inputs");
 }
 
+static void test_clash_detection(void)
+{
+    BookingClash out[10];
+
+    /* Two overlapping bookings in the same room: 1 clash */
+    Booking overlap[] = {
+        make_booking(1, "Main", "R101", 1, 540, 600),
+        make_booking(2, "Main", "R101", 1, 570, 630)};
+    assert(detect_booking_clashes(overlap, 2, 1, out, 10) == 1);
+    assert(out[0].booking_id_a == 1 && out[0].booking_id_b == 2);
+
+    /* Adjacent bookings: no clash */
+    Booking adjacent[] = {
+        make_booking(1, "Main", "R101", 1, 540, 600),
+        make_booking(2, "Main", "R101", 1, 600, 660)};
+    assert(detect_booking_clashes(adjacent, 2, 1, out, 10) == 0);
+
+    /* Same time, different rooms: no clash */
+    Booking rooms[] = {
+        make_booking(1, "Main", "R101", 1, 540, 600),
+        make_booking(2, "Main", "R102", 1, 540, 600)};
+    assert(detect_booking_clashes(rooms, 2, 1, out, 10) == 0);
+
+    /* Overlap on a different day than the one queried: no clash */
+    Booking other_day[] = {
+        make_booking(1, "Main", "R101", 2, 540, 600),
+        make_booking(2, "Main", "R101", 2, 570, 630)};
+    assert(detect_booking_clashes(other_day, 2, 1, out, 10) == 0);
+
+    /* Three mutually overlapping bookings: 3 clashes */
+    Booking triple[] = {
+        make_booking(1, "Main", "R101", 1, 540, 660),
+        make_booking(2, "Main", "R101", 1, 560, 640),
+        make_booking(3, "Main", "R101", 1, 580, 620)};
+    assert(detect_booking_clashes(triple, 3, 1, out, 10) == 3);
+
+    /* Output buffer too small: -2 */
+    assert(detect_booking_clashes(triple, 3, 1, out, 1) == -2);
+
+    /* Invalid booking (start == end): -1 */
+    Booking invalid[] = {make_booking(1, "Main", "R101", 1, 600, 600)};
+    assert(detect_booking_clashes(invalid, 1, 1, out, 10) == -1);
+
+    /* Invalid day: -1 */
+    assert(detect_booking_clashes(triple, 3, 6, out, 10) == -1);
+
+    /* Empty list: 0 */
+    assert(detect_booking_clashes(NULL, 0, 1, out, 10) == 0);
+
+    puts("PASS: sweep-line clash detection");
+}
+
 int main(void)
 {
     test_validation_and_overlap();
@@ -150,6 +202,7 @@ int main(void)
     test_availability();
     test_free_slots();
     test_full_day_and_invalid_input();
+    test_clash_detection();
 
     puts("All C core tests passed.");
     return 0;

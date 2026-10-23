@@ -70,7 +70,8 @@ CORE_API void sort_bookings(Booking bookings[], int count);
 /*
  * Detect every pair of overlapping bookings on a given weekday.
  * Returns the number of clashes, -1 for invalid input,
- * or -2 if the output buffer is too small.
+ * -2 if the output buffer is too small,
+ * or -3 if memory allocation failed.
  *
  * Time complexity: O(n log n + k), where k is the number
  * of candidate pairs checked by the sweep line.

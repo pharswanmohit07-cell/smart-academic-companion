@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,7 +15,7 @@ class TestRiskModelDatabaseFeatures(unittest.TestCase):
             db_path = Path(temp_dir) / "risk_features.db"
             with patch.object(database, "DATABASE_PATH", db_path):
                 database.initialize_database()
-                with sqlite3.connect(db_path) as connection:
+                with closing(sqlite3.connect(db_path)) as connection:
                     connection.execute(
                         "INSERT INTO students (name, email) VALUES (?, ?)",
                         ("Risk Test Student", "risk@example.edu"),

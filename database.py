@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -44,9 +45,10 @@ def initialize_database():
     """Create tables and safely add compatibility columns without deleting data."""
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
 
-    with get_connection() as connection:
-        connection.executescript(schema)
-        _apply_compatibility_migrations(connection)
+    with closing(get_connection()) as connection:
+        with connection:
+            connection.executescript(schema)
+            _apply_compatibility_migrations(connection)
 
 
 if __name__ == "__main__":

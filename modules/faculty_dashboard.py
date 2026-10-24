@@ -55,6 +55,13 @@ def get_faculty_summary():
             """
         ).fetchall()
 
+        subject_names = [
+            row["subject_name"]
+            for row in conn.execute(
+                "SELECT subject_name FROM subjects ORDER BY subject_name"
+            ).fetchall()
+        ]
+
         records = [dict(row) for row in students]
         by_student = {student["student_id"]: student for student in records}
         for student in records:
@@ -103,6 +110,7 @@ def get_faculty_summary():
         complete = [student for student in records if student["data_complete"]]
         return {
             "students": records,
+            "subject_names": subject_names,
             "total_students": len(records),
             "incomplete_records": len(records) - len(complete),
             "low_attendance": sum(

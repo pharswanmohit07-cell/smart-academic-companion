@@ -128,6 +128,80 @@
   </div>
 </div>
 
+<div class="row g-4 mt-1">
+  <div class="col-12">
+    <section class="card shadow-sm"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div><h2 class="h5 mb-1">Retrieve saved records</h2><p class="text-secondary small mb-0">Read-only view of records currently stored in the database.</p></div>
+        <div class="d-flex flex-wrap gap-2">
+          <select class="form-select form-select-sm" id="saved-record-type" aria-label="Saved record type" style="width:auto">
+            <option value="all">All record types</option><option value="marks">Exam marks</option><option value="attendance">Attendance</option>
+          </select>
+          <input class="form-control form-control-sm" id="saved-record-search" type="search" placeholder="Search student or subject" aria-label="Search saved records" style="max-width:260px">
+        </div>
+      </div>
+      <div class="table-responsive" id="saved-marks-wrap">
+        <h3 class="h6">Saved exam marks</h3>
+        <table class="table table-sm table-striped align-middle">
+          <thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>Date</th></tr></thead>
+          <tbody id="saved-marks-body">
+          {% for record in saved_marks %}
+            <tr class="saved-record-row" data-type="marks" data-search="{{ (record.student_name ~ ' ' ~ record.subject_name ~ ' ' ~ record.exam_name)|lower }}">
+              <td>{{ record.student_name }} <span class="text-secondary small">(#{{ record.student_id }})</span></td>
+              <td>{{ record.subject_name }}</td><td>{{ record.exam_name }}</td>
+              <td>{{ "%.1f"|format(record.marks_obtained) }} / {{ "%.1f"|format(record.max_marks) }}</td><td>{{ record.exam_date or "—" }}</td>
+            </tr>
+          {% else %}<tr><td colspan="5" class="text-secondary text-center">No exam marks have been saved yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="table-responsive mt-3" id="saved-attendance-wrap">
+        <h3 class="h6">Saved attendance</h3>
+        <table class="table table-sm table-striped align-middle">
+          <thead><tr><th>Student</th><th>Subject</th><th>Attended</th><th>Total classes</th><th>Attendance</th></tr></thead>
+          <tbody id="saved-attendance-body">
+          {% for record in saved_attendance %}
+            <tr class="saved-record-row" data-type="attendance" data-search="{{ (record.student_name ~ ' ' ~ record.subject_name)|lower }}">
+              <td>{{ record.student_name }} <span class="text-secondary small">(#{{ record.student_id }})</span></td>
+              <td>{{ record.subject_name }}</td><td>{{ record.attended_classes }}</td><td>{{ record.total_classes }}</td>
+              <td>{{ "%.1f"|format(100 * record.attended_classes / record.total_classes) }}%</td>
+            </tr>
+          {% else %}<tr><td colspan="5" class="text-secondary text-center">No attendance records have been saved yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p id="saved-record-empty" class="text-secondary text-center d-none mb-0">No saved records match your search.</p>
+    </div></section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const typeFilter = document.getElementById("saved-record-type");
+  const search = document.getElementById("saved-record-search");
+  const rows = Array.from(document.querySelectorAll(".saved-record-row"));
+  const marksWrap = document.getElementById("saved-marks-wrap");
+  const attendanceWrap = document.getElementById("saved-attendance-wrap");
+  const empty = document.getElementById("saved-record-empty");
+  function filterSavedRecords() {
+    const type = typeFilter.value;
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    rows.forEach((row) => {
+      const matches = (type === "all" || row.dataset.type === type) && row.dataset.search.includes(query);
+      row.classList.toggle("d-none", !matches);
+      if (matches) visible++;
+    });
+    marksWrap.classList.toggle("d-none", type === "attendance");
+    attendanceWrap.classList.toggle("d-none", type === "marks");
+    empty.classList.toggle("d-none", visible > 0);
+  }
+  typeFilter.addEventListener("change", filterSavedRecords);
+  search.addEventListener("input", filterSavedRecords);
+  filterSavedRecords();
+})();
+</script>
+
 <style>
 .student-picker-results {
   top: 100%;

@@ -189,9 +189,16 @@ def faculty_manage():
                     email = request.form.get("email", "").strip() or None
                     if not name or semester < 1 or not section:
                         raise ValueError("Enter a name, valid semester and section.")
-                    conn.execute(
+                    cursor = conn.execute(
                         "INSERT INTO students (name, email, semester, section) VALUES (?, ?, ?, ?)",
                         (name, email, semester, section),
+                    )
+                    student_id = cursor.lastrowid
+                    conn.execute(
+                        """INSERT INTO assessment_submissions
+                           (assessment_id, student_id, submitted)
+                           SELECT assessment_id, ?, 0 FROM assessment_items""",
+                        (student_id,),
                     )
                     message = "Student added successfully."
 

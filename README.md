@@ -161,10 +161,19 @@ The classroom tests require the C DLL to be compiled first.
 
 ## Current scope and limitations
 
-- The Flask interface currently exposes the home page and attendance calculator. Classroom functionality is provided by the C core and its Python wrapper; a dedicated classroom web page may be added separately.
-- The provided DLL build command targets Windows. Linux and macOS need a platform-specific shared-library build and corresponding loader path.
-- Seed data is synthetic and should not be treated as real student information.
-- This project is intended for learning and demonstration; review security, deployment configuration, and data-protection requirements before using it with real academic records.
+The current Flask interface includes these pages and workflows:
+
+- **Home page** at `/`.
+- **Safe-attendance calculator** at `/attendance`.
+- **Empty classroom finder** at `/classrooms`, backed by the C scheduling library and timetable records.
+- **Faculty academic dashboard** at `/risk`, showing attendance, Midterm and End Term marks by subject, pending assessments, incomplete records, and rule-based attention flags.
+- **Faculty record management** at `/faculty/manage`, including student and subject records, attendance, exam marks, assessment creation, and submission status.
+
+The at-risk labels are demonstration rules based on academic thresholds; they are not validated evidence of real-world prediction accuracy. There is no authentication or role-based access control in the current scope, so do not expose the app publicly or use it for real student records without a security and privacy review.
+
+The provided DLL build command targets Windows. Linux and macOS need a platform-specific shared-library build and corresponding loader path. Seed data is synthetic and should not be treated as real student information.
+
+**Data safety:** `python database.py` initializes the schema and applies compatibility columns without intentionally clearing existing rows. `python seed_data.py` clears existing project-table rows before inserting demo data; use it only with disposable demo data or after making a verified backup.
 
 ## Contributing
 

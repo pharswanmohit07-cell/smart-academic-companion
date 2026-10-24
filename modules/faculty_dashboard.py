@@ -4,7 +4,7 @@ from database import get_connection
 
 
 def get_faculty_summary():
-    """Return student exam totals, attendance and assessment status."""
+    """Return student attendance, subject-level exam marks and assessment status."""
     conn = get_connection()
     try:
         students = conn.execute(
@@ -12,10 +12,6 @@ def get_faculty_summary():
             SELECT
                 s.student_id, s.name, s.semester, s.section,
                 attendance.attendance_pct,
-                midterm.marks_obtained AS midterm_obtained,
-                midterm.max_marks AS midterm_max,
-                endterm.marks_obtained AS endterm_obtained,
-                endterm.max_marks AS endterm_max,
                 assessments.total_items,
                 assessments.submitted_items
             FROM students AS s
@@ -25,20 +21,6 @@ def get_faculty_summary():
                     NULLIF(SUM(total_classes), 0) AS attendance_pct
                 FROM attendance GROUP BY student_id
             ) AS attendance ON attendance.student_id = s.student_id
-            LEFT JOIN (
-                SELECT student_id,
-                    SUM(marks_obtained) AS marks_obtained,
-                    SUM(max_marks) AS max_marks
-                FROM marks WHERE lower(trim(exam_name)) = 'midterm'
-                GROUP BY student_id
-            ) AS midterm ON midterm.student_id = s.student_id
-            LEFT JOIN (
-                SELECT student_id,
-                    SUM(marks_obtained) AS marks_obtained,
-                    SUM(max_marks) AS max_marks
-                FROM marks WHERE lower(trim(exam_name)) IN ('end term', 'end-term', 'endterm')
-                GROUP BY student_id
-            ) AS endterm ON endterm.student_id = s.student_id
             LEFT JOIN (
                 SELECT s.student_id,
                     COUNT(ai.assessment_id) AS total_items,
@@ -54,48 +36,84 @@ def get_faculty_summary():
             """
         ).fetchall()
 
+        mark_rows = conn.execute(
+            """
+            SELECT m.student_id, subject.subject_name,
+                   CASE
+                       WHEN lower(trim(m.exam_name)) = 'midterm' THEN 'midterm'
+                       WHEN lower(trim(m.exam_name)) IN ('end term', 'end-term', 'endterm')
+                           THEN 'endterm'
+                   END AS exam_type,
+                   SUM(m.marks_obtained) AS marks_obtained,
+                   SUM(m.max_marks) AS max_marks
+            FROM marks AS m
+            JOIN subjects AS subject ON subject.subject_id = m.subject_id
+            WHERE lower(trim(m.exam_name)) = 'midterm'
+               OR lower(trim(m.exam_name)) IN ('end term', 'end-term', 'endterm')
+            GROUP BY m.student_id, m.subject_id, exam_type
+            ORDER BY subject.subject_name
+            """
+        ).fetchall()
+
         records = [dict(row) for row in students]
+        by_student = {student["student_id"]: student for student in records}
+        for student in records:
+            student["midterm_results"] = []
+            student["endterm_results"] = []
+
+        for row in mark_rows:
+            student = by_student.get(row["student_id"])
+            if student is None or not row["max_marks"]:
+                continue
+            result = {
+                "subject_name": row["subject_name"],
+                "marks_obtained": row["marks_obtained"],
+                "max_marks": row["max_marks"],
+                "percentage": 100.0 * row["marks_obtained"] / row["max_marks"],
+            }
+            key = "midterm_results" if row["exam_type"] == "midterm" else "endterm_results"
+            student[key].append(result)
+
         for student in records:
             attendance = student["attendance_pct"]
+            student["midterm_low"] = any(
+                result["percentage"] < 50 for result in student["midterm_results"]
+            )
+            student["endterm_low"] = any(
+                result["percentage"] < 50 for result in student["endterm_results"]
+            )
             student["data_complete"] = (
                 attendance is not None
-                and student["midterm_max"] is not None
-                and student["endterm_max"] is not None
+                and bool(student["midterm_results"])
+                and bool(student["endterm_results"])
             )
             student["rule_flags"] = []
             if attendance is not None and attendance < 75:
                 student["rule_flags"].append("Attendance below 75%")
-            if student["midterm_max"] and (
-                student["midterm_obtained"] / student["midterm_max"] < 0.5
-            ):
-                student["rule_flags"].append("Midterm marks below 50%")
-            if student["endterm_max"] and (
-                student["endterm_obtained"] / student["endterm_max"] < 0.5
-            ):
-                student["rule_flags"].append("End Term marks below 50%")
+            if student["midterm_low"]:
+                student["rule_flags"].append("Midterm marks below 50% in one or more subjects")
+            if student["endterm_low"]:
+                student["rule_flags"].append("End Term marks below 50% in one or more subjects")
             total_items = student["total_items"] or 0
             submitted_items = student["submitted_items"] or 0
             student["pending_assessments"] = total_items - submitted_items
             if student["pending_assessments"] > 0:
                 student["rule_flags"].append("Assessments pending")
 
-        complete = [s for s in records if s["data_complete"]]
+        complete = [student for student in records if student["data_complete"]]
         return {
             "students": records,
             "total_students": len(records),
             "incomplete_records": len(records) - len(complete),
             "low_attendance": sum(
-                1 for s in records
-                if s["attendance_pct"] is not None and s["attendance_pct"] < 75
+                1 for student in records
+                if student["attendance_pct"] is not None and student["attendance_pct"] < 75
             ),
             "low_marks": sum(
-                1 for s in records
-                if any(flag in s["rule_flags"] for flag in (
-                    "Midterm marks below 50%", "End Term marks below 50%"
-                ))
+                1 for student in records if student["midterm_low"] or student["endterm_low"]
             ),
             "incomplete_assignments": sum(
-                1 for s in records if s["pending_assessments"] > 0
+                1 for student in records if student["pending_assessments"] > 0
             ),
         }
     finally:

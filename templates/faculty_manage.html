@@ -143,30 +143,32 @@
       <div class="table-responsive" id="saved-marks-wrap">
         <h3 class="h6">Saved exam marks</h3>
         <table class="table table-sm table-striped align-middle">
-          <thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>Date</th></tr></thead>
+          <thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Marks</th><th>Date</th><th>Action</th></tr></thead>
           <tbody id="saved-marks-body">
           {% for record in saved_marks %}
             <tr class="saved-record-row" data-type="marks" data-search="{{ (record.student_name ~ ' ' ~ record.subject_name ~ ' ' ~ record.exam_name)|lower }}">
               <td>{{ record.student_name }} <span class="text-secondary small">(#{{ record.student_id }})</span></td>
               <td>{{ record.subject_name }}</td><td>{{ record.exam_name }}</td>
               <td>{{ "%.1f"|format(record.marks_obtained) }} / {{ "%.1f"|format(record.max_marks) }}</td><td>{{ record.exam_date or "—" }}</td>
+              <td><button type="button" class="btn btn-sm btn-outline-primary load-saved-marks" data-student-id="{{ record.student_id }}" data-student-name="{{ record.student_name }}" data-subject-id="{{ record.subject_id }}" data-subject-name="{{ record.subject_name }}" data-exam="{{ record.exam_name }}" data-obtained="{{ record.marks_obtained }}" data-maximum="{{ record.max_marks }}">Load into form</button></td>
             </tr>
-          {% else %}<tr><td colspan="5" class="text-secondary text-center">No exam marks have been saved yet.</td></tr>{% endfor %}
+          {% else %}<tr><td colspan="6" class="text-secondary text-center">No exam marks have been saved yet.</td></tr>{% endfor %}
           </tbody>
         </table>
       </div>
       <div class="table-responsive mt-3" id="saved-attendance-wrap">
         <h3 class="h6">Saved attendance</h3>
         <table class="table table-sm table-striped align-middle">
-          <thead><tr><th>Student</th><th>Subject</th><th>Attended</th><th>Total classes</th><th>Attendance</th></tr></thead>
+          <thead><tr><th>Student</th><th>Subject</th><th>Attended</th><th>Total classes</th><th>Attendance</th><th>Action</th></tr></thead>
           <tbody id="saved-attendance-body">
           {% for record in saved_attendance %}
             <tr class="saved-record-row" data-type="attendance" data-search="{{ (record.student_name ~ ' ' ~ record.subject_name)|lower }}">
               <td>{{ record.student_name }} <span class="text-secondary small">(#{{ record.student_id }})</span></td>
               <td>{{ record.subject_name }}</td><td>{{ record.attended_classes }}</td><td>{{ record.total_classes }}</td>
               <td>{{ "%.1f"|format(100 * record.attended_classes / record.total_classes) }}%</td>
+              <td><button type="button" class="btn btn-sm btn-outline-primary load-saved-attendance" data-student-id="{{ record.student_id }}" data-student-name="{{ record.student_name }}" data-subject-id="{{ record.subject_id }}" data-subject-name="{{ record.subject_name }}" data-attended="{{ record.attended_classes }}" data-total="{{ record.total_classes }}">Load into form</button></td>
             </tr>
-          {% else %}<tr><td colspan="5" class="text-secondary text-center">No attendance records have been saved yet.</td></tr>{% endfor %}
+          {% else %}<tr><td colspan="6" class="text-secondary text-center">No attendance records have been saved yet.</td></tr>{% endfor %}
           </tbody>
         </table>
       </div>
@@ -199,6 +201,33 @@
   typeFilter.addEventListener("change", filterSavedRecords);
   search.addEventListener("input", filterSavedRecords);
   filterSavedRecords();
+
+  function chooseStudent(searchId, hiddenId, studentId, studentName) {
+    const searchInput = document.getElementById(searchId);
+    const hiddenInput = document.getElementById(hiddenId);
+    searchInput.value = `${studentName} (ID ${studentId})`;
+    hiddenInput.value = studentId;
+    searchInput.setCustomValidity("");
+  }
+  document.querySelectorAll(".load-saved-marks").forEach((button) => {
+    button.addEventListener("click", () => {
+      chooseStudent("marks-student-search", "marks-student", button.dataset.studentId, button.dataset.studentName);
+      document.getElementById("marks-subject").value = button.dataset.subjectId;
+      document.getElementById("exam-name").value = button.dataset.exam;
+      document.getElementById("marks-obtained").value = button.dataset.obtained;
+      document.getElementById("max-marks").value = button.dataset.maximum;
+      document.getElementById("marks-student-search").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
+  document.querySelectorAll(".load-saved-attendance").forEach((button) => {
+    button.addEventListener("click", () => {
+      chooseStudent("attendance-student-search", "attendance-student", button.dataset.studentId, button.dataset.studentName);
+      document.getElementById("attendance-subject").value = button.dataset.subjectId;
+      document.getElementById("attended-classes").value = button.dataset.attended;
+      document.getElementById("total-classes").value = button.dataset.total;
+      document.getElementById("attendance-student-search").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
 })();
 </script>
 

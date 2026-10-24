@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,7 +16,7 @@ class TestDatabaseInitialization(unittest.TestCase):
 
             # Simulate a database created before the newer optional columns
             # were added. Keep the columns used by current indexes intact.
-            with sqlite3.connect(db_path) as connection:
+            with closing(sqlite3.connect(db_path)) as connection:
                 connection.executescript(
                     """
                     CREATE TABLE students (
@@ -56,7 +57,7 @@ class TestDatabaseInitialization(unittest.TestCase):
             ):
                 database.initialize_database()
 
-            with sqlite3.connect(db_path) as connection:
+            with closing(sqlite3.connect(db_path)) as connection:
                 student_columns = {
                     row[1] for row in connection.execute("PRAGMA table_info(students)")
                 }

@@ -120,6 +120,36 @@ class TestFacultyRoutes(unittest.TestCase):
             ).fetchall()
         self.assertEqual(rows, [(1, 0), (2, 0)])
 
+
+    def test_edit_student_updates_existing_record(self):
+        response = self.client.post("/faculty/manage", data={
+            "action": "edit_student",
+            "student_id": "1",
+            "name": "Updated Student",
+            "semester": "4",
+            "section": "B",
+            "email": "updated@example.edu",
+        })
+        self.assertEqual(response.status_code, 200)
+        with sqlite3.connect(self.db_path) as connection:
+            row = connection.execute(
+                "SELECT name, semester, section FROM students WHERE student_id = 1"
+            ).fetchone()
+        self.assertEqual(row, ("Updated Student", 4, "B"))
+
+    def test_subject_can_be_added(self):
+        response = self.client.post("/faculty/manage", data={
+            "action": "create_subject",
+            "subject_name": "Database Systems",
+            "subject_code": "DBMS",
+        })
+        self.assertEqual(response.status_code, 200)
+        with sqlite3.connect(self.db_path) as connection:
+            row = connection.execute(
+                "SELECT subject_name FROM subjects WHERE subject_code = 'DBMS'"
+            ).fetchone()
+        self.assertEqual(row, ("Database Systems",))
+
     def test_submission_status_can_be_updated(self):
         response = self.client.post("/faculty/manage", data={
             "action": "save_submission",

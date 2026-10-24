@@ -1,0 +1,49 @@
+name: Python and C tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up MSYS2 GCC
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Build C DLL
+        shell: msys2 {0}
+        run: gcc -std=c11 -Wall -Wextra -Wpedantic -DCORE_BUILD_DLL -shared c_core/core.c -o c_core/core.dll
+
+      - name: Create disposable demo data for model tests
+        run: python seed_data.py
+
+      - name: Run Python tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build and run C tests
+        shell: msys2 {0}
+        run: |
+          gcc -std=c11 -Wall -Wextra -Wpedantic c_core/core.c c_core/test_core.c -o c_core/test_core.exe
+          ./c_core/test_core.exe

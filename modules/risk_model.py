@@ -37,22 +37,55 @@ def _load_student_data():
     try:
         data = pd.read_sql_query(
             """
+            WITH attendance_by_student AS (
+                SELECT student_id,
+                    100.0 * SUM(attended_classes) /
+                    NULLIF(SUM(total_classes), 0) AS attendance_pct
+                FROM attendance
+                GROUP BY student_id
+            ),
+            marks_by_student AS (
+                SELECT student_id,
+                    100.0 * AVG(marks_obtained / NULLIF(max_marks, 0))
+                        AS average_marks_pct
+                FROM marks
+                GROUP BY student_id
+            ),
+            legacy_assignment_ratio AS (
+                SELECT student_id,
+                    1.0 * AVG(submitted) AS submission_ratio
+                FROM assignments
+                GROUP BY student_id
+            ),
+            assessment_submission_ratio AS (
+                SELECT s.student_id,
+                    1.0 * SUM(COALESCE(ss.submitted, 0)) /
+                    NULLIF(COUNT(ai.assessment_id), 0) AS submission_ratio
+                FROM students AS s
+                CROSS JOIN assessment_items AS ai
+                LEFT JOIN assessment_submissions AS ss
+                    ON ss.assessment_id = ai.assessment_id
+                    AND ss.student_id = s.student_id
+                GROUP BY s.student_id
+            )
             SELECT
                 s.student_id,
                 s.name,
-                100.0 * SUM(a.attended_classes) / NULLIF(SUM(a.total_classes), 0)
-                    AS attendance_pct,
-                100.0 * AVG(m.marks_obtained / NULLIF(m.max_marks, 0))
-                    AS average_marks_pct,
-                1.0 * AVG(x.submitted)
-                    AS assignment_submission_ratio
+                attendance.attendance_pct,
+                marks.average_marks_pct,
+                COALESCE(
+                    assessments.submission_ratio,
+                    legacy.submission_ratio
+                ) AS assignment_submission_ratio
             FROM students AS s
-            LEFT JOIN attendance AS a
-                ON a.student_id = s.student_id
-            LEFT JOIN marks AS m
-                ON m.student_id = s.student_id
-            LEFT JOIN assignments AS x
-                ON x.student_id = s.student_id
+            LEFT JOIN attendance_by_student AS attendance
+                ON attendance.student_id = s.student_id
+            LEFT JOIN marks_by_student AS marks
+                ON marks.student_id = s.student_id
+            LEFT JOIN assessment_submission_ratio AS assessments
+                ON assessments.student_id = s.student_id
+            LEFT JOIN legacy_assignment_ratio AS legacy
+                ON legacy.student_id = s.student_id
             GROUP BY s.student_id, s.name
             """,
             conn,

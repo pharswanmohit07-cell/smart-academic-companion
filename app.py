@@ -160,10 +160,10 @@ def classrooms():
                 try:
                     results, summary = find_rooms(day, start, end)
                 except sqlite3.OperationalError:
-                    error = "Database not ready. Run: python seed_data.py"
+                    error = "Database tables are not ready. Run: python database.py. Only use seed_data.py for disposable demo data because it clears existing records."
                 else:
                     if not results:
-                        error = "No timetable found. Run: python seed_data.py"
+                        error = "No timetable entries found. Add timetable data, or use seed_data.py only for disposable demo data because it clears existing records."
 
     return render_template(
         "classrooms.html",
@@ -189,9 +189,16 @@ def faculty_manage():
                     email = request.form.get("email", "").strip() or None
                     if not name or semester < 1 or not section:
                         raise ValueError("Enter a name, valid semester and section.")
-                    conn.execute(
+                    cursor = conn.execute(
                         "INSERT INTO students (name, email, semester, section) VALUES (?, ?, ?, ?)",
                         (name, email, semester, section),
+                    )
+                    student_id = cursor.lastrowid
+                    conn.execute(
+                        """INSERT INTO assessment_submissions
+                           (assessment_id, student_id, submitted)
+                           SELECT assessment_id, ?, 0 FROM assessment_items""",
+                        (student_id,),
                     )
                     message = "Student added successfully."
 

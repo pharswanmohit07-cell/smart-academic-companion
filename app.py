@@ -340,7 +340,7 @@ def faculty_manage():
                ORDER BY ai.assessment_type, ai.title, s.name"""
         ).fetchall()]
         saved_marks = [dict(row) for row in conn.execute(
-            """SELECT m.student_id, s.name AS student_name, sub.subject_name,
+            """SELECT m.student_id, s.name AS student_name, m.subject_id, sub.subject_name,
                       m.exam_name, m.marks_obtained, m.max_marks, m.exam_date
                FROM marks m
                JOIN students s ON s.student_id = m.student_id
@@ -348,7 +348,7 @@ def faculty_manage():
                ORDER BY s.name, sub.subject_name, m.exam_name"""
         ).fetchall()]
         saved_attendance = [dict(row) for row in conn.execute(
-            """SELECT a.student_id, s.name AS student_name, sub.subject_name,
+            """SELECT a.student_id, s.name AS student_name, a.subject_id, sub.subject_name,
                       a.attended_classes, a.total_classes
                FROM attendance a
                JOIN students s ON s.student_id = a.student_id

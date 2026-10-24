@@ -20,6 +20,35 @@ class TestClassroomRoute(unittest.TestCase):
             response.data,
         )
 
+    def test_empty_timetable_shows_safe_seed_data_warning(self):
+        from unittest.mock import patch
+
+        with patch("app.CLASSROOM_ERROR", None), patch(
+            "app.find_rooms", return_value=([], None)
+        ):
+            response = self.client.post(
+                "/classrooms",
+                data={"day": "1", "start": "10:00", "end": "11:00"},
+            )
+
+        self.assertIn(b"No timetable entries found.", response.data)
+        self.assertIn(b"it clears existing records", response.data)
+
+    def test_database_error_does_not_recommend_destructive_seed_as_default(self):
+        import sqlite3
+        from unittest.mock import patch
+
+        with patch("app.CLASSROOM_ERROR", None), patch(
+            "app.find_rooms", side_effect=sqlite3.OperationalError("no such table")
+        ):
+            response = self.client.post(
+                "/classrooms",
+                data={"day": "1", "start": "10:00", "end": "11:00"},
+            )
+
+        self.assertIn(b"Run: python database.py", response.data)
+        self.assertIn(b"disposable demo data", response.data)
+
 
 if __name__ == "__main__":
     unittest.main()

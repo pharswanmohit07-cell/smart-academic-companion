@@ -72,7 +72,7 @@ class TestFacultyDashboard(unittest.TestCase):
         summary = get_faculty_summary()
         student = summary["students"][0]
 
-        self.assertIn("Midterm marks below 50%", student["rule_flags"])
+        self.assertIn("Midterm marks below 50% in one or more subjects", student["rule_flags"])
         self.assertEqual(
             {
                 result["subject_name"]: result["percentage"]

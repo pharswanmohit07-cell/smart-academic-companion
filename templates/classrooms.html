@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% macro time12(value) -%}
+  {%- set parts = value.split(':') -%}
+  {%- set hour = parts[0]|int -%}
+  {%- set suffix = 'AM' if hour < 12 else 'PM' -%}
+  {{ (12 if hour % 12 == 0 else hour % 12) }}:{{ parts[1] }} {{ suffix }}
+{%- endmacro %}
 <div class="card shadow-sm mb-4">
   <div class="card-body p-4">
     <h1 class="h3 mb-1">Empty Classroom Finder</h1>
@@ -39,14 +45,14 @@
 {% if results %}
 <div class="alert alert-info">
   <strong>{{ summary.free_count }} of {{ summary.room_count }}</strong> rooms are free on
-  {{ days[form.day|int] }} from {{ form.start }} to {{ form.end }}.
+  {{ days[form.day|int] }} from {{ time12(form.start) }} to {{ time12(form.end) }}.
   Timetable clash check for this day: <strong>{{ summary.clash_count }}</strong> clashes.
 </div>
 
 <div class="table-responsive">
   <table class="table table-striped align-middle">
     <thead>
-      <tr><th>Room</th><th>Status</th><th>Free slots (09:00–18:00)</th></tr>
+      <tr><th>Room</th><th>Status</th><th>Free slots (9:00 AM–6:00 PM)</th></tr>
     </thead>
     <tbody>
       {% for row in results %}
@@ -57,7 +63,7 @@
           {% else %}<span class="badge bg-secondary">Busy</span>{% endif %}
         </td>
         <td>
-          {% for slot in row.slots %}{{ slot[0] }}–{{ slot[1] }}{% if not loop.last %}, {% endif %}{% else %}No free time{% endfor %}
+          {% for slot in row.slots %}{{ time12(slot[0]) }}–{{ time12(slot[1]) }}{% if not loop.last %}, {% endif %}{% else %}No free time{% endfor %}
         </td>
       </tr>
       {% endfor %}

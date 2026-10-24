@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -19,7 +20,7 @@ class TestFacultyRoutes(unittest.TestCase):
         app_module.app.config.update(TESTING=True)
         self.client = app_module.app.test_client()
 
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             connection.execute(
                 "INSERT INTO students (name, email) VALUES (?, ?)",
                 ("Existing Student", "existing@example.edu"),
@@ -55,7 +56,7 @@ class TestFacultyRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Student added successfully.", response.data)
 
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             row = connection.execute(
                 """SELECT submitted FROM assessment_submissions
                    WHERE assessment_id = 1 AND student_id = 2"""
@@ -71,7 +72,7 @@ class TestFacultyRoutes(unittest.TestCase):
             "attended_classes": "0",
         })
         self.assertEqual(response.status_code, 200)
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
         self.assertEqual(count, 0)
 
@@ -89,7 +90,7 @@ class TestFacultyRoutes(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             rows = connection.execute(
                 """SELECT marks_obtained FROM marks
                    WHERE student_id = 1 AND subject_id = 1 AND exam_name = 'Midterm'"""
@@ -97,7 +98,7 @@ class TestFacultyRoutes(unittest.TestCase):
         self.assertEqual(rows, [(72.0,)])
 
     def test_new_assessment_creates_pending_rows_for_all_students(self):
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             connection.execute(
                 "INSERT INTO students (name, email) VALUES (?, ?)",
                 ("Second Student", "second@example.edu"),
@@ -113,7 +114,7 @@ class TestFacultyRoutes(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
 
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             rows = connection.execute(
                 """SELECT student_id, submitted FROM assessment_submissions
                    WHERE assessment_id = 2 ORDER BY student_id"""
@@ -131,7 +132,7 @@ class TestFacultyRoutes(unittest.TestCase):
             "email": "updated@example.edu",
         })
         self.assertEqual(response.status_code, 200)
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             row = connection.execute(
                 "SELECT name, semester, section FROM students WHERE student_id = 1"
             ).fetchone()
@@ -144,7 +145,7 @@ class TestFacultyRoutes(unittest.TestCase):
             "subject_code": "DBMS",
         })
         self.assertEqual(response.status_code, 200)
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             row = connection.execute(
                 "SELECT subject_name FROM subjects WHERE subject_code = 'DBMS'"
             ).fetchone()
@@ -158,7 +159,7 @@ class TestFacultyRoutes(unittest.TestCase):
             "submitted": "1",
         })
         self.assertEqual(response.status_code, 200)
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             row = connection.execute(
                 """SELECT submitted FROM assessment_submissions
                    WHERE assessment_id = 1 AND student_id = 1"""

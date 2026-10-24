@@ -60,18 +60,25 @@ def find_rooms(day, start, end):
         for r in rows
     ]
 
+    with closing(get_connection()) as conn:
+        locations = {
+            row["room_number"]: dict(row)
+            for row in conn.execute(
+                "SELECT room_number, building, floor, room_type FROM room_locations"
+            ).fetchall()
+        }
+
     results = []
     for room in sorted({b["room"] for b in bookings}):
-        slots = classroom.find_free_slots(
-            bookings, room, day, DAY_START, DAY_END
-        )
+        is_free = classroom.is_room_free(bookings, room, day, start, end)
+        if not is_free:
+            continue
+        location = locations.get(room, {})
         results.append({
             "room": room,
-            "free": classroom.is_room_free(bookings, room, day, start, end),
-            "slots": [
-                (to_hhmm(s["start_minute"]), to_hhmm(s["end_minute"]))
-                for s in slots
-            ],
+            "building": location.get("building") or "Not set",
+            "floor": location.get("floor") or "Not set",
+            "room_type": location.get("room_type") or ("Laboratory" if room.upper().startswith("LAB") else "Classroom"),
         })
 
     clashes = classroom.detect_clashes(bookings, day)

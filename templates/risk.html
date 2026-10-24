@@ -14,12 +14,6 @@
 </div>
 <div class="card shadow-sm"><div class="card-body">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Student academic overview</h2><span class="small text-muted" id="student-result-count" aria-live="polite">Showing {{ summary.total_students }} of {{ summary.total_students }} students</span></div>
-  {% set subject_names = namespace(items=[]) %}
-  {% for student in summary.students %}
-    {% for result in student.midterm_results + student.endterm_results %}
-      {% if result.subject_name not in subject_names.items %}{% set subject_names.items = subject_names.items + [result.subject_name] %}{% endif %}
-    {% endfor %}
-  {% endfor %}
   <div class="row g-2 mb-3">
     <div class="col-12 col-md-5"><label for="student-search" class="form-label">Search students</label><input type="search" class="form-control" id="student-search" placeholder="Enter student name or ID" autocomplete="off"></div>
     <div class="col-12 col-md-4"><label for="issue-filter" class="form-label">Filter students</label><select class="form-select" id="issue-filter">
@@ -29,7 +23,7 @@
     <div class="col-12 d-flex justify-content-end"><button type="button" class="btn btn-outline-secondary btn-sm" id="clear-filters">Clear filters</button></div>
   </div>
   <div class="table-responsive"><table class="table table-striped table-hover align-middle" id="student-table">
-    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="midterm-subject-filter" aria-label="Filter midterm marks by subject"><option value="all">All subjects</option>{% for subject_name in subject_names.items|sort %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>End Term marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="endterm-subject-filter" aria-label="Filter end term marks by subject"><option value="all">All subjects</option>{% for subject_name in subject_names.items|sort %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>Pending assessments</th><th>Attention needed</th></tr></thead>
+    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="midterm-subject-filter" aria-label="Filter midterm marks by subject"><option value="all">All subjects</option>{% for subject_name in summary.subject_names %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>End Term marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="endterm-subject-filter" aria-label="Filter end term marks by subject"><option value="all">All subjects</option>{% for subject_name in subject_names.items|sort %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>Pending assessments</th><th>Attention needed</th></tr></thead>
     <tbody id="student-table-body">
     {% for student in summary.students %}
       <tr class="student-row"

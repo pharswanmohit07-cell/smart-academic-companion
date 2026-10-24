@@ -97,6 +97,39 @@ class TestFacultyRoutes(unittest.TestCase):
             ).fetchall()
         self.assertEqual(rows, [(72.0,)])
 
+
+    def test_marks_above_maximum_are_not_saved(self):
+        response = self.client.post("/faculty/manage", data={
+            "action": "save_marks",
+            "student_id": "1",
+            "subject_id": "1",
+            "exam_name": "Midterm",
+            "marks_obtained": "101",
+            "max_marks": "100",
+        })
+        self.assertEqual(response.status_code, 200)
+        with closing(sqlite3.connect(self.db_path)) as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM marks WHERE student_id = 1"
+            ).fetchone()[0]
+        self.assertEqual(count, 0)
+
+    def test_duplicate_assessment_is_rejected_without_duplicate_rows(self):
+        response = self.client.post("/faculty/manage", data={
+            "action": "create_assessment",
+            "subject_id": "1",
+            "assessment_type": "assignment",
+            "title": "Existing Assignment",
+            "due_date": "",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"That assessment title already exists", response.data)
+        with closing(sqlite3.connect(self.db_path)) as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM assessment_items WHERE title = 'Existing Assignment'"
+            ).fetchone()[0]
+        self.assertEqual(count, 1)
+
     def test_new_assessment_creates_pending_rows_for_all_students(self):
         with closing(sqlite3.connect(self.db_path)) as connection:
             connection.execute(

@@ -22,21 +22,21 @@
     <div class="col-12 d-flex justify-content-end"><button type="button" class="btn btn-outline-secondary btn-sm" id="clear-filters">Clear filters</button></div>
   </div>
   <div class="table-responsive"><table class="table table-striped table-hover align-middle" id="student-table">
-    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks</th><th>End Term marks</th><th>Pending assessments</th><th>Attention needed</th></tr></thead>
+    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks by subject</th><th>End Term marks by subject</th><th>Pending assessments</th><th>Attention needed</th></tr></thead>
     <tbody id="student-table-body">
     {% for student in summary.students %}
       <tr class="student-row"
         data-search="{{ (student.name ~ ' ' ~ student.student_id)|lower }}"
         data-attendance="{{ '1' if student.attendance_pct is not none and student.attendance_pct < 75 else '0' }}"
-        data-midterm="{{ '1' if student.midterm_max and student.midterm_obtained / student.midterm_max < 0.5 else '0' }}"
-        data-endterm="{{ '1' if student.endterm_max and student.endterm_obtained / student.endterm_max < 0.5 else '0' }}"
+        data-midterm="{{ '1' if student.midterm_low else '0' }}"
+        data-endterm="{{ '1' if student.endterm_low else '0' }}"
         data-pending="{{ '1' if student.pending_assessments > 0 else '0' }}"
         data-incomplete="{{ '0' if student.data_complete else '1' }}"
         data-issue-count="{{ student.rule_flags|length }}">
         <td>{{ student.student_id }}</td><td>{{ student.name }}</td><td>{{ student.semester or "—" }}</td><td>{{ student.section or "—" }}</td>
         <td>{% if student.attendance_pct is not none %}{{ "%.1f"|format(student.attendance_pct) }}%{% else %}<span class="text-muted">Not recorded</span>{% endif %}</td>
-        <td>{% if student.midterm_max %}{{ "%.1f"|format(student.midterm_obtained) }} / {{ "%.1f"|format(student.midterm_max) }}{% else %}<span class="text-muted">Not recorded</span>{% endif %}</td>
-        <td>{% if student.endterm_max %}{{ "%.1f"|format(student.endterm_obtained) }} / {{ "%.1f"|format(student.endterm_max) }}{% else %}<span class="text-muted">Not recorded</span>{% endif %}</td>
+        <td>{% for result in student.midterm_results %}<div>{{ result.subject_name }}: {{ "%.1f"|format(result.marks_obtained) }} / {{ "%.1f"|format(result.max_marks) }} <span class="text-muted">({{ "%.1f"|format(result.percentage) }}%)</span></div>{% else %}<span class="text-muted">Not recorded</span>{% endfor %}</td>
+        <td>{% for result in student.endterm_results %}<div>{{ result.subject_name }}: {{ "%.1f"|format(result.marks_obtained) }} / {{ "%.1f"|format(result.max_marks) }} <span class="text-muted">({{ "%.1f"|format(result.percentage) }}%)</span></div>{% else %}<span class="text-muted">Not recorded</span>{% endfor %}</td>
         <td>{% if student.pending_assessments %}{{ student.pending_assessments }}{% else %}0{% endif %}</td>
         <td>{% if not student.data_complete %}<span class="badge text-bg-secondary">Incomplete data</span>{% endif %}
           {% if student.rule_flags %}{% for flag in student.rule_flags %}<span class="badge text-bg-warning mb-1">{{ flag }}</span> {% endfor %}{% elif student.data_complete %}<span class="badge text-bg-success">No rule-based flag</span>{% endif %}

@@ -89,7 +89,8 @@ def _load_student_data():
             GROUP BY s.student_id, s.name
             """,
             conn,
-        )    finally:
+        )
+    finally:
         conn.close()
 
     # Students with no attendance/marks/assignment rows cannot be scored.

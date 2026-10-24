@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS timetable (
     CHECK (start_time < end_time)
 );
 
+CREATE TABLE IF NOT EXISTS room_locations (
+    room_number TEXT PRIMARY KEY,
+    building TEXT NOT NULL DEFAULT '',
+    floor TEXT NOT NULL DEFAULT '',
+    room_type TEXT NOT NULL DEFAULT ''
+);
+
 CREATE TABLE IF NOT EXISTS assignments (
     assignment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,

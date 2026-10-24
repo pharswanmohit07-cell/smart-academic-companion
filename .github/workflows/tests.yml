@@ -32,6 +32,9 @@ jobs:
         shell: msys2 {0}
         run: gcc -std=c11 -Wall -Wextra -Wpedantic -DCORE_BUILD_DLL -shared c_core/core.c -o c_core/core.dll
 
+      - name: Create disposable demo data for model tests
+        run: python seed_data.py
+
       - name: Run Python tests
         run: python -m unittest discover -s tests -v
 

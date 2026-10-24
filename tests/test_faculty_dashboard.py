@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -16,7 +17,7 @@ class TestFacultyDashboard(unittest.TestCase):
         self.database_patch.start()
         database.initialize_database()
 
-        with sqlite3.connect(self.db_path) as connection:
+        with closing(sqlite3.connect(self.db_path)) as connection:
             connection.execute(
                 "INSERT INTO students (name, email) VALUES (?, ?)",
                 ("Test Student", "test@example.edu"),

@@ -44,28 +44,27 @@
 
 {% if results %}
 <div class="alert alert-info">
-  <strong>{{ summary.free_count }} of {{ summary.room_count }}</strong> rooms are free on
-  {{ days[form.day|int] }} from {{ time12(form.start) }} to {{ time12(form.end) }}.
-  Timetable clash check for this day: <strong>{{ summary.clash_count }}</strong> clashes.
+  <strong>{{ summary.free_count }}</strong> rooms are available on {{ days[form.day|int] }}
+  from {{ time12(form.start) }} to {{ time12(form.end) }}.
+  <span class="ms-2">Timetable clashes: <strong>{{ summary.clash_count }}</strong></span>
 </div>
 
 <div class="table-responsive">
-  <table class="table table-striped align-middle">
+  <table class="table table-striped align-middle mb-0">
     <thead>
-      <tr><th>Room</th><th>Status</th><th>Free slots (9:00 AM–6:00 PM)</th></tr>
+      <tr><th>Room</th><th>Type</th><th>Building / Block</th><th>Floor</th><th>Availability</th></tr>
     </thead>
     <tbody>
       {% for row in results %}
       <tr>
-        <td>{{ row.room }}</td>
-        <td>
-          {% if row.free %}<span class="badge bg-success">Free</span>
-          {% else %}<span class="badge bg-secondary">Busy</span>{% endif %}
-        </td>
-        <td>
-          {% for slot in row.slots %}{{ time12(slot[0]) }}–{{ time12(slot[1]) }}{% if not loop.last %}, {% endif %}{% else %}No free time{% endfor %}
-        </td>
+        <td class="fw-semibold">{{ row.room }}</td>
+        <td>{{ row.room_type }}</td>
+        <td>{{ row.building }}</td>
+        <td>{{ row.floor }}</td>
+        <td><span class="badge bg-success">Available</span></td>
       </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-center text-muted py-4">No rooms are available for this time window.</td></tr>
       {% endfor %}
     </tbody>
   </table>

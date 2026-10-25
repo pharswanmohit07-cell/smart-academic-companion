@@ -28,7 +28,7 @@ The repository is a learning project that combines web development, database des
 - **Sample academic data**
   - A deterministic seed script creates sample students, subjects, attendance, marks, assignments, exams, and timetable entries.
 - **Automated tests**
-  - Python unit tests for attendance calculations and classroom wrapper behavior.
+  - Python unit tests for attendance calculations, classroom wrapper behavior, routes, database initialization, faculty workflows, and risk-model behavior.
   - C assertion-based tests for the core scheduling utilities.
 
 ## Tech stack
@@ -47,21 +47,36 @@ The repository is a learning project that combines web development, database des
 
 ```text
 smart-academic-companion/
-├── app.py                         # Flask application
+├── app.py                         # Flask application and routes
 ├── attendance_calculator.py       # Attendance calculations
 ├── database.py                    # SQLite connection and initialization
 ├── schema.sql                     # Database schema
 ├── seed_data.py                   # Generates sample academic data
 ├── requirements.txt               # Python dependencies
 ├── modules/
-│   └── classroom.py               # ctypes wrapper for the C classroom core
+│   ├── classroom.py               # ctypes wrapper for the C classroom core
+│   ├── faculty_dashboard.py       # Faculty dashboard data and summaries
+│   └── risk_model.py              # Demonstration academic risk model
 ├── c_core/
 │   ├── core.h                     # C structs and public declarations
 │   ├── core.c                     # C implementation
 │   └── test_core.c                # C assertion tests
+├── templates/
+│   ├── base.html                  # Shared page layout
+│   ├── attendance.html            # Attendance calculator page
+│   ├── classrooms.html             # Classroom finder page
+│   ├── faculty_manage.html        # Faculty record management page
+│   └── risk.html                  # Faculty dashboard page
 └── tests/
+    ├── test_app_routes.py
     ├── test_attendance_calculator.py
-    └── test_classroom.py
+    ├── test_classroom.py
+    ├── test_classroom_free_slots.py
+    ├── test_database.py
+    ├── test_faculty_dashboard.py
+    ├── test_faculty_routes.py
+    ├── test_risk_model.py
+    └── test_risk_model_database.py
 ```
 
 ## Requirements
@@ -78,10 +93,10 @@ Open PowerShell in the repository folder.
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\\.venv\\Scripts\\Activate.ps1
 ```
 
-If PowerShell blocks activation, you can run the environment's Python directly with `.venv\Scripts\python.exe`.
+If PowerShell blocks activation, you can run the environment's Python directly with `.venv\\Scripts\\python.exe`.
 
 ### 2. Install Python dependencies
 
@@ -104,7 +119,7 @@ To build and run the standalone C tests:
 
 ```powershell
 gcc -std=c11 -Wall -Wextra -Wpedantic c_core/core.c c_core/test_core.c -o c_core/test_core.exe
-.\c_core\test_core.exe
+.\\c_core\\test_core.exe
 ```
 
 ### 4. Initialize the database

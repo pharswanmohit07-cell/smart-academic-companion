@@ -2,7 +2,7 @@
 import sqlite3
 from contextlib import closing
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, render_template, request
 
 from attendance_calculator import classes_needed, classes_missable
 from database import get_connection, initialize_database

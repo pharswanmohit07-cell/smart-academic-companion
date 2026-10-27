@@ -223,29 +223,6 @@ def faculty_manage():
                     )
                     message = "Student details updated."
 
-                elif action == "save_room_location":
-                    room_number = request.form.get("room_number", "").strip()
-                    building = request.form.get("building", "").strip()
-                    floor = request.form.get("floor", "").strip()
-                    room_type = request.form.get("room_type", "").strip()
-                    if not room_number or not building or not floor or room_type not in ("Classroom", "Laboratory", "Lecture theatre", "Other"):
-                        raise ValueError("Enter a room, building, floor and valid room type.")
-                    exists = conn.execute(
-                        "SELECT 1 FROM timetable WHERE room_number = ? LIMIT 1",
-                        (room_number,),
-                    ).fetchone()
-                    if not exists:
-                        raise ValueError("Choose a room that exists in the timetable.")
-                    conn.execute(
-                        """INSERT INTO room_locations (room_number, building, floor, room_type)
-                           VALUES (?, ?, ?, ?)
-                           ON CONFLICT(room_number) DO UPDATE SET
-                           building = excluded.building, floor = excluded.floor,
-                           room_type = excluded.room_type""",
-                        (room_number, building, floor, room_type),
-                    )
-                    message = "Room location saved."
-
                 elif action == "create_subject":
                     subject_name = request.form.get("subject_name", "").strip()
                     subject_code = request.form.get("subject_code", "").strip().upper() or None
@@ -385,18 +362,10 @@ def faculty_manage():
                JOIN subjects sub ON sub.subject_id = a.subject_id
                ORDER BY s.name, sub.subject_name"""
         ).fetchall()]
-        rooms = [dict(row) for row in conn.execute(
-            """SELECT room_number FROM timetable GROUP BY room_number ORDER BY room_number"""
-        ).fetchall()]
-        room_locations = [dict(row) for row in conn.execute(
-            """SELECT room_number, building, floor, room_type FROM room_locations ORDER BY room_number"""
-        ).fetchall()]
-
     return render_template(
         "faculty_manage.html", students=students, subjects=subjects,
         assessments=assessments, submissions=submissions,
         saved_marks=saved_marks, saved_attendance=saved_attendance,
-        rooms=rooms, room_locations=room_locations,
         message=message, error=error,
     )
 
@@ -511,9 +480,18 @@ def risk_dashboard():
     error = None
     summary = None
     assessments = []
+    selected_class_id = request.args.get("class_id", type=int)
+    classes = []
 
     try:
-        summary = get_faculty_summary()
+        with closing(get_connection()) as conn:
+            classes = [dict(row) for row in conn.execute(
+                """SELECT class_id, class_name, program, semester, section
+                   FROM faculty_classes ORDER BY class_name"""
+            ).fetchall()]
+        if selected_class_id and not any(item["class_id"] == selected_class_id for item in classes):
+            selected_class_id = None
+        summary = get_faculty_summary(class_id=selected_class_id)
         assessments = get_assessment_overview()
     except sqlite3.Error:
         error = (
@@ -525,6 +503,8 @@ def risk_dashboard():
         "risk.html",
         summary=summary,
         assessments=assessments,
+        classes=classes,
+        selected_class_id=selected_class_id,
         error=error,
     )
 

@@ -43,7 +43,49 @@ def _apply_compatibility_migrations(connection):
 
 
 def _assign_legacy_students_to_classes(connection):
-    """Group existing unassigned students into classes without changing their records."""
+    """Give existing students clear class labels and group unassigned students safely."""
+    # Rename the automatically generated placeholder classes from the first migration.
+    # Existing students stay linked to the same class IDs, so their academic records remain intact.
+    legacy_classes = connection.execute(
+        """SELECT class_id, class_name, semester, section
+           FROM faculty_classes
+           WHERE class_name LIKE 'Existing Demo - Semester %'"""
+    ).fetchall()
+
+    for row in legacy_classes:
+        semester = int(row["semester"])
+        section = (row["section"] or "A").strip().upper() or "A"
+        class_name = f"BCA AI & DS - Sem {semester} - Section {section}"
+        existing = connection.execute(
+            "SELECT class_id FROM faculty_classes WHERE class_name = ?",
+            (class_name,),
+        ).fetchone()
+
+        if existing and existing["class_id"] != row["class_id"]:
+            # If the clean label already exists, move students to it before removing
+            # the duplicate placeholder class.
+            connection.execute(
+                "UPDATE students SET class_id = ? WHERE class_id = ?",
+                (existing["class_id"], row["class_id"]),
+            )
+            connection.execute(
+                "DELETE FROM faculty_classes WHERE class_id = ?",
+                (row["class_id"],),
+            )
+        else:
+            connection.execute(
+                """UPDATE faculty_classes
+                   SET class_name = ?, program = ?, description = ?
+                   WHERE class_id = ?""",
+                (
+                    class_name,
+                    "BCA AI & Data Science",
+                    "Existing students grouped by semester and section.",
+                    row["class_id"],
+                ),
+            )
+
+    # Any students not yet assigned get a clean class label instead of "Existing Demo".
     groups = connection.execute(
         """SELECT DISTINCT semester, section FROM students
            WHERE class_id IS NULL ORDER BY semester, section"""
@@ -51,13 +93,18 @@ def _assign_legacy_students_to_classes(connection):
     for row in groups:
         semester = int(row["semester"])
         section = (row["section"] or "A").strip().upper() or "A"
-        class_name = f"Existing Demo - Semester {semester} - Section {section}"
+        class_name = f"BCA AI & DS - Sem {semester} - Section {section}"
         connection.execute(
             """INSERT OR IGNORE INTO faculty_classes
                (class_name, program, semester, section, description)
                VALUES (?, ?, ?, ?, ?)""",
-            (class_name, "Existing / Demo", semester, section,
-             "Automatically grouped from students already in the database."),
+            (
+                class_name,
+                "BCA AI & Data Science",
+                semester,
+                section,
+                "Existing students grouped by semester and section.",
+            ),
         )
         class_row = connection.execute(
             "SELECT class_id FROM faculty_classes WHERE class_name = ?",

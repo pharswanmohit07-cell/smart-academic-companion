@@ -3,8 +3,11 @@
 from database import get_connection
 
 
-def get_faculty_summary():
-    """Return student attendance, subject-level exam marks and assessment status."""
+def get_faculty_summary(class_id=None):
+    """Return student attendance, subject-level exam marks and assessment status.
+    
+    When class_id is provided, include only students assigned to that class.
+    """
     conn = get_connection()
     try:
         students = conn.execute(
@@ -32,8 +35,10 @@ def get_faculty_summary():
                     AND sub.student_id = s.student_id
                 GROUP BY s.student_id
             ) AS assessments ON assessments.student_id = s.student_id
+            WHERE (? IS NULL OR s.class_id = ?)
             ORDER BY s.student_id
-            """
+            """,
+            (class_id, class_id),
         ).fetchall()
 
         mark_rows = conn.execute(

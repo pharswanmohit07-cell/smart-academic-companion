@@ -1,5 +1,15 @@
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS faculty_classes (
+    class_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_name TEXT NOT NULL UNIQUE,
+    program TEXT NOT NULL,
+    semester INTEGER NOT NULL CHECK (semester >= 1),
+    section TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS students (
     student_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -7,7 +17,8 @@ CREATE TABLE IF NOT EXISTS students (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     semester INTEGER NOT NULL DEFAULT 3,
     section TEXT NOT NULL DEFAULT 'A',
-    attendance_type TEXT NOT NULL DEFAULT 'regular'
+    attendance_type TEXT NOT NULL DEFAULT 'regular',
+    class_id INTEGER REFERENCES faculty_classes(class_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS subjects (

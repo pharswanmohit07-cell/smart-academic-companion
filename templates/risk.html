@@ -2,7 +2,10 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
   <div><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-muted mb-0">Review attendance, exam marks and pending assessments.</p></div>
-  <a class="btn btn-primary" href="{{ url_for('faculty_manage') }}">Manage Records</a>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="{{ url_for('faculty_manage') }}">Manage Records</a>
+    <a class="btn btn-primary" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+  </div>
 </div>
 {% if error %}<div class="alert alert-danger">{{ error }}</div>
 {% elif summary %}
@@ -15,8 +18,12 @@
 <div class="card shadow-sm"><div class="card-body">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Student academic overview</h2><span class="small text-muted" id="student-result-count" aria-live="polite">Showing {{ summary.total_students }} of {{ summary.total_students }} students</span></div>
   <div class="row g-2 mb-3">
-    <div class="col-12 col-md-5"><label for="student-search" class="form-label">Search students</label><input type="search" class="form-control" id="student-search" placeholder="Enter student name or ID" autocomplete="off"></div>
-    <div class="col-12 col-md-4"><label for="issue-filter" class="form-label">Filter students</label><select class="form-select" id="issue-filter">
+    <div class="col-12 col-md-3"><label for="student-search" class="form-label">Search students</label><input type="search" class="form-control" id="student-search" placeholder="Enter student name or ID" autocomplete="off"></div>
+    <div class="col-12 col-md-3"><label for="class-filter" class="form-label">Filter class</label><select class="form-select" id="class-filter" aria-label="Filter students by class">
+      <option value="all" {% if not selected_class_id %}selected{% endif %}>All classes</option>
+      {% for class_item in classes %}<option value="{{ class_item.class_id }}" {% if selected_class_id == class_item.class_id %}selected{% endif %}>{{ class_item.class_name }} · Sem {{ class_item.semester }} · {{ class_item.program }} · {{ class_item.section }}</option>{% endfor %}
+    </select></div>
+    <div class="col-12 col-md-3"><label for="issue-filter" class="form-label">Filter students</label><select class="form-select" id="issue-filter">
       <option value="all">All students</option><option value="attendance">Attendance below 75%</option><option value="midterm">Midterm marks below 50%</option><option value="endterm">End Term marks below 50%</option><option value="pending">Pending assignments or term work</option><option value="multiple">Multiple academic issues</option><option value="incomplete">Incomplete records</option>
     </select></div>
     
@@ -63,6 +70,7 @@
 (() => {
   const searchInput = document.getElementById("student-search");
   const issueFilter = document.getElementById("issue-filter");
+  const classFilter = document.getElementById("class-filter");
   const clearButton = document.getElementById("clear-filters");
   const midtermSubjectFilter = document.getElementById("midterm-subject-filter");
   const endtermSubjectFilter = document.getElementById("endterm-subject-filter");
@@ -93,6 +101,10 @@
     resultCount.textContent = `Showing ${visibleCount} of ${rows.length} students`;
     noResults.classList.toggle("d-none", visibleCount !== 0 || rows.length === 0);
   }
+  classFilter.addEventListener("change", () => {
+    const value = classFilter.value;
+    window.location.href = value === "all" ? "{{ url_for('risk_dashboard') }}" : "{{ url_for('risk_dashboard') }}?class_id=" + encodeURIComponent(value);
+  });
   searchInput.addEventListener("input", updateStudents);
   issueFilter.addEventListener("change", updateStudents);
   midtermSubjectFilter.addEventListener("change", updateStudents);

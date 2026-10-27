@@ -21,7 +21,7 @@
     <div class="col-12 col-md-3"><label for="student-search" class="form-label">Search students</label><input type="search" class="form-control" id="student-search" placeholder="Enter student name or ID" autocomplete="off"></div>
     <div class="col-12 col-md-3"><label for="class-filter" class="form-label">Filter class</label><select class="form-select" id="class-filter" aria-label="Filter students by class">
       <option value="all" {% if not selected_class_id %}selected{% endif %}>All classes</option>
-      {% for class_item in classes %}<option value="{{ class_item.class_id }}" {% if selected_class_id == class_item.class_id %}selected{% endif %}>{{ class_item.class_name }} · Sem {{ class_item.semester }} · {{ class_item.program }} · {{ class_item.section }}</option>{% endfor %}
+      {% for class_item in classes %}<option value="{{ class_item.class_id }}" {% if selected_class_id == class_item.class_id %}selected{% endif %}>{{ class_item.class_name }}</option>{% endfor %}
     </select></div>
     <div class="col-12 col-md-3"><label for="issue-filter" class="form-label">Filter students</label><select class="form-select" id="issue-filter">
       <option value="all">All students</option><option value="attendance">Attendance below 75%</option><option value="midterm">Midterm marks below 50%</option><option value="endterm">End Term marks below 50%</option><option value="pending">Pending assignments or term work</option><option value="multiple">Multiple academic issues</option><option value="incomplete">Incomplete records</option>

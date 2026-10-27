@@ -223,29 +223,6 @@ def faculty_manage():
                     )
                     message = "Student details updated."
 
-                elif action == "save_room_location":
-                    room_number = request.form.get("room_number", "").strip()
-                    building = request.form.get("building", "").strip()
-                    floor = request.form.get("floor", "").strip()
-                    room_type = request.form.get("room_type", "").strip()
-                    if not room_number or not building or not floor or room_type not in ("Classroom", "Laboratory", "Lecture theatre", "Other"):
-                        raise ValueError("Enter a room, building, floor and valid room type.")
-                    exists = conn.execute(
-                        "SELECT 1 FROM timetable WHERE room_number = ? LIMIT 1",
-                        (room_number,),
-                    ).fetchone()
-                    if not exists:
-                        raise ValueError("Choose a room that exists in the timetable.")
-                    conn.execute(
-                        """INSERT INTO room_locations (room_number, building, floor, room_type)
-                           VALUES (?, ?, ?, ?)
-                           ON CONFLICT(room_number) DO UPDATE SET
-                           building = excluded.building, floor = excluded.floor,
-                           room_type = excluded.room_type""",
-                        (room_number, building, floor, room_type),
-                    )
-                    message = "Room location saved."
-
                 elif action == "create_subject":
                     subject_name = request.form.get("subject_name", "").strip()
                     subject_code = request.form.get("subject_code", "").strip().upper() or None
@@ -385,19 +362,117 @@ def faculty_manage():
                JOIN subjects sub ON sub.subject_id = a.subject_id
                ORDER BY s.name, sub.subject_name"""
         ).fetchall()]
-        rooms = [dict(row) for row in conn.execute(
-            """SELECT room_number FROM timetable GROUP BY room_number ORDER BY room_number"""
-        ).fetchall()]
-        room_locations = [dict(row) for row in conn.execute(
-            """SELECT room_number, building, floor, room_type FROM room_locations ORDER BY room_number"""
-        ).fetchall()]
-
     return render_template(
         "faculty_manage.html", students=students, subjects=subjects,
         assessments=assessments, submissions=submissions,
         saved_marks=saved_marks, saved_attendance=saved_attendance,
-        rooms=rooms, room_locations=room_locations,
         message=message, error=error,
+    )
+
+
+@app.route("/faculty/classes", methods=["GET", "POST"])
+def faculty_classes():
+    """Create custom faculty classes and manage their student lists."""
+    message = request.args.get("message")
+    error = None
+    selected_class_id = request.args.get("class_id", type=int)
+
+    if request.method == "POST":
+        action = request.form.get("action", "")
+        try:
+            with closing(get_connection()) as conn:
+                if action == "create_class":
+                    class_name = request.form.get("class_name", "").strip()
+                    program = request.form.get("program", "").strip()
+                    semester = int(request.form.get("semester", ""))
+                    section = request.form.get("section", "").strip().upper()
+                    description = request.form.get("description", "").strip()
+                    if not class_name or not program or semester < 1 or not section:
+                        raise ValueError("Enter a class name, program, valid semester and section.")
+                    cursor = conn.execute(
+                        """INSERT INTO faculty_classes
+                           (class_name, program, semester, section, description)
+                           VALUES (?, ?, ?, ?, ?)""",
+                        (class_name, program, semester, section, description),
+                    )
+                    selected_class_id = cursor.lastrowid
+                    message = "Custom class created. It is ready for students."
+                elif action == "add_student_to_class":
+                    selected_class_id = int(request.form.get("class_id", ""))
+                    name = request.form.get("name", "").strip()
+                    email = request.form.get("email", "").strip() or None
+                    class_row = conn.execute(
+                        "SELECT semester, section FROM faculty_classes WHERE class_id = ?",
+                        (selected_class_id,),
+                    ).fetchone()
+                    if class_row is None or not name:
+                        raise ValueError("Choose a class and enter the student's name.")
+                    conn.execute(
+                        """INSERT INTO students (name, email, semester, section, class_id)
+                           VALUES (?, ?, ?, ?, ?)""",
+                        (name, email, class_row["semester"], class_row["section"], selected_class_id),
+                    )
+                    message = "Student added to the selected class."
+                elif action == "move_student":
+                    student_id = int(request.form.get("student_id", ""))
+                    selected_class_id = int(request.form.get("class_id", ""))
+                    class_row = conn.execute(
+                        "SELECT semester, section FROM faculty_classes WHERE class_id = ?",
+                        (selected_class_id,),
+                    ).fetchone()
+                    student_row = conn.execute(
+                        "SELECT student_id FROM students WHERE student_id = ?",
+                        (student_id,),
+                    ).fetchone()
+                    if class_row is None or student_row is None:
+                        raise ValueError("Choose an existing student and class.")
+                    conn.execute(
+                        """UPDATE students SET class_id = ?, semester = ?, section = ?
+                           WHERE student_id = ?""",
+                        (selected_class_id, class_row["semester"], class_row["section"], student_id),
+                    )
+                    message = "Student assigned to the selected class."
+                else:
+                    raise ValueError("Choose a valid class action.")
+                conn.commit()
+        except ValueError:
+            error = "Please enter valid values in all required fields."
+        except sqlite3.IntegrityError as exc:
+            error = ("That class name already exists. Choose a different name."
+                     if "faculty_classes.class_name" in str(exc)
+                     else "Could not save this record. Check the email or selected class.")
+        except sqlite3.Error:
+            error = "Could not save the class record. Make sure the database is initialized."
+
+    with closing(get_connection()) as conn:
+        classes = [dict(row) for row in conn.execute(
+            """SELECT c.class_id, c.class_name, c.program, c.semester, c.section,
+                      c.description, COUNT(s.student_id) AS student_count
+               FROM faculty_classes c LEFT JOIN students s ON s.class_id = c.class_id
+               GROUP BY c.class_id ORDER BY c.created_at, c.class_name"""
+        ).fetchall()]
+        if selected_class_id and not any(c["class_id"] == selected_class_id for c in classes):
+            selected_class_id = None
+        if selected_class_id is None and classes:
+            selected_class_id = classes[0]["class_id"]
+        selected_class = next((c for c in classes if c["class_id"] == selected_class_id), None)
+        class_students = []
+        unassigned_students = []
+        if selected_class:
+            class_students = [dict(row) for row in conn.execute(
+                """SELECT student_id, name, email, semester, section
+                   FROM students WHERE class_id = ? ORDER BY name""",
+                (selected_class_id,),
+            ).fetchall()]
+            unassigned_students = [dict(row) for row in conn.execute(
+                """SELECT student_id, name, semester, section FROM students
+                   WHERE class_id IS NULL ORDER BY name"""
+            ).fetchall()]
+
+    return render_template(
+        "faculty_classes.html", classes=classes, selected_class=selected_class,
+        selected_class_id=selected_class_id, class_students=class_students,
+        unassigned_students=unassigned_students, message=message, error=error,
     )
 
 @app.route("/risk")
@@ -405,9 +480,18 @@ def risk_dashboard():
     error = None
     summary = None
     assessments = []
+    selected_class_id = request.args.get("class_id", type=int)
+    classes = []
 
     try:
-        summary = get_faculty_summary()
+        with closing(get_connection()) as conn:
+            classes = [dict(row) for row in conn.execute(
+                """SELECT class_id, class_name, program, semester, section
+                   FROM faculty_classes ORDER BY class_name"""
+            ).fetchall()]
+        if selected_class_id and not any(item["class_id"] == selected_class_id for item in classes):
+            selected_class_id = None
+        summary = get_faculty_summary(class_id=selected_class_id)
         assessments = get_assessment_overview()
     except sqlite3.Error:
         error = (
@@ -419,6 +503,8 @@ def risk_dashboard():
         "risk.html",
         summary=summary,
         assessments=assessments,
+        classes=classes,
+        selected_class_id=selected_class_id,
         error=error,
     )
 

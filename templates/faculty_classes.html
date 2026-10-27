@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-1">Class & Section Management</h1>
+    <p class="text-secondary mb-0">Create custom classes and manage each class's student list separately.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('faculty_manage') }}">Faculty Data Management</a>
+</div>
+{% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+
+<div class="row g-4">
+  <div class="col-12 col-xl-5">
+    <section class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Create a custom class</h2>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="create_class">
+        <div class="col-12"><label class="form-label" for="class-name">Class name</label><input class="form-control" id="class-name" name="class_name" placeholder="e.g. BCA AI & DS - A1" maxlength="120" required></div>
+        <div class="col-12"><label class="form-label" for="class-program">Program / course</label><input class="form-control" id="class-program" name="program" placeholder="e.g. BCA AI & Data Science" maxlength="100" required></div>
+        <div class="col-6"><label class="form-label" for="class-semester">Semester</label><input class="form-control" id="class-semester" type="number" name="semester" min="1" max="12" value="3" required></div>
+        <div class="col-6"><label class="form-label" for="class-section">Section / group</label><input class="form-control" id="class-section" name="section" placeholder="A1" maxlength="20" required></div>
+        <div class="col-12"><label class="form-label" for="class-description">Description (optional)</label><textarea class="form-control" id="class-description" name="description" rows="2" maxlength="500" placeholder="Any notes about this class"></textarea></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Create class</button></div>
+      </form>
+    </div></section>
+  </div>
+  <div class="col-12 col-xl-7">
+    <section class="card shadow-sm"><div class="card-body">
+      <h2 class="h5 mb-3">Your classes</h2>
+      {% if classes %}
+      <div class="list-group">
+        {% for class_item in classes %}
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 {% if selected_class_id == class_item.class_id %}active{% endif %}" href="{{ url_for('faculty_classes', class_id=class_item.class_id) }}">
+          <span><strong>{{ class_item.class_name }}</strong><br><small>{{ class_item.program }} · Semester {{ class_item.semester }} · Section {{ class_item.section }}</small></span>
+          <span class="badge text-bg-secondary">{{ class_item.student_count }} students</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}<p class="text-secondary mb-0">No classes yet. Create your first custom class using the form.</p>{% endif %}
+    </div></section>
+  </div>
+</div>
+
+{% if selected_class %}
+<div class="row g-4 mt-1">
+  <div class="col-12 col-xl-5">
+    <section class="card shadow-sm"><div class="card-body">
+      <h2 class="h5 mb-1">Add student to {{ selected_class.class_name }}</h2>
+      <p class="text-secondary small">New students are added only to this selected class.</p>
+      <form method="post" class="row g-3">
+        <input type="hidden" name="action" value="add_student_to_class">
+        <input type="hidden" name="class_id" value="{{ selected_class.class_id }}">
+        <div class="col-12"><label class="form-label" for="new-student-name">Student name</label><input class="form-control" id="new-student-name" name="name" maxlength="120" required></div>
+        <div class="col-12"><label class="form-label" for="new-student-email">Email (optional)</label><input class="form-control" id="new-student-email" type="email" name="email" maxlength="254"></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit">Add student</button></div>
+      </form>
+      {% if unassigned_students %}
+      <hr><h3 class="h6">Assign an existing unassigned student</h3>
+      <form method="post" class="row g-2">
+        <input type="hidden" name="action" value="move_student">
+        <input type="hidden" name="class_id" value="{{ selected_class.class_id }}">
+        <div class="col-8"><select class="form-select" name="student_id" required><option value="">Choose student</option>{% for student in unassigned_students %}<option value="{{ student.student_id }}">{{ student.name }} (#{{ student.student_id }})</option>{% endfor %}</select></div>
+        <div class="col-4"><button class="btn btn-outline-primary w-100" type="submit">Assign</button></div>
+      </form>
+      {% endif %}
+    </div></section>
+  </div>
+  <div class="col-12 col-xl-7">
+    <section class="card shadow-sm"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Students in this class</h2><span class="badge text-bg-primary">{{ class_students|length }}</span></div>
+      {% if class_students %}
+      <div class="table-responsive"><table class="table table-striped align-middle mb-0">
+        <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Semester</th><th>Section</th></tr></thead>
+        <tbody>{% for student in class_students %}<tr><td>{{ student.student_id }}</td><td>{{ student.name }}</td><td>{{ student.email or "—" }}</td><td>{{ student.semester }}</td><td>{{ student.section }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      {% else %}<p class="text-secondary mb-0">This class is empty. Add students when you are ready. Your existing data is unchanged.</p>{% endif %}
+    </div></section>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

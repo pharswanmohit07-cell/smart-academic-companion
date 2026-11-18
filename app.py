@@ -445,8 +445,13 @@ def faculty_classes():
                 else:
                     raise ValueError("Choose a valid class action.")
                 conn.commit()
-        except ValueError:
-            error = "Please enter valid values in all required fields."
+        except ValueError as exc:
+            message_text = str(exc)
+            error = (
+                "Enter a valid semester number."
+                if "invalid literal for int()" in message_text
+                else message_text
+            )
         except sqlite3.IntegrityError as exc:
             error = ("That class name already exists. Choose a different name."
                      if "faculty_classes.class_name" in str(exc)

@@ -59,7 +59,7 @@ def _load_student_data():
             ),
             assessment_submission_ratio AS (
                 SELECT s.student_id,
-                    1.0 * SUM(COALESCE(ss.submitted, 0)) /
+                    1.0 * SUM(CASE WHEN ss.submitted = 1 THEN 1 ELSE 0 END) /
                     NULLIF(COUNT(ai.assessment_id), 0) AS submission_ratio
                 FROM students AS s
                 CROSS JOIN assessment_items AS ai
@@ -145,6 +145,14 @@ def train_model():
     return model, metrics
 
 
+# Human-readable names used by the dashboard.
+_FEATURE_LABELS = {
+    "attendance_pct": "attendance percentage",
+    "average_marks_pct": "average marks percentage",
+    "assignment_submission_ratio": "assignment submission ratio",
+}
+
+
 def predict_risk(student_id):
     """Return the student's estimated risk and strongest factor."""
     data = _load_student_data()
@@ -153,7 +161,40 @@ def predict_risk(student_id):
         raise ValueError("Student not found or required data is incomplete.")
 
     model, _ = train_model()
-    row = student_rows.iloc[0]
+    return _explain(model, student_rows.iloc[0])
+
+
+def predict_students(student_ids):
+    """Score several students with one trained model.
+
+    Used by the faculty dashboard. Training happens once, and students
+    without complete data are simply left out of the result instead of
+    raising, so one incomplete record cannot break the whole page.
+
+    Returns a dict of {student_id: prediction}. Raises ValueError only when
+    the model cannot be trained at all (for example, too few students).
+    """
+    data = _load_student_data()
+    if data.empty:
+        raise ValueError(
+            "No students have complete attendance, marks and assignment data."
+        )
+
+    model, _ = train_model()
+
+    wanted = {int(student_id) for student_id in student_ids}
+    predictions = {}
+    for _, row in data[data["student_id"].isin(wanted)].iterrows():
+        prediction = _explain(model, row)
+        prediction["top_factor_label"] = _FEATURE_LABELS.get(
+            prediction["top_factor"], prediction["top_factor"]
+        )
+        predictions[int(row["student_id"])] = prediction
+    return predictions
+
+
+def _explain(model, row):
+    """Turn one fitted model and one student row into a readable result."""
     features = row[FEATURES].to_frame().T
     probability = float(model.predict_proba(features)[0][1])
 
@@ -176,6 +217,7 @@ def predict_risk(student_id):
         "predicted_at_risk": bool(model.predict(features)[0]),
         "features": {feature: float(row[feature]) for feature in FEATURES},
         "top_factor": FEATURES[strongest_index],
+        "top_factor_label": _FEATURE_LABELS[FEATURES[strongest_index]],
         "top_factor_direction": (
             "increases estimated risk"
             if contributions[strongest_index] > 0

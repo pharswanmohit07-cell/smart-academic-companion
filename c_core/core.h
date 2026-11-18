@@ -61,6 +61,16 @@ typedef struct {
     int estimated_minutes;
 } StudyTopic;
 
+/* One scheduled study block produced by the planner. */
+typedef struct {
+    int topic_id;
+    char topic_name[MAX_TOPIC_LEN];
+    double mastery_pct;
+    double priority_score;  /* 0 to 100; higher means study first */
+    int allocated_minutes;  /* Minutes scheduled for this topic */
+    int position;           /* 1-based order in the study plan */
+} StudyPlanItem;
+
 /*
  * Sort bookings by start time using stable merge sort.
  * Time complexity: O(n log n); space complexity: O(n).
@@ -146,6 +156,71 @@ CORE_API int is_room_free(
     int day,
     int start,
     int end
+);
+
+/*
+ * Priority score for one study topic: 0 to 100.
+ * A topic with 0% mastery scores 100 (study it first) and a topic with
+ * 100% mastery scores 0. Returns -1 if the topic is invalid.
+ *
+ * Time complexity: O(1); space complexity: O(1).
+ */
+CORE_API double study_priority_score(const StudyTopic *topic);
+
+/*
+ * Write the topics ordered from weakest to strongest into output[]
+ * using a min-heap keyed on mastery_pct (priority_score descending on
+ * ties, topic_id ascending on further ties). output[] may be NULL when
+ * output_capacity is 0, which only checks the input.
+ *
+ * Returns the number of topics written, or:
+ *   -1 : invalid argument (NULL topics, negative count, capacity < count,
+ *        NULL output while capacity > 0)
+ *   -2 : an invalid topic (missing name, mastery outside 0-100,
+ *        estimated_minutes <= 0)
+ *   -3 : memory allocation failed
+ *
+ * Time complexity: O(n + n log n); space complexity: O(n).
+ */
+CORE_API int rank_topics_by_weakness(
+    const StudyTopic topics[],
+    int count,
+    StudyPlanItem output[],
+    int output_capacity
+);
+
+/*
+ * Build a study plan for available_minutes using a max-heap of topics
+ * keyed on priority_score. The plan is written in study order into
+ * output[], which must hold at least count entries.
+ *
+ * The schedule never exceeds available_minutes. Leftover time that no
+ * topic can use as a whole goes to the weakest unscheduled topic, which
+ * is written to output[] as a partial block and also to skipped[].
+ *
+ * skipped[] receives every topic that needs more time than it received
+ * (fully unscheduled topics plus the partially scheduled one), so
+ * skipped_capacity should be count + 1. skipped_minutes is optional and
+ * receives the number of skipped entries written.
+ *
+ * Returns the number of scheduled items, or:
+ *   -1 : invalid argument
+ *   -2 : an invalid topic
+ *   -3 : memory allocation failed
+ *   -4 : available_minutes is not positive
+ *
+ * Time complexity: O(n + n log n); space complexity: O(n).
+ */
+CORE_API int build_study_schedule(
+    const StudyTopic topics[],
+    int count,
+    int available_minutes,
+    StudyPlanItem output[],
+    int output_capacity,
+    StudyPlanItem skipped[],
+    int skipped_capacity,
+    int *scheduled_minutes,
+    int *skipped_minutes
 );
 
 #endif

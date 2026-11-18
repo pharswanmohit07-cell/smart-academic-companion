@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Smart Academic Companion</title>
+    <link rel="icon" href="data:,">
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -93,8 +94,12 @@
                 <a class="nav-link" href="{{ url_for('classrooms') }}">
                     Classrooms
                 </a>
+                <a class="nav-link" href="{{ url_for('study_planner_page') }}">
+                    Study Planner
+                </a>
                 <a class="nav-link" href="{{ url_for('risk_dashboard') }}">Faculty Dashboard</a>
                 <a class="nav-link" href="{{ url_for('faculty_manage') }}">Manage Records</a>
+                <a class="nav-link" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
             </div>
         </div>
     </div>
@@ -110,8 +115,8 @@
     Your academic workspace, <span class="text-primary">all in one place.</span>
 </h1>
         <p class="lead text-secondary mb-0" style="max-width: 760px;">
-            Manage attendance, find available classrooms, and review student
-            academic performance from one place.
+            Plan attendance, find available classrooms, build a study schedule,
+            and review student academic performance from one place.
         </p>
     </section>
 
@@ -162,6 +167,41 @@
                     <a href="{{ url_for('risk_dashboard') }}"
                        class="btn btn-primary mt-auto">
                         Open Faculty Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="feature-icon mb-3" aria-hidden="true">◎</div>
+                    <h2 class="h4">AI Study Planner</h2>
+                    <p class="text-secondary">
+                        Enter topic mastery and available time. A C min-heap
+                        ranks weak topics and a max-heap builds your study
+                        schedule. Runs locally, no AI API needed.
+                    </p>
+                    <a href="{{ url_for('study_planner_page') }}"
+                       class="btn btn-primary mt-auto">
+                        Build a Study Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card feature-card shadow-sm">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="feature-icon mb-3" aria-hidden="true">▦</div>
+                    <h2 class="h4">Class Management</h2>
+                    <p class="text-secondary">
+                        Create custom classes, assign students, and filter the
+                        faculty dashboard by class.
+                    </p>
+                    <a href="{{ url_for('faculty_classes') }}"
+                       class="btn btn-primary mt-auto">
+                        Manage Classes
                     </a>
                 </div>
             </div>

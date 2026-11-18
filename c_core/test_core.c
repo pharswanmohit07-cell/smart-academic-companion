@@ -195,6 +195,216 @@ static void test_clash_detection(void)
     puts("PASS: sweep-line clash detection");
 }
 
+static StudyTopic make_topic(
+    int id,
+    const char *name,
+    double mastery,
+    int minutes)
+{
+    StudyTopic t = {0};
+    t.topic_id = id;
+    snprintf(t.topic_name, sizeof(t.topic_name), "%s", name);
+    t.mastery_pct = mastery;
+    t.estimated_minutes = minutes;
+
+    return t;
+}
+
+static void test_study_priority_score(void)
+{
+    StudyTopic weak = make_topic(1, "Recursion", 0.0, 30);
+    StudyTopic mid = make_topic(2, "Hashing", 42.5, 30);
+    StudyTopic strong = make_topic(3, "Arrays", 100.0, 30);
+    StudyTopic invalid = make_topic(4, "Invalid", 120.0, 30);
+
+    assert(study_priority_score(&weak) == 100.0);
+    assert(study_priority_score(&mid) == 57.5);
+    assert(study_priority_score(&strong) == 0.0);
+    assert(study_priority_score(&invalid) == -1.0);
+    assert(study_priority_score(NULL) == -1.0);
+
+    puts("PASS: study priority score");
+}
+
+static void test_rank_topics_min_heap(void)
+{
+    StudyPlanItem ranked[6];
+    StudyTopic topics[] = {
+        make_topic(1, "Arrays", 90.0, 30),
+        make_topic(2, "Recursion", 20.0, 45),
+        make_topic(3, "Trees", 55.0, 40),
+        make_topic(4, "Graphs", 20.0, 60),
+    };
+
+    /* Weakest topic (lowest mastery) first. */
+    int count = rank_topics_by_weakness(topics, 4, ranked, 6);
+    assert(count == 4);
+    assert(ranked[0].topic_id == 2 && ranked[0].position == 1);
+    assert(ranked[1].topic_id == 4);
+    assert(ranked[2].topic_id == 3);
+    assert(ranked[3].topic_id == 1);
+    assert(strcmp(ranked[0].topic_name, "Recursion") == 0);
+    assert(ranked[0].priority_score == 80.0);
+    assert(ranked[0].allocated_minutes == 45);
+
+    /* Equal mastery keeps the lower topic_id first. */
+    StudyTopic equal[] = {
+        make_topic(7, "Loops", 50.0, 20),
+        make_topic(5, "Stacks", 50.0, 20),
+    };
+    count = rank_topics_by_weakness(equal, 2, ranked, 6);
+    assert(count == 2);
+    assert(ranked[0].topic_id == 5 && ranked[1].topic_id == 7);
+
+    /* One topic. */
+    count = rank_topics_by_weakness(topics, 1, ranked, 6);
+    assert(count == 1 && ranked[0].topic_id == 1);
+
+    /* Empty list. */
+    assert(rank_topics_by_weakness(NULL, 0, ranked, 6) == 0);
+
+    /* Invalid argument and invalid topic data. */
+    assert(rank_topics_by_weakness(NULL, 2, ranked, 6) == -1);
+    assert(rank_topics_by_weakness(topics, 4, NULL, 6) == -1);
+    assert(rank_topics_by_weakness(topics, 4, ranked, 2) == -1);
+    assert(rank_topics_by_weakness(topics, -1, ranked, 6) == -1);
+
+    StudyTopic bad_mastery[] = {make_topic(1, "Negative", -1.0, 30)};
+    assert(rank_topics_by_weakness(bad_mastery, 1, ranked, 6) == -2);
+
+    StudyTopic bad_minutes[] = {make_topic(1, "Zero", 50.0, 0)};
+    assert(rank_topics_by_weakness(bad_minutes, 1, ranked, 6) == -2);
+
+    StudyTopic no_name[] = {make_topic(1, "", 50.0, 30)};
+    assert(rank_topics_by_weakness(no_name, 1, ranked, 6) == -2);
+
+    puts("PASS: min-heap ranking of weak topics");
+}
+
+static void test_build_study_schedule(void)
+{
+    StudyPlanItem plan[5];
+    StudyPlanItem skipped[5];
+    int scheduled = -1;
+    int skipped_out = -1;
+    StudyTopic topics[] = {
+        make_topic(1, "Recursion", 20.0, 60),
+        make_topic(2, "Hashing", 50.0, 45),
+        make_topic(3, "Arrays", 90.0, 30),
+    };
+
+    /* Enough time for everything: weakest first, total used = 135. */
+    int count = build_study_schedule(
+        topics, 3, 240, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 3);
+    assert(scheduled == 135);
+    assert(plan[0].topic_id == 1 && plan[0].allocated_minutes == 60);
+    assert(plan[1].topic_id == 2 && plan[1].allocated_minutes == 45);
+    assert(plan[2].topic_id == 3 && plan[2].allocated_minutes == 30);
+    assert(plan[0].position == 1 && plan[2].position == 3);
+    assert(skipped_out == 0);
+
+    /*
+     * Partial allocation: after the 60-minute topic, the 45-minute topic
+     * does not fit in the remaining 10 minutes, so the strongest fitting
+     * topic gets those 10 minutes. The two rejected topics are reported.
+     */
+    count = build_study_schedule(
+        topics, 3, 70, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 2);
+    assert(scheduled == 70);
+    assert(plan[0].topic_id == 1 && plan[0].allocated_minutes == 60);
+    assert(plan[1].topic_id == 2 && plan[1].allocated_minutes == 10);
+    assert(plan[0].position == 1 && plan[1].position == 2);
+    assert(skipped[0].topic_id == 2 && skipped[0].position == 0);
+    assert(skipped[0].allocated_minutes == 45);
+    assert(skipped[1].topic_id == 3 && skipped[1].position == 0);
+    assert(skipped_out == 2);
+
+    /* 105 minutes: 60 + 45 fit exactly, 5 minutes are left over. */
+    count = build_study_schedule(
+        topics, 3, 105, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 2);
+    assert(scheduled == 105);
+    assert(plan[0].topic_id == 1 && plan[1].topic_id == 2);
+    assert(skipped[0].topic_id == 3 && skipped[0].position == 0);
+    assert(skipped[0].allocated_minutes == 30);
+    assert(skipped_out == 1);
+
+    /* 45 minutes: exactly one topic fits, no leftover to allocate. */
+    count = build_study_schedule(
+        topics, 3, 45, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 1);
+    assert(scheduled == 45);
+    assert(plan[0].topic_id == 1 && plan[0].allocated_minutes == 45);
+    /* The weakest topic is partial, so all three are reported as short. */
+    assert(skipped[0].topic_id == 1 && skipped[0].allocated_minutes == 60);
+    assert(skipped[1].topic_id == 2 && skipped[1].allocated_minutes == 45);
+    assert(skipped[2].topic_id == 3 && skipped[2].allocated_minutes == 30);
+    assert(skipped_out == 3);
+
+    /* 90 minutes: the 60-minute topic plus 30 partial minutes of the next. */
+    count = build_study_schedule(
+        topics, 3, 90, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 2);
+    assert(scheduled == 90);
+    assert(plan[0].topic_id == 1 && plan[0].allocated_minutes == 60);
+    assert(plan[1].topic_id == 2 && plan[1].allocated_minutes == 30);
+    assert(plan[0].position == 1 && plan[1].position == 2);
+    assert(skipped[0].topic_id == 2 && skipped[0].allocated_minutes == 45);
+    assert(skipped_out == 2);
+
+    /* Only 10 minutes: not even the weakest topic fits as a whole. */
+    count = build_study_schedule(
+        topics, 3, 10, plan, 5, skipped, 5, &scheduled, &skipped_out);
+    assert(count == 1);
+    assert(scheduled == 10);
+    assert(plan[0].topic_id == 1 && plan[0].allocated_minutes == 10);
+    assert(plan[0].position == 1);
+    /* All three topics still need more time than they received. */
+    assert(skipped[0].topic_id == 1 && skipped[0].allocated_minutes == 60);
+    assert(skipped[2].topic_id == 3);
+    assert(skipped_out == 3);
+
+    /* Never exceeds the available time. */
+    for (int available = 1; available <= 200; available++) {
+        count = build_study_schedule(
+            topics, 3, available, plan, 5, skipped, 5, &scheduled, &skipped_out);
+        int total = 0;
+        for (int i = 0; i < count; i++) total += plan[i].allocated_minutes;
+        assert(count >= 0);
+        assert(total == scheduled);
+        assert(total <= available);
+        assert(count <= 5);
+        assert(skipped_out >= 0 && skipped_out <= 4);
+        assert(count + skipped_out >= 3);
+    }
+
+    /* Empty list is valid and schedules nothing. */
+    assert(build_study_schedule(NULL, 0, 60, plan, 5, skipped, 5, &scheduled, &skipped_out) == 0);
+    assert(scheduled == 0 && skipped_out == 0);
+
+    /* Invalid arguments. */
+    assert(build_study_schedule(topics, 3, 0, plan, 5, skipped, 5, &scheduled, &skipped_out) == -4);
+    assert(build_study_schedule(topics, 3, -30, plan, 5, skipped, 5, &scheduled, &skipped_out) == -4);
+    assert(build_study_schedule(topics, 3, 60, plan, 2, skipped, 5, &scheduled, &skipped_out) == -1);
+    assert(build_study_schedule(topics, 3, 60, plan, 0, skipped, 5, &scheduled, &skipped_out) == -1);
+    assert(build_study_schedule(NULL, 3, 60, plan, 5, skipped, 5, &scheduled, &skipped_out) == -1);
+    assert(build_study_schedule(topics, 3, 60, NULL, 5, skipped, 5, &scheduled, &skipped_out) == -1);
+
+    StudyTopic bad[] = {make_topic(1, "Bad", 101.0, 30)};
+    assert(build_study_schedule(bad, 1, 60, plan, 5, skipped, 5, &scheduled, &skipped_out) == -2);
+
+    /* Zero-duration topics are rejected, never scheduled. */
+    StudyTopic bad_minutes[] = {make_topic(1, "Zero", 50.0, 0)};
+    assert(build_study_schedule(bad_minutes, 1, 60, plan, 5, skipped, 5, &scheduled, &skipped_out) == -2);
+
+    /* A NULL skipped buffer is rejected while skipped_capacity is positive. */
+    assert(build_study_schedule(topics, 3, 60, plan, 5, NULL, 5, &scheduled, &skipped_out) == -1);
+
+    puts("PASS: greedy max-heap study scheduling");
+}
+
 int main(void)
 {
     test_validation_and_overlap();
@@ -203,6 +413,9 @@ int main(void)
     test_free_slots();
     test_full_day_and_invalid_input();
     test_clash_detection();
+    test_study_priority_score();
+    test_rank_topics_min_heap();
+    test_build_study_schedule();
 
     puts("All C core tests passed.");
     return 0;

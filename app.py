@@ -201,6 +201,9 @@ def faculty_manage():
                         (name, email, semester, section),
                     )
                     student_id = cursor.lastrowid
+                    # Keep the new student visible in the matching class filter.
+                    from database import _assign_legacy_students_to_classes
+                    _assign_legacy_students_to_classes(conn)
                     conn.execute(
                         """INSERT INTO assessment_submissions
                            (assessment_id, student_id, submitted)
@@ -218,9 +221,17 @@ def faculty_manage():
                     if not name or semester < 1 or not section:
                         raise ValueError("Enter a name, valid semester and section.")
                     conn.execute(
-                        "UPDATE students SET name = ?, email = ?, semester = ?, section = ? WHERE student_id = ?",
-                        (name, email, semester, section, student_id),
+                        """UPDATE students
+                           SET name = ?, email = ?, semester = ?, section = ?,
+                               class_id = CASE
+                                   WHEN semester != ? OR upper(section) != ? THEN NULL
+                                   ELSE class_id
+                               END
+                           WHERE student_id = ?""",
+                        (name, email, semester, section, semester, section, student_id),
                     )
+                    from database import _assign_legacy_students_to_classes
+                    _assign_legacy_students_to_classes(conn)
                     message = "Student details updated."
 
                 elif action == "create_subject":
@@ -427,9 +438,8 @@ def faculty_classes():
                     if class_row is None or student_row is None:
                         raise ValueError("Choose an existing student and class.")
                     conn.execute(
-                        """UPDATE students SET class_id = ?, semester = ?, section = ?
-                           WHERE student_id = ?""",
-                        (selected_class_id, class_row["semester"], class_row["section"], student_id),
+                        "UPDATE students SET class_id = ? WHERE student_id = ?",
+                        (selected_class_id, student_id),
                     )
                     message = "Student assigned to the selected class."
                 else:
@@ -492,7 +502,7 @@ def risk_dashboard():
         if selected_class_id and not any(item["class_id"] == selected_class_id for item in classes):
             selected_class_id = None
         summary = get_faculty_summary(class_id=selected_class_id)
-        assessments = get_assessment_overview()
+        assessments = get_assessment_overview(class_id=selected_class_id)
     except sqlite3.Error:
         error = (
             "Could not load student records. "

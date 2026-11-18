@@ -531,13 +531,13 @@ int detect_booking_clashes(
  * Min-heap: orders topics from weakest to strongest so the student can
  * see which topic needs the most attention first. The heap key is
  * mastery_pct (lower first), then priority_score (higher first), then
- * topic_id (lower first) so the result is deterministic.
+ * topic_id (lower first).
  *
  * Max-heap: greedy scheduling. At every step the highest priority topic
  * that still fits in the remaining time is selected and its estimated
- * study time is allocated. This is the classic "highest value per unit,
- * take the best that fits" greedy strategy. Its complexity is
- * O(n log n + k log n), where k is the number of rejected candidates.
+ * study time is allocated. This is a "take the best that fits" greedy
+ * strategy: it never exceeds the available time, but it is NOT
+ * guaranteed to pack topics optimally. Complexity is O(n log n).
  *
  * priority_score = 100 - mastery_pct   (rounded to 2 decimals)
  *   0% mastery  -> 100 priority

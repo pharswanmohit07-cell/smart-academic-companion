@@ -156,9 +156,12 @@ activemq-data/
 # Environments
 .env
 .envrc
+# Stray virtual environments (for example .venv-cleanup-check)
 .venv
+.venv*/
 env/
 venv/
+venv*/
 ENV/
 env.bak/
 venv.bak/

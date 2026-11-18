@@ -108,11 +108,11 @@ Open PowerShell in the repository folder.
 ### 1. Create and activate a virtual environment
 
 ```powershell
-py -m venv .venv
-.\\.venv\\Scripts\\Activate.ps1
+py -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation, you can run the environment's Python directly with `.venv\\Scripts\\python.exe`.
+This project's commands use a virtual environment named `venv`. If you prefer `.venv`, substitute that name everywhere. If PowerShell blocks activation, run the environment's Python directly instead: `.\venv\Scripts\python.exe -m unittest discover -s tests -v`.
 
 ### 2. Install Python dependencies
 
@@ -129,14 +129,18 @@ Ensure GCC is available in your terminal's PATH, then run:
 gcc -std=c11 -Wall -Wextra -Wpedantic -DCORE_BUILD_DLL -shared c_core/core.c -o c_core/core.dll
 ```
 
+The `-DCORE_BUILD_DLL` flag is required: it makes the C functions visible to Python. Without it the DLL builds but has no exported symbols.
+
 The DLL must be located at `c_core/core.dll`, because that is the path used by `modules/classroom.py` and `modules/study_planner.py`. Rebuild it after changing `core.c`; an older DLL does not contain the study-planner functions and the planner page will show a build reminder.
 
 To build and run the standalone C tests:
 
 ```powershell
 gcc -std=c11 -Wall -Wextra -Wpedantic c_core/core.c c_core/test_core.c -o c_core/test_core.exe
-.\\c_core\\test_core.exe
+.\c_core\test_core.exe
 ```
+
+The C test program runs 11 assertion groups and prints `All C core tests passed.` on success.
 
 ### 4. Initialize the database
 
@@ -191,6 +195,7 @@ Both algorithms live in `c_core/core.c` and are called from Python through `ctyp
 - **Priority** is `100 - mastery_pct`, rounded to two decimals. A topic at 0% mastery has priority 100; a topic at 100% mastery has priority 0.
 - **Min-heap ranking** (`rank_topics_by_weakness`): every topic is pushed into a min-heap keyed on mastery, then popped one by one. Lowest mastery comes out first, with `priority_score` and `topic_id` as tie-breakers so the order is deterministic. Build is `O(n)`, all pops together are `O(n log n)`.
 - **Greedy max-heap scheduling** (`build_study_schedule`): topics are pushed into a max-heap keyed on priority, so the weakest topic is always at the root. The root is scheduled if it fits in the remaining time; otherwise the leftover minutes are given to that same weakest topic as a partial block. Topics still in the heap are reported as not scheduled. The total never exceeds the available time.
+  - **The scheduler is greedy, not optimal.** It always prefers the weakest topic, so it does not search for the best possible packing of topics into the available time. This is deliberate: the plan always starts with the topic that most needs attention and the behaviour is easy to explain.
 - **Errors** are returned as negative codes (`-1` invalid argument, `-2` invalid topic data, `-3` allocation failure, `-4` non-positive available time) and are turned into readable messages by the Python wrapper.
 - **Validation**: mastery must be 0-100, estimated minutes must be positive, names must be non-empty and fit the fixed-size C buffer. Empty input is valid and simply produces no plan.
 
@@ -213,6 +218,8 @@ The current Flask interface includes these pages and workflows:
 - **Class management** at `/faculty/classes`, for custom classes, student assignment and moving students between classes.
 
 The at-risk labels are demonstration rules based on academic thresholds; they are not validated evidence of real-world prediction accuracy. The dashboard now shows an individual logistic-regression risk score next to each student, trained on those rule-based labels and broken down by strongest contributing factor. It is a teaching demonstration: it is not a validated dropout predictor and must not be used to decide anything about a student. Students without complete attendance, marks and assignment data are shown as "No prediction". If the model cannot be trained (for example, fewer than 10 students with complete data), the dashboard shows a notice and keeps working. There is no authentication or role-based access control in the current scope, so do not expose the app publicly or use it for real student records without a security and privacy review.
+
+No deployment configuration is included. The application is a Windows-targeted Flask app that loads a locally compiled `c_core/core.dll`, keeps its data in a local SQLite file and has no authentication, so it is intended to run locally for the demonstration. Hosting it would need a Linux build of the C core, a persistent writable database and an authentication layer first.
 
 The provided DLL build command targets Windows. Linux and macOS need a platform-specific shared-library build and corresponding loader path. Seed data is synthetic and should not be treated as real student information.
 

@@ -13,7 +13,7 @@ class TestStudyPlannerPage(unittest.TestCase):
         response = self.client.get("/study-planner")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"AI Study Planner", response.data)
-        self.assertIn(b"Generate study plan", response.data)
+        self.assertIn(b"Generate Study Plan", response.data)
 
     def test_home_and_navigation_link_to_planner(self):
         home = self.client.get("/")
@@ -33,7 +33,7 @@ class TestStudyPlannerPage(unittest.TestCase):
         # Weakest topic first and the totals are shown.
         self.assertIn(b"Recursion", response.data)
         self.assertIn(b"120 min", response.data)
-        self.assertIn(b"Topics that could not fit", response.data)
+        self.assertIn(b"Topics that did not fit", response.data)
 
     def test_plan_that_fits_everything_has_no_warning(self):
         response = self.client.post("/study-planner", data={
@@ -44,7 +44,7 @@ class TestStudyPlannerPage(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Complete", response.data)
-        self.assertNotIn(b"Topics that could not fit", response.data)
+        self.assertNotIn(b"Topics that did not fit", response.data)
 
     def test_missing_topic_fields_shows_error(self):
         response = self.client.post("/study-planner", data={

@@ -65,14 +65,17 @@ class TestRiskDashboardIntegration(unittest.TestCase):
         self.database_patch.stop()
         self.temp_dir.cleanup()
 
-    def test_dashboard_shows_risk_score_and_strongest_factor(self):
+    def test_dashboard_shows_risk_score_and_main_factor(self):
         seed_students(12)
         response = self.client.get("/risk")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Demonstration risk score", response.data)
-        self.assertIn(b"Strongest factor:", response.data)
+        self.assertIn(b"Risk estimate", response.data)
+        self.assertIn(b"Main factor:", response.data)
         self.assertIn(b"%", response.data)
-        self.assertIn(b"not a validated dropout predictor", response.data)
+        # The short guidance note replaces the long technical explanation.
+        self.assertIn(b"Risk estimates are for guidance only.", response.data)
+        for technical in (b"logistic", b"min-heap", b"max-heap"):
+            self.assertNotIn(technical, response.data)
 
     def test_students_without_data_show_no_prediction(self):
         seed_students(12)
@@ -83,7 +86,7 @@ class TestRiskDashboardIntegration(unittest.TestCase):
             connection.commit()
         response = self.client.get("/risk")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"No prediction (incomplete data)", response.data)
+        self.assertIn(b"Not available (incomplete data)", response.data)
 
     def test_model_failure_does_not_crash_dashboard(self):
         seed_students(12)
@@ -93,18 +96,20 @@ class TestRiskDashboardIntegration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"The academic records above are unaffected", response.data)
         self.assertIn(b"Faculty Academic Dashboard", response.data)
+        # Technical model names must not leak into the user-facing page.
+        self.assertNotIn(b"RuntimeError", response.data)
 
     def test_too_few_students_is_handled_gracefully(self):
         seed_students(3)
         response = self.client.get("/risk")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"could not score these students", response.data)
+        self.assertIn(b"Risk estimates are unavailable right now", response.data)
 
     def test_class_filter_still_works_with_predictions(self):
         seed_students(12)
         response = self.client.get("/risk?class_id=1")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Demonstration risk score", response.data)
+        self.assertIn(b"Risk estimate", response.data)
 
     def test_pending_assessment_does_not_hide_score(self):
         """A row with submitted = 0 must still count as complete data."""

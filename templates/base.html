@@ -1,220 +1,800 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Smart Academic Companion</title>
-    <!-- Stops the browser requesting /favicon.ico (which Flask does not serve). -->
-    <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+    <title>{% block title %}Smart Academic Companion{% endblock %}</title>
+    <link rel="icon"
+        href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <!--
+      Theme is applied before the stylesheet paints, so a returning visitor
+      never sees a flash of light mode. localStorage is the only source of
+      truth: the OS preference is deliberately ignored.
+    -->
+    <script>
+        (function () {
+            var THEME_KEY = "sac-theme";
+            var theme = "light";
+            try {
+                if (window.localStorage.getItem(THEME_KEY) === "dark") {
+                    theme = "dark";
+                }
+            } catch (e) {
+                /* Private mode or storage disabled: stay on the default. */
+            }
+            document.documentElement.setAttribute("data-bs-theme", theme);
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .navbar .nav-link {
-            color: #fff;
-            padding: 0.55rem 0.8rem;
-            border-radius: 0.4rem;
+        /* ------------------------------------------------------------------
+           Colour tokens. Bootstrap 5.3 reads its own --bs-* variables, so we
+           override those for the components (cards, tables, forms, alerts)
+           and expose a few --app-* tokens for our own surfaces.
+           ------------------------------------------------------------------ */
+        :root,
+        [data-bs-theme="light"] {
+            --app-bg: #f5f6f8;
+            --app-surface: #ffffff;
+            --app-surface-muted: #f8fafc;
+            --app-border: #e5e7eb;
+            --app-text: #1f2937;
+            --app-text-muted: #64748b;
+            --app-accent: #2563eb;
+            --app-accent-soft: #eaf1fe;
+            --app-navbar-bg: #ffffff;
+            --app-navbar-text: #1f2937;
+            --app-hover: #f1f5f9;
+
+            --bs-body-bg: var(--app-bg);
+            --bs-body-color: var(--app-text);
+            --bs-border-color: var(--app-border);
+            --bs-secondary-color: var(--app-text-muted);
+            --bs-emphasis-color: var(--app-text);
+            --bs-primary: var(--app-accent);
+            --bs-primary-rgb: 37, 99, 235;
+            --bs-link-color: var(--app-accent);
+            --bs-link-hover-color: #1d4ed8;
+            --bs-card-bg: var(--app-surface);
+            --bs-card-border-color: var(--app-border);
+            --bs-tertiary-bg: var(--app-surface-muted);
         }
 
-        .navbar .nav-link:hover,
-        .navbar .nav-link:focus {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.17);
+        [data-bs-theme="dark"] {
+            --app-bg: #111827;
+            --app-surface: #1f2937;
+            --app-surface-muted: #273449;
+            --app-border: #374151;
+            --app-text: #f3f4f6;
+            --app-text-muted: #cbd5e1;
+            --app-accent: #60a5fa;
+            --app-accent-soft: #1e3a5f;
+            --app-navbar-bg: #1a2332;
+            --app-navbar-text: #f3f4f6;
+            --app-hover: #273449;
+
+            --bs-body-bg: var(--app-bg);
+            --bs-body-color: var(--app-text);
+            --bs-border-color: var(--app-border);
+            --bs-secondary-color: var(--app-text-muted);
+            --bs-emphasis-color: var(--app-text);
+            --bs-primary: var(--app-accent);
+            --bs-primary-rgb: 96, 165, 250;
+            --bs-link-color: var(--app-accent);
+            --bs-link-hover-color: #93c5fd;
+            --bs-card-bg: var(--app-surface);
+            --bs-card-border-color: var(--app-border);
+            --bs-tertiary-bg: var(--app-surface-muted);
+            --bs-secondary-bg: #273449;
+            --bs-table-color: var(--app-text);
+            --bs-table-bg: transparent;
+            --bs-table-striped-color: var(--app-text);
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.035);
+            --bs-table-hover-color: var(--app-text);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ---------------------------- Base --------------------------------- */
+        body {
+            background-color: var(--app-bg);
+            color: var(--app-text);
+            font-size: 0.975rem;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            letter-spacing: -0.011em;
+        }
+
+        .text-secondary,
+        .text-muted {
+            color: var(--app-text-muted) !important;
+        }
+
+        a {
+            color: var(--app-accent);
+        }
+
+        a:hover {
+            color: var(--bs-link-hover-color);
+        }
+
+        hr {
+            color: var(--app-border);
+            opacity: 1;
+        }
+
+        /* --------------------------- Navigation ---------------------------- */
+        .app-navbar {
+            background-color: var(--app-navbar-bg);
+            border-bottom: 1px solid var(--app-border);
+        }
+
+        .app-navbar .navbar-brand {
+            color: var(--app-text);
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+
+        .app-navbar .navbar-brand {
+            margin-right: 1.25rem;
+        }
+
+        .app-navbar .nav-link {
+            color: var(--app-text-muted);
+            padding: 0.45rem 0.6rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        /* The link row is wide; collapse to the hamburger before it wraps. */
+        @media (min-width: 992px) and (max-width: 1399.98px) {
+            .app-navbar .navbar-brand { font-size: 1rem; margin-right: 0.75rem; }
+            .app-navbar .nav-link { padding: 0.4rem 0.45rem; font-size: 0.855rem; }
+            .app-navbar .navbar { flex-wrap: nowrap; }
+        }
+
+        .app-navbar .nav-link:hover,
+        .app-navbar .nav-link:focus {
+            color: var(--app-text);
+            background-color: var(--app-hover);
+        }
+
+        .app-navbar .nav-link.active {
+            color: var(--app-accent);
+            background-color: var(--app-accent-soft);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border: 1px solid var(--app-border);
+            background: transparent;
+            color: var(--app-text-muted);
+            border-radius: 0.375rem;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus-visible {
+            color: var(--app-text);
+            background-color: var(--app-hover);
+            border-color: var(--app-border);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--app-accent);
+            outline-offset: 2px;
+        }
+
+        .theme-toggle svg {
+            flex: 0 0 auto;
+        }
+
+        /* ----------------------------- Cards ------------------------------- */
+        .card {
+            background-color: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 0.6rem;
+            color: var(--app-text);
+        }
+
+        .card-header,
+        .card-footer {
+            background-color: var(--app-surface-muted);
+            border-color: var(--app-border);
         }
 
         .feature-card {
-    height: 100%;
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    background: #fff;
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+            height: 100%;
+        }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.10);
-}
-
-.feature-card .card-body {
-    padding: 1.75rem;
-}
-
-.feature-card h2 {
-    font-weight: 650;
-    letter-spacing: -0.02em;
-}
-
-.feature-card .btn {
-    border-radius: 0.6rem;
-    padding: 0.7rem 1rem;
-    font-weight: 600;
-}
+        .feature-card .card-body {
+            padding: 1.5rem;
+        }
 
         .feature-icon {
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             display: grid;
             place-items: center;
-            border-radius: 0.7rem;
-            background: #e7f0ff;
-            color: #0d6efd;
-            font-size: 1.5rem;
+            border-radius: 0.5rem;
+            background: var(--app-accent-soft);
+            color: var(--app-accent);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .stat-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.9rem 1rem;
+            background: var(--app-surface-muted);
+            border: 1px solid var(--app-border);
+            border-radius: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            color: var(--app-text-muted);
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* ----------------------------- Tables ------------------------------ */
+        .table {
+            --bs-table-color: var(--app-text);
+            --bs-table-border-color: var(--app-border);
+            --bs-table-striped-bg: rgba(15, 23, 42, 0.025);
+            --bs-table-hover-bg: rgba(15, 23, 42, 0.045);
+            --bs-table-hover-color: var(--app-text);
+            color: var(--app-text);
+            margin-bottom: 0;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.04);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.07);
+        }
+
+        .table thead th {
+            background-color: var(--app-surface-muted);
+            color: var(--app-text-muted);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--app-border);
+            white-space: nowrap;
+        }
+
+        .table> :not(caption)>*>* {
+            border-color: var(--app-border);
+        }
+
+        /* ---------------------------- Controls ----------------------------- */
+        .form-control,
+        .form-select {
+            background-color: var(--app-surface);
+            border-color: var(--app-border);
+            color: var(--app-text);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: var(--app-surface);
+            color: var(--app-text);
+            border-color: var(--app-accent);
+            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.18);
+        }
+
+        .form-control::placeholder {
+            color: var(--app-text-muted);
+            opacity: 0.8;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Keep native date/time pickers readable in dark mode. */
+        [data-bs-theme="dark"] input[type="date"],
+        [data-bs-theme="dark"] input[type="time"],
+        [data-bs-theme="dark"] input[type="number"],
+        [data-bs-theme="dark"] input[type="search"] {
+            color-scheme: dark;
+        }
+
+        /* ----------------------------- Buttons ----------------------------- */
+        .btn {
+            border-radius: 0.4rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            --bs-btn-bg: var(--app-accent);
+            --bs-btn-border-color: var(--app-accent);
+            --bs-btn-hover-bg: #1d4ed8;
+            --bs-btn-hover-border-color: #1d4ed8;
+            --bs-btn-active-bg: #1e40af;
+            --bs-btn-active-border-color: #1e40af;
+            --bs-btn-color: #ffffff;
+            --bs-btn-hover-color: #ffffff;
+            --bs-btn-active-color: #ffffff;
+            --bs-btn-disabled-bg: var(--app-accent);
+            --bs-btn-disabled-border-color: var(--app-accent);
+            --bs-btn-disabled-color: #ffffff;
+        }
+
+        [data-bs-theme="dark"] .btn-primary {
+            --bs-btn-color: #0b1220;
+            --bs-btn-hover-color: #0b1220;
+            --bs-btn-active-color: #0b1220;
+            --bs-btn-disabled-color: #0b1220;
+            --bs-btn-hover-bg: #93c5fd;
+            --bs-btn-hover-border-color: #93c5fd;
+            --bs-btn-active-bg: #bfdbfe;
+            --bs-btn-active-border-color: #bfdbfe;
+        }
+
+        .btn-outline-primary {
+            --bs-btn-color: var(--app-accent);
+            --bs-btn-border-color: var(--app-accent);
+            --bs-btn-hover-bg: var(--app-accent);
+            --bs-btn-hover-border-color: var(--app-accent);
+            --bs-btn-hover-color: #ffffff;
+        }
+
+        [data-bs-theme="dark"] .btn-outline-primary {
+            --bs-btn-hover-color: #0b1220;
+            --bs-btn-active-color: #0b1220;
+        }
+
+        .btn-outline-secondary {
+            --bs-btn-color: var(--app-text-muted);
+            --bs-btn-border-color: var(--app-border);
+            --bs-btn-hover-bg: var(--app-hover);
+            --bs-btn-hover-border-color: var(--app-border);
+            --bs-btn-hover-color: var(--app-text);
+            --bs-btn-active-bg: var(--app-hover);
+            --bs-btn-active-color: var(--app-text);
+            --bs-btn-active-border-color: var(--app-border);
+        }
+
+        .btn-outline-danger {
+            --bs-btn-color: #b91c1c;
+            --bs-btn-border-color: #e5b4b4;
+            --bs-btn-hover-bg: #b91c1c;
+            --bs-btn-hover-border-color: #b91c1c;
+        }
+
+        [data-bs-theme="dark"] .btn-outline-danger {
+            --bs-btn-color: #fca5a5;
+            --bs-btn-border-color: #7f3030;
+        }
+
+        /* ------------------------- Alerts & badges -------------------------- */
+        .alert {
+            border-radius: 0.5rem;
+            border-width: 1px;
+        }
+
+        .alert-danger {
+            --bs-alert-color: #991b1b;
+            --bs-alert-bg: #fdf2f2;
+            --bs-alert-border-color: #f3c9c9;
+        }
+
+        .alert-warning {
+            --bs-alert-color: #8a5300;
+            --bs-alert-bg: #fdf7ec;
+            --bs-alert-border-color: #f0dcb3;
+        }
+
+        .alert-success {
+            --bs-alert-color: #166534;
+            --bs-alert-bg: #f2f9f4;
+            --bs-alert-border-color: #c3e3cd;
+        }
+
+        .alert-info {
+            --bs-alert-color: #1e4b8f;
+            --bs-alert-bg: #f1f6fd;
+            --bs-alert-border-color: #c6daf5;
+        }
+
+        .alert-secondary {
+            --bs-alert-color: var(--app-text-muted);
+            --bs-alert-bg: var(--app-surface-muted);
+            --bs-alert-border-color: var(--app-border);
+        }
+
+        [data-bs-theme="dark"] .alert-danger {
+            --bs-alert-color: #fecaca;
+            --bs-alert-bg: #2a1a1c;
+            --bs-alert-border-color: #6b2626;
+        }
+
+        [data-bs-theme="dark"] .alert-warning {
+            --bs-alert-color: #fde68a;
+            --bs-alert-bg: #2a2318;
+            --bs-alert-border-color: #6b5220;
+        }
+
+        [data-bs-theme="dark"] .alert-success {
+            --bs-alert-color: #bbf7d0;
+            --bs-alert-bg: #16251c;
+            --bs-alert-border-color: #2f5c3e;
+        }
+
+        [data-bs-theme="dark"] .alert-info {
+            --bs-alert-color: #bfdbfe;
+            --bs-alert-bg: #172233;
+            --bs-alert-border-color: #2c4a72;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.36em 0.6em;
+            border-radius: 0.35rem;
+        }
+
+        .text-bg-primary {
+            background-color: var(--app-accent) !important;
+            color: #fff !important;
+        }
+
+        [data-bs-theme="dark"] .text-bg-primary {
+            color: #0b1220 !important;
+        }
+
+        .text-bg-success {
+            background-color: #dcfce7 !important;
+            color: #166534 !important;
+        }
+
+        .text-bg-warning {
+            background-color: #fef3c7 !important;
+            color: #854d0e !important;
+        }
+
+        .text-bg-secondary {
+            background-color: #e5e7eb !important;
+            color: #374151 !important;
+        }
+
+        [data-bs-theme="dark"] .text-bg-success {
+            background-color: #16321f !important;
+            color: #bbf7d0 !important;
+        }
+
+        [data-bs-theme="dark"] .text-bg-warning {
+            background-color: #3a2c10 !important;
+            color: #fde68a !important;
+        }
+
+        [data-bs-theme="dark"] .text-bg-secondary {
+            background-color: #374151 !important;
+            color: #e5e7eb !important;
+        }
+
+        /* --------------------------- Lists/links ---------------------------- */
+        .list-group-item {
+            background-color: var(--app-surface);
+            border-color: var(--app-border);
+            color: var(--app-text);
+        }
+
+        .border-warning-subtle {
+            border-color: var(--app-border) !important;
+        }
+
+        /* --------------------------- Small screens -------------------------- */
+        @media (max-width: 991.98px) {
+            .app-navbar .navbar-nav {
+                padding-top: 0.5rem;
+                gap: 0.15rem;
+            }
+
+            .app-navbar .nav-link {
+                padding: 0.55rem 0.7rem;
+            }
+
+            .theme-toggle {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            /* Keep the topic table usable: stack the inputs on phones. */
+            .table-responsive.stack-table {
+                overflow-x: visible;
+            }
+
+            .stack-table thead {
+                display: none;
+            }
+
+            .stack-table tbody tr {
+                display: block;
+                border: 1px solid var(--app-border);
+                border-radius: 0.5rem;
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+                background: var(--app-surface-muted);
+            }
+
+            .stack-table tbody td {
+                display: block;
+                width: 100% !important;
+                border: 0;
+                padding: 0.25rem 0;
+            }
+
+            .stack-table tbody td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: var(--app-text-muted);
+                margin-bottom: 0.15rem;
+            }
+        }
+
+        /* Respect reduced-motion users. */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important;
+            }
         }
     </style>
 </head>
-<body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-semibold" href="/">
-            Smart Academic Companion
-        </a>
+<body>
 
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#mainNavigation"
-            aria-controls="mainNavigation"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-        >
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <nav class="navbar navbar-expand-lg app-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                Smart Academic Companion
+            </a>
 
-        <div class="collapse navbar-collapse" id="mainNavigation">
-            <div class="navbar-nav ms-auto align-items-lg-center">
-                <a class="nav-link" href="{{ url_for('home') }}">Home</a>
-                <a class="nav-link" href="{{ url_for('attendance') }}">
-                    Attendance
-                </a>
-                <a class="nav-link" href="{{ url_for('classrooms') }}">
-                    Classrooms
-                </a>
-                <a class="nav-link" href="{{ url_for('study_planner_page') }}">
-                    Study Planner
-                </a>
-                <a class="nav-link" href="{{ url_for('risk_dashboard') }}">Faculty Dashboard</a>
-                <a class="nav-link" href="{{ url_for('faculty_manage') }}">Manage Records</a>
-                <a class="nav-link" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
+                aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavigation">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    {% set endpoint = request.endpoint %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'home' %}active{% endif %}" {% if endpoint=='home'
+                            %}aria-current="page" {% endif %} href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if
+                            endpoint=='attendance' %}aria-current="page" {% endif %}
+                            href="{{ url_for('attendance') }}">Attendance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if
+                            endpoint=='classrooms' %}aria-current="page" {% endif %}
+                            href="{{ url_for('classrooms') }}">Classrooms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if
+                            endpoint=='study_planner_page' %}aria-current="page" {% endif %}
+                            href="{{ url_for('study_planner_page') }}">Study Planner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'risk_dashboard' %}active{% endif %}" {% if
+                            endpoint=='risk_dashboard' %}aria-current="page" {% endif %}
+                            href="{{ url_for('risk_dashboard') }}">Faculty Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if
+                            endpoint=='faculty_manage' %}aria-current="page" {% endif %}
+                            href="{{ url_for('faculty_manage') }}">Manage Records</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'faculty_classes' %}active{% endif %}" {% if
+                            endpoint=='faculty_classes' %}aria-current="page" {% endif %}
+                            href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode"
+                            aria-pressed="false" title="Switch to dark mode">
+                            <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <path
+                                    d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4">
+                                </path>
+                            </svg>
+                            <span id="theme-label">Light</span>
+                        </button>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<main class="container py-4 py-lg-5">
-    {% block content %}
-    <section class="mb-5">
-        <span class="badge text-bg-primary mb-3">
-            Academic Management
-        </span>
-        <h1 class="display-5 fw-bold mb-3">
-    Your academic workspace, <span class="text-primary">all in one place.</span>
-</h1>
-        <p class="lead text-secondary mb-0" style="max-width: 760px;">
-            Plan attendance, find available classrooms, build a study schedule,
-            and review student academic performance from one place.
-        </p>
-    </section>
+    <main class="container py-4 py-lg-5">
+        {% block content %}
+        <section class="page-head mb-5">
+            <span class="badge text-bg-primary mb-3">Academic Management</span>
+            <h1 class="display-6 fw-semibold mb-3">
+                Your academic workspace, <span class="text-primary">all in one place.</span>
+            </h1>
+            <p class="lead text-secondary mb-0" style="max-width: 760px;">
+                Plan attendance, find available classrooms, build a study schedule,
+                and review student academic performance from one place.
+            </p>
+        </section>
 
-    <div class="row g-4">
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card feature-card shadow-sm">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="feature-icon mb-3" aria-hidden="true">✓</div>
-                    <h2 class="h4">Safe Attendance Calculator</h2>
-                    <p class="text-secondary">
-                        Calculate classes needed to reach your attendance
-                        target and how many upcoming classes you can miss.
-                    </p>
-                    <a href="{{ url_for('attendance') }}"
-                       class="btn btn-primary mt-auto">
-                        Open Attendance Calculator
-                    </a>
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="feature-icon mb-3" aria-hidden="true">&#10003;</div>
+                        <h2 class="h5">Safe Attendance Calculator</h2>
+                        <p class="text-secondary">
+                            Calculate the classes you need to reach your attendance
+                            target, and how many upcoming classes you can miss.
+                        </p>
+                        <a href="{{ url_for('attendance') }}" class="btn btn-primary mt-auto">
+                            Open Attendance Calculator
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="feature-icon mb-3" aria-hidden="true">&#8962;</div>
+                        <h2 class="h5">Classroom Finder</h2>
+                        <p class="text-secondary">
+                            See which rooms are free on a chosen day and time, and
+                            check for timetable clashes.
+                        </p>
+                        <a href="{{ url_for('classrooms') }}" class="btn btn-primary mt-auto">
+                            Find a Classroom
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="feature-icon mb-3" aria-hidden="true">&#9673;</div>
+                        <h2 class="h5">AI Study Planner</h2>
+                        <p class="text-secondary">
+                            Add your topics, how prepared you feel and how much time
+                            you have, then get a study order with time for each topic.
+                        </p>
+                        <a href="{{ url_for('study_planner_page') }}" class="btn btn-primary mt-auto">
+                            Build a Study Plan
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="feature-icon mb-3" aria-hidden="true">&#9636;</div>
+                        <h2 class="h5">Faculty Academic Dashboard</h2>
+                        <p class="text-secondary">
+                            Review student attendance, exam marks, assignment
+                            completion and records that may need attention.
+                        </p>
+                        <a href="{{ url_for('risk_dashboard') }}" class="btn btn-primary mt-auto">
+                            Open Faculty Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="feature-icon mb-3" aria-hidden="true">&#9638;</div>
+                        <h2 class="h5">Class Management</h2>
+                        <p class="text-secondary">
+                            Create classes, add students to them, and filter the
+                            faculty dashboard by class.
+                        </p>
+                        <a href="{{ url_for('faculty_classes') }}" class="btn btn-primary mt-auto">
+                            Manage Classes
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+        {% endblock %}
+    </main>
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card feature-card shadow-sm">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="feature-icon mb-3" aria-hidden="true">⌂</div>
-                    <h2 class="h4">Classroom Finder</h2>
-                    <p class="text-secondary">
-                        Check room availability for a selected day and time,
-                        and review available time slots.
-                    </p>
-                    <a href="{{ url_for('classrooms') }}"
-                       class="btn btn-primary mt-auto">
-                        Find a Classroom
-                    </a>
-                </div>
-            </div>
-        </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /*
+         * Light / dark toggle, shared by every page that extends base.html.
+         * The saved value is read by the inline script in <head>; this block only
+         * handles the button state and writes the user's choice to localStorage.
+         */
+        (function () {
+            var THEME_KEY = "sac-theme";
+            var root = document.documentElement;
+            var button = document.getElementById("theme-toggle");
+            var label = document.getElementById("theme-label");
+            var icon = document.getElementById("theme-icon");
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card feature-card shadow-sm">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="feature-icon mb-3" aria-hidden="true">▤</div>
-                    <h2 class="h4">Faculty Academic Dashboard</h2>
-                    <p class="text-secondary">
-                        Review student attendance, marks, assignment completion,
-                        and records that may need attention.
-                    </p>
-                    <a href="{{ url_for('risk_dashboard') }}"
-                       class="btn btn-primary mt-auto">
-                        Open Faculty Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
+            var SUN = '<circle cx="12" cy="12" r="4"></circle>' +
+                '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4' +
+                'M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>';
+            var MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>';
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card feature-card shadow-sm">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="feature-icon mb-3" aria-hidden="true">◎</div>
-                    <h2 class="h4">AI Study Planner</h2>
-                    <p class="text-secondary">
-                        Enter topic mastery and available time. A C min-heap
-                        ranks weak topics and a max-heap builds your study
-                        schedule. Runs locally, no AI API needed.
-                    </p>
-                    <a href="{{ url_for('study_planner_page') }}"
-                       class="btn btn-primary mt-auto">
-                        Build a Study Plan
-                    </a>
-                </div>
-            </div>
-        </div>
+            if (!button) { return; }
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card feature-card shadow-sm">
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="feature-icon mb-3" aria-hidden="true">▦</div>
-                    <h2 class="h4">Class Management</h2>
-                    <p class="text-secondary">
-                        Create custom classes, assign students, and filter the
-                        faculty dashboard by class.
-                    </p>
-                    <a href="{{ url_for('faculty_classes') }}"
-                       class="btn btn-primary mt-auto">
-                        Manage Classes
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+            function apply(theme) {
+                var dark = theme === "dark";
+                root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+                root.setAttribute("data-theme", dark ? "dark" : "light");
+                if (icon) { icon.innerHTML = dark ? MOON : SUN; }
+                if (label) { label.textContent = dark ? "Dark" : "Light"; }
+                button.setAttribute("aria-pressed", dark ? "true" : "false");
+                var next = dark ? "light" : "dark";
+                button.setAttribute("aria-label", "Switch to " + next + " mode");
+                button.setAttribute("title", "Switch to " + next + " mode");
+            }
 
+            // Sync the button with whatever the head script already applied.
+            apply(root.getAttribute("data-bs-theme") === "dark" ? "dark" : "light");
 
-    {% endblock %}
-</main>
-
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-></script>
+            button.addEventListener("click", function () {
+                var next = root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
+                apply(next);
+                try {
+                    window.localStorage.setItem(THEME_KEY, next);
+                } catch (e) {
+                    /* Storage unavailable: the choice lasts for this page only. */
+                }
+            });
+        })();
+    </script>
 </body>
+
 </html>

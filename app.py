@@ -606,8 +606,9 @@ def risk_dashboard():
             )
         except Exception:  # noqa: BLE001 - a model error must not crash the page
             risk_lookup_error = (
-                "The demonstration risk model could not score these students. "
-                "The academic records above are unaffected."
+                "Risk estimates are unavailable right now because there is not "
+                "enough data to calculate them. The academic records above are "
+                "unaffected."
             )
 
     return render_template(

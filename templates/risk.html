@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% block title %}Faculty Academic Dashboard · Smart Academic Companion{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-muted mb-0">Review attendance, exam marks and pending assessments.</p></div>
+  <div class="page-head"><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-secondary mb-0">View student performance, attendance and academic records.</p></div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-primary" href="{{ url_for('faculty_manage') }}">Manage Records</a>
-    <a class="btn btn-primary" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('faculty_manage') }}">Manage Records</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
   </div>
 </div>
 {% set risk_predictions = risk_predictions or {} %}
@@ -16,14 +17,10 @@
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Low marks in either exam</p><h2 class="h3 mb-0">{{ summary.low_marks }}</h2></div></div></div>
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Incomplete records</p><h2 class="h3 mb-0">{{ summary.incomplete_records }}</h2></div></div></div>
 </div>
-<div class="alert alert-secondary small" role="note">
-  <strong>Demonstration risk score.</strong>
-  The score comes from a logistic regression trained on rule-based demonstration labels
-  (at risk when attendance is below 75% or average marks are below 50%).
-  It is a learning exercise, not a validated dropout predictor, and must not be used to make
-  decisions about a student.
-  {% if risk_lookup_error %}<br><span class="text-danger">{{ risk_lookup_error }}</span>{% endif %}
-</div>
+<p class="small text-secondary mb-3" role="note">
+  Risk estimates are for guidance only.
+  {% if risk_lookup_error %}<span class="text-danger d-block">{{ risk_lookup_error }}</span>{% endif %}
+</p>
 <div class="card shadow-sm"><div class="card-body">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Student academic overview</h2><span class="small text-muted" id="student-result-count" aria-live="polite">Showing {{ summary.total_students }} of {{ summary.total_students }} students</span></div>
   <div class="row g-2 mb-3">
@@ -39,7 +36,7 @@
     <div class="col-12 d-flex justify-content-end"><button type="button" class="btn btn-outline-secondary btn-sm" id="clear-filters">Clear filters</button></div>
   </div>
   <div class="table-responsive"><table class="table table-striped table-hover align-middle" id="student-table">
-    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="midterm-subject-filter" aria-label="Filter midterm marks by subject"><option value="all">All subjects</option>{% for subject_name in summary.subject_names %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>End Term marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="endterm-subject-filter" aria-label="Filter end term marks by subject"><option value="all">All subjects</option>{% for subject_name in summary.subject_names %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>Pending assessments</th><th>Attention needed</th><th>Demonstration risk score</th></tr></thead>
+    <thead><tr><th>ID</th><th>Student</th><th>Semester</th><th>Section</th><th>Attendance</th><th>Midterm marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="midterm-subject-filter" aria-label="Filter midterm marks by subject"><option value="all">All subjects</option>{% for subject_name in summary.subject_names %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>End Term marks<div class="mt-1"><select class="form-select form-select-sm exam-subject-filter" id="endterm-subject-filter" aria-label="Filter end term marks by subject"><option value="all">All subjects</option>{% for subject_name in summary.subject_names %}<option value="{{ subject_name|lower }}">{{ subject_name }}</option>{% endfor %}</select></div></th><th>Pending assessments</th><th>Attention needed</th><th>Risk estimate</th></tr></thead>
     <tbody id="student-table-body">
     {% for student in summary.students %}
       <tr class="student-row"
@@ -68,9 +65,9 @@
         <td>
           {% if prediction %}
           <strong>{{ "%.1f"|format(prediction.risk_percent) }}%</strong>
-          <div class="small text-muted">Strongest factor: {{ prediction.top_factor_label }} ({{ prediction.top_factor_direction }})</div>
+          <div class="small text-secondary">Main factor: {{ prediction.top_factor_label }}</div>
           {% else %}
-          <span class="text-muted small" title="Attendance, marks and assignment data are all required">No prediction (incomplete data)</span>
+          <span class="text-secondary small" title="Attendance, marks and assignment data are all required">Not available (incomplete data)</span>
           {% endif %}
         </td>
       </tr>

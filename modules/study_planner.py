@@ -1,5 +1,6 @@
 """
-AI Study Planner backed by the C heap algorithms in ``c_core/core.dll``.
+AI Study Planner backed by the C heap algorithms in the compiled C core
+(``c_core/core.dll`` on Windows, ``c_core/libcore.so`` on Linux).
 
 The C core provides two heap-based algorithms:
 
@@ -20,7 +21,14 @@ made by the C code, not by Python.
 """
 
 import ctypes
+import sys
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from c_core.cload import load_core  # noqa: E402  (path set up above)
 
 MAX_TOPIC_LEN = 100
 MAX_NAME_LEN = 100
@@ -52,8 +60,8 @@ class StudyPlanItem(ctypes.Structure):
     ]
 
 
-_DLL_PATH = Path(__file__).resolve().parent.parent / "c_core" / "core.dll"
-_lib = ctypes.CDLL(str(_DLL_PATH))
+# Raises OSError when no platform library is available; callers catch it.
+_lib = load_core()
 
 _lib.study_priority_score.argtypes = [ctypes.POINTER(StudyTopic)]
 _lib.study_priority_score.restype = ctypes.c_double

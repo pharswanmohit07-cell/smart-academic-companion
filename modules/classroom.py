@@ -2,12 +2,20 @@
 """
 Classroom timetable utilities backed by the C interval module.
 
-Python wrapper around c_core/core.dll.
-Supports building-aware bookings and legacy inputs without a building.
+Python wrapper around the compiled C core (c_core/core.dll on Windows,
+c_core/libcore.so on Linux). Supports building-aware bookings and legacy
+inputs without a building.
 """
 
 import ctypes
+import sys
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from c_core.cload import load_core  # noqa: E402  (path set up above)
 
 MAX_ROOM_LEN = 16
 MAX_BUILDING_LEN = 64
@@ -36,8 +44,8 @@ class Booking(ctypes.Structure):
     ]
 
 
-_DLL_PATH = Path(__file__).resolve().parent.parent / "c_core" / "core.dll"
-_lib = ctypes.CDLL(str(_DLL_PATH))
+# Raises OSError when no platform library is available; callers catch it.
+_lib = load_core()
 
 _lib.sort_bookings.argtypes = [ctypes.POINTER(Booking), ctypes.c_int]
 _lib.sort_bookings.restype = None

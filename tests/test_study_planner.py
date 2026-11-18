@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 import modules.study_planner as study_planner
+from c_core import cload
 
 
 def topic(name, mastery, minutes):
@@ -164,9 +165,20 @@ class TestDllLoadingErrors(unittest.TestCase):
         with self.assertRaises(OSError):
             ctypes.CDLL("c_core/this_library_does_not_exist.dll")
 
+    def test_core_loader_finds_the_platform_library(self):
+        library = cload.find_library()
+        self.assertIsNotNone(library)
+        self.assertIn(library.name, cload.LIBRARY_NAMES)
+
+    def test_core_loader_error_mentions_the_build_command(self):
+        with patch.object(cload, "candidate_paths", return_value=[]):
+            with self.assertRaises(OSError) as context:
+                cload.load_core()
+        self.assertIn("gcc", str(context.exception))
+
     def test_old_dll_without_planner_functions_is_detected(self):
         # Simulate a DLL built from the previous core.c (no planner symbols).
-        old_lib = ctypes.CDLL(str(study_planner._DLL_PATH))
+        old_lib = ctypes.CDLL(str(cload.find_library()))
         with self.assertRaises(AttributeError):
             old_lib.this_symbol_does_not_exist
 

@@ -2,7 +2,7 @@
 import sqlite3
 from contextlib import closing
 
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 
 from attendance_calculator import classes_needed, classes_missable
 from database import get_connection, initialize_database
@@ -102,6 +102,12 @@ def find_rooms(day, start, end):
         "clash_count": len(clashes),
     }
     return results, summary
+
+
+@app.route("/favicon.ico")
+def favicon():
+    """Silence the browser's automatic favicon request; the app has no icon."""
+    return Response(status=204)
 
 
 @app.route("/")

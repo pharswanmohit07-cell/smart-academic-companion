@@ -247,7 +247,7 @@ static void test_rank_topics_min_heap(void)
     assert(ranked[0].priority_score == 80.0);
     assert(ranked[0].allocated_minutes == 45);
 
-    /* Equal mastery keeps the lower topic_id first. */
+    /* Equal mastery keeps the lower topic_id first (header contract). */
     StudyTopic equal[] = {
         make_topic(7, "Loops", 50.0, 20),
         make_topic(5, "Stacks", 50.0, 20),
@@ -405,6 +405,90 @@ static void test_build_study_schedule(void)
     puts("PASS: greedy max-heap study scheduling");
 }
 
+/*
+ * Longest contiguous run of equally-ranked topics. Used as a coarse sanity
+ * check on the heap output; the tie-break guarantee itself is checked by
+ * test_rank_tie_break for many sizes below.
+ */
+static int longest_equal_run(const StudyPlanItem ranked[], int count)
+{
+    int longest = 1;
+    int run = 1;
+    for (int i = 1; i < count; i++) {
+        if (ranked[i].mastery_pct == ranked[i - 1].mastery_pct) {
+            run++;
+        } else {
+            run = 1;
+        }
+        if (run > longest) longest = run;
+    }
+    return longest;
+}
+
+/* The header guarantees equal mastery + equal priority breaks on topic_id. */
+static void test_rank_tie_break(void)
+{
+    for (int n = 1; n <= 40; n++) {
+        StudyTopic topics[40];
+        StudyPlanItem ranked[40];
+
+        for (int i = 0; i < n; i++) {
+            /* Same mastery for everyone: only topic_id can decide. */
+            topics[i] = make_topic(n - i, "Tie", 60.0, 10 + i);
+        }
+
+        assert(rank_topics_by_weakness(topics, n, ranked, 40) == n);
+        for (int i = 0; i < n; i++) {
+            assert(ranked[i].topic_id == i + 1);
+        }
+    }
+
+    puts("PASS: equal-mastery tie-break is topic_id order");
+}
+
+static void test_rank_order_and_determinism(void)
+{
+    StudyPlanItem ranked[230];
+    StudyTopic topics[230];
+
+    for (int i = 0; i < 230; i++) {
+        /* Every third topic shares one mastery value to create ties. */
+        topics[i] = make_topic(i + 1, "Topic", (double)(i % 7) * 10.0, 20 + i);
+    }
+
+    int count = rank_topics_by_weakness(topics, 230, ranked, 230);
+    assert(count == 230);
+
+    /* Global property: mastery never decreases through the ranking. */
+    for (int i = 1; i < count; i++) {
+        assert(ranked[i - 1].mastery_pct <= ranked[i].mastery_pct);
+        assert(ranked[i].position == i + 1);
+    }
+
+    /* Determinism: a second call produces exactly the same order. */
+    StudyPlanItem again[230];
+    assert(rank_topics_by_weakness(topics, 230, again, 230) == 230);
+    for (int i = 0; i < count; i++) {
+        assert(ranked[i].topic_id == again[i].topic_id);
+    }
+
+    /* Only a small key set can occupy a contiguous run: a real heap
+     * would interleave very little, but the ordering is still correct. */
+    assert(longest_equal_run(ranked, count) <= 34);
+
+    /* Out-parameter pointers may be NULL. */
+    StudyPlanItem plan[2];
+    StudyPlanItem skipped[3];
+    StudyTopic two[] = {
+        make_topic(1, "First", 10.0, 30),
+        make_topic(2, "Second", 90.0, 30),
+    };
+    assert(build_study_schedule(two, 2, 30, plan, 2, skipped, 3, NULL, NULL) == 1);
+    assert(plan[0].topic_id == 1);
+
+    puts("PASS: ranking order, determinism and NULL out-parameters");
+}
+
 int main(void)
 {
     test_validation_and_overlap();
@@ -416,6 +500,8 @@ int main(void)
     test_study_priority_score();
     test_rank_topics_min_heap();
     test_build_study_schedule();
+    test_rank_tie_break();
+    test_rank_order_and_determinism();
 
     puts("All C core tests passed.");
     return 0;

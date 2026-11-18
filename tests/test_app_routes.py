@@ -52,3 +52,15 @@ class TestClassroomRoute(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFaviconRoute(unittest.TestCase):
+    """Browsers always request /favicon.ico; a 404 shows up as a console error."""
+
+    def setUp(self):
+        self.client = app.test_client()
+
+    def test_favicon_is_not_a_404(self):
+        response = self.client.get("/favicon.ico")
+        self.assertNotEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 204)

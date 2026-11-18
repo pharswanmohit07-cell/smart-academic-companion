@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-1">AI Study Planner</h1>
+    <p class="text-muted mb-0">
+      Rank topics by weakness with a C min-heap, then fill your available time
+      with a greedy C max-heap scheduler.
+    </p>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-1">Your topics</h2>
+    <p class="text-secondary small">
+      Priority = 100 &minus; mastery. A topic at 0% mastery has priority 100 and
+      is studied first; a topic at 100% mastery has priority 0 and is studied last.
+    </p>
+
+    <form method="post" id="study-plan-form">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 45%;">Topic name</th>
+              <th style="width: 25%;">Mastery (%)</th>
+              <th style="width: 25%;">Estimated minutes</th>
+              <th style="width: 5%;"></th>
+            </tr>
+          </thead>
+          <tbody id="topic-rows">
+            {% for row in rows %}
+            <tr class="topic-row">
+              <td><input type="text" class="form-control" name="topic_name" value="{{ row.name }}" maxlength="99" aria-label="Topic name"></td>
+              <td><input type="number" class="form-control" name="mastery_pct" value="{{ row.mastery_pct }}" min="0" max="100" step="0.1" aria-label="Mastery percentage"></td>
+              <td><input type="number" class="form-control" name="estimated_minutes" value="{{ row.estimated_minutes }}" min="1" step="1" aria-label="Estimated study minutes"></td>
+              <td><button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remove topic">&times;</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-4">
+          <label for="available_minutes" class="form-label">Available study time (minutes)</label>
+          <input id="available_minutes" type="number" class="form-control" name="available_minutes"
+                 value="{{ available_minutes }}" min="1" step="1" required>
+        </div>
+        <div class="col-12 col-md-8 d-flex flex-wrap gap-2 justify-content-md-end">
+          <button type="button" class="btn btn-outline-secondary" id="add-row">Add topic</button>
+          <button type="submit" class="btn btn-primary">Generate study plan</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if plan %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Available time</p><h2 class="h4 mb-0">{{ plan.available_minutes }} min</h2></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Scheduled time</p><h2 class="h4 mb-0">{{ plan.scheduled_minutes }} min</h2></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Time left over</p><h2 class="h4 mb-0">{{ plan.remaining_minutes }} min</h2></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Topics not fully planned</p><h2 class="h4 mb-0">{{ plan.skipped|length }}</h2></div></div></div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3">Recommended study order</h2>
+    {% if plan.schedule %}
+    <div class="table-responsive">
+      <table class="table table-striped align-middle mb-0">
+        <thead>
+          <tr><th>Step</th><th>Topic</th><th>Mastery</th><th>Priority</th><th>Allocated minutes</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for item in plan.schedule %}
+          <tr>
+            <td>{{ item.position }}</td>
+            <td class="fw-semibold">{{ item.name }}</td>
+            <td>{{ "%.1f"|format(item.mastery_pct) }}%</td>
+            <td>{{ "%.2f"|format(item.priority_score) }}</td>
+            <td>{{ item.allocated_minutes }}</td>
+            <td>
+              {% if item.partial %}
+              <span class="badge text-bg-warning">Partial: {{ item.allocated_minutes }} of {{ item.needed_minutes }} min</span>
+              {% else %}
+              <span class="badge text-bg-success">Complete</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No topic could be scheduled with the available time.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3">Topic priority ranking (weakest first)</h2>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead><tr><th>#</th><th>Topic</th><th>Mastery</th><th>Priority (100 &minus; mastery)</th><th>Planned?</th></tr></thead>
+        <tbody>
+          {% for topic in plan.topics %}
+          <tr>
+            <td>{{ topic.position }}</td>
+            <td>{{ topic.name }}</td>
+            <td>{{ "%.1f"|format(topic.mastery_pct) }}%</td>
+            <td>{{ "%.2f"|format(topic.priority_score) }}</td>
+            <td>{% if topic.name in plan.scheduled_names %}<span class="badge text-bg-primary">Yes</span>{% else %}<span class="badge text-bg-secondary">No</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if plan.skipped %}
+<div class="card shadow-sm mt-4 border-warning-subtle">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3">Topics that could not fit</h2>
+    <ul class="list-group list-group-flush">
+      {% for item in plan.skipped %}
+      <li class="list-group-item d-flex justify-content-between align-items-start gap-3">
+        <div>
+          <strong>{{ item.name }}</strong>
+          <div class="small text-muted">{{ item.reason }}</div>
+        </div>
+        <span class="badge text-bg-warning">{{ "%.2f"|format(item.priority_score) }} priority</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="small text-muted mt-3 mb-0">
+      Add more study time, or lower the estimated minutes for these topics, then generate the plan again.
+    </p>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<script>
+(() => {
+  const rows = document.getElementById("topic-rows");
+  const addButton = document.getElementById("add-row");
+  const maxTopics = Number("{{ max_topics|int }}");
+
+  function attachRemove(button) {
+    button.addEventListener("click", () => {
+      if (rows.querySelectorAll(".topic-row").length === 1) {
+        button.closest("tr").querySelectorAll("input").forEach((input) => { input.value = ""; });
+        return;
+      }
+      button.closest("tr").remove();
+    });
+  }
+
+  rows.querySelectorAll(".remove-row").forEach(attachRemove);
+
+  addButton.addEventListener("click", () => {
+    if (rows.querySelectorAll(".topic-row").length >= maxTopics) return;
+    const clone = rows.querySelector(".topic-row").cloneNode(true);
+    clone.querySelectorAll("input").forEach((input) => { input.value = ""; });
+    // cloneNode does not copy event listeners, so attach the handler again.
+    const removeButton = clone.querySelector(".remove-row");
+    removeButton.addEventListener("click", () => { removeButton.closest("tr").remove(); });
+    rows.appendChild(clone);
+  });
+})();
+</script>
+{% endblock %}

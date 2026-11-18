@@ -224,3 +224,16 @@ __marimo__/
 .streamlit/secrets.toml
 academic_companion.db
 academic.db
+
+# Local project data, backups and archives (never commit student data)
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+*.backup.db
+.db-backups/
+*.zip
+
+# Local editor settings
+.vscode/

@@ -6,6 +6,7 @@ from flask import Flask, render_template, request
 
 from attendance_calculator import classes_needed, classes_missable
 from database import get_connection, initialize_database
+from modules import risk_model
 from modules.faculty_dashboard import get_assessment_overview, get_faculty_summary
 
 # The classroom finder needs the compiled C library (c_core/core.dll).
@@ -17,6 +18,19 @@ except (OSError, AttributeError):
     classroom = None
     CLASSROOM_ERROR = (
         "The C library could not be loaded. Build it with: "
+        "gcc -shared -DCORE_BUILD_DLL -o c_core\\core.dll c_core\\core.c"
+    )
+
+# The study planner uses the same C library, so it fails the same way
+# when the DLL is missing or was built from an older version of core.c.
+try:
+    from modules import study_planner
+    STUDY_PLANNER_ERROR = None
+except (OSError, AttributeError):
+    study_planner = None
+    STUDY_PLANNER_ERROR = (
+        "The C study planner is not available because c_core\\core.dll "
+        "could not be loaded. Build it with: "
         "gcc -shared -DCORE_BUILD_DLL -o c_core\\core.dll c_core\\core.c"
     )
 
@@ -176,6 +190,67 @@ def classrooms():
         "classrooms.html",
         form=form, days=DAY_NAMES, results=results,
         summary=summary, error=error,
+    )
+
+
+@app.route("/study-planner", methods=["GET", "POST"])
+def study_planner_page():
+    """Build a study plan from topic mastery using the C heap algorithms."""
+    error = STUDY_PLANNER_ERROR
+    plan = None
+    available_minutes = "120"
+    # Default rows so the page is usable straight away.
+    rows = [
+        {"name": "Recursion", "mastery_pct": "40", "estimated_minutes": "45"},
+        {"name": "Normalisation", "mastery_pct": "60", "estimated_minutes": "30"},
+        {"name": "Graph Algorithms", "mastery_pct": "25", "estimated_minutes": "60"},
+    ]
+
+    if study_planner is not None and request.method == "POST":
+        available_minutes = request.form.get("available_minutes", "").strip()
+        names = request.form.getlist("topic_name")
+        masteries = request.form.getlist("mastery_pct")
+        minutes = request.form.getlist("estimated_minutes")
+        rows = [
+            {"name": names[i].strip(), "mastery_pct": masteries[i].strip(),
+             "estimated_minutes": minutes[i].strip()}
+            for i in range(len(names))
+        ]
+
+        topics = []
+        for index, row in enumerate(rows, start=1):
+            # Skip rows the user has not filled in at all.
+            if not (row["name"] or row["mastery_pct"] or row["estimated_minutes"]):
+                continue
+            try:
+                topics.append({
+                    "name": row["name"],
+                    "mastery_pct": float(row["mastery_pct"]),
+                    "estimated_minutes": int(row["estimated_minutes"]),
+                })
+            except ValueError:
+                error = (
+                    f"Row {index}: enter a mastery percentage and estimated "
+                    "minutes as numbers."
+                )
+                break
+
+        if error is None and not topics:
+            error = "Add at least one topic before generating a plan."
+
+        if error is None:
+            try:
+                plan = study_planner.build_plan(topics, available_minutes)
+            except ValueError as exc:
+                error = str(exc)
+
+    return render_template(
+        "study_planner.html",
+        plan=plan,
+        rows=rows,
+        available_minutes=available_minutes,
+        error=error,
+        max_topics=study_planner.MAX_TOPICS if study_planner else 10,
     )
 
 
@@ -495,6 +570,8 @@ def risk_dashboard():
     error = None
     summary = None
     assessments = []
+    risk_lookup_error = None
+    risk_predictions = {}
     selected_class_id = request.args.get("class_id", type=int)
     classes = []
 
@@ -514,6 +591,19 @@ def risk_dashboard():
             "Check that the database is initialized."
         )
 
+    # Demonstration risk predictions are loaded separately so a model
+    # problem can never break the academic dashboard itself.
+    if summary is not None:
+        try:
+            risk_predictions = risk_model.predict_students(
+                [student["student_id"] for student in summary["students"]]
+            )
+        except Exception:  # noqa: BLE001 - a model error must not crash the page
+            risk_lookup_error = (
+                "The demonstration risk model could not score these students. "
+                "The academic records above are unaffected."
+            )
+
     return render_template(
         "risk.html",
         summary=summary,
@@ -521,6 +611,8 @@ def risk_dashboard():
         classes=classes,
         selected_class_id=selected_class_id,
         error=error,
+        risk_predictions=risk_predictions,
+        risk_lookup_error=risk_lookup_error,
     )
 
 

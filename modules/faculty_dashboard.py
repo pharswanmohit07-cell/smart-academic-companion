@@ -133,8 +133,8 @@ def get_faculty_summary(class_id=None):
         conn.close()
 
 
-def get_assessment_overview():
-    """Return assessment items and their student submission counts."""
+def get_assessment_overview(class_id=None):
+    """Return assessment items and submission counts, optionally for one class."""
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -149,9 +149,11 @@ def get_assessment_overview():
             LEFT JOIN assessment_submissions ss
                 ON ss.assessment_id = ai.assessment_id
                 AND ss.student_id = s.student_id
+            WHERE (? IS NULL OR s.class_id = ?)
             GROUP BY ai.assessment_id
             ORDER BY ai.assessment_type, ai.title
-            """
+            """,
+            (class_id, class_id),
         ).fetchall()
         return [dict(row) for row in rows]
     finally:

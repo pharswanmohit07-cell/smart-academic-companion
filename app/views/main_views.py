@@ -83,6 +83,28 @@ def forbidden(error):
     return render_template("errors/403.html"), 403
 
 
+def register_error_handlers(app):
+    """Register error pages on the application.
+
+    These must be app-level, not blueprint-level: ``abort(403)`` is raised from
+    inside other blueprints (the ownership checks in ``app.auth``), and a
+    blueprint handler would not catch it, so Flask would render its default
+    error and the response status would not be the real one.
+    """
+
+    @app.errorhandler(403)
+    def _forbidden(error):
+        return forbidden(error)
+
+    @app.errorhandler(404)
+    def _not_found(error):
+        return not_found(error)
+
+    @app.errorhandler(500)
+    def _server_error(error):
+        return server_error(error)
+
+
 @bp.errorhandler(404)
 def not_found(error):
     return render_template("errors/404.html"), 404

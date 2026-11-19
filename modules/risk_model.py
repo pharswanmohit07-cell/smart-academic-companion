@@ -31,15 +31,31 @@ FEATURES = [
 RANDOM_SEED = 42
 
 
-def _load_student_data():
+def _load_student_data(class_ids=None):
     """Build student features and demonstration labels from the database.
 
     The rows are read through :mod:`db` (SQLite locally, PostgreSQL in
     production) and handed to pandas as a list of mappings. ``pandas.read_sql``
     is not used because it needs a raw DBAPI cursor, which the portable
     connection deliberately does not expose.
+
+    ``class_ids`` restricts the dataset to the classes the caller is authorized
+    for (``None`` means all, for operator tooling). Training and scoring always
+    share one scope, so a faculty account's model never sees students from
+    classes it does not own.
     """
     conn = get_connection()
+    scope_sql = ""
+    scope_params = ()
+    if class_ids is not None:
+        ids = sorted({int(value) for value in class_ids})
+        if not ids:
+            conn.close()
+            return pd.DataFrame(columns=(
+                "student_id", "name", *FEATURES))
+        placeholders = ", ".join(chr(63) for _ in ids)  # 63 == '?'
+        scope_sql = f"WHERE s.class_id IN ({placeholders})"
+        scope_params = tuple(ids)
     try:
         rows = conn.execute(
             """
@@ -92,8 +108,10 @@ def _load_student_data():
                 ON assessments.student_id = s.student_id
             LEFT JOIN legacy_assignment_ratio AS legacy
                 ON legacy.student_id = s.student_id
+            {scope_sql}
             GROUP BY s.student_id, s.name
-            """
+            """.format(scope_sql=scope_sql),
+            scope_params,
         ).fetchall()
     finally:
         conn.close()
@@ -112,14 +130,14 @@ def _load_student_data():
     return data
 
 
-def train_model():
-    """Train a logistic regression model on the student data.
+def train_model(class_ids=None):
+    """Train a logistic regression model on the (optionally scoped) data.
 
     Returns:
         (model, metrics): the fitted sklearn pipeline and a dict of
         evaluation metrics from the held-out test split.
     """
-    data = _load_student_data()
+    data = _load_student_data(class_ids)
     if data.empty or len(data) < 10:
         raise ValueError(
             "Not enough student data in the database to train the risk "
@@ -173,25 +191,25 @@ def predict_risk(student_id):
     return _explain(model, student_rows.iloc[0])
 
 
-def predict_students(student_ids):
+def predict_students(student_ids, class_ids=None):
     """Score several students with one trained model.
 
-    Used by the faculty dashboard. Training happens once, and students
-    without complete data are simply left out of the result instead of
-    raising, so one incomplete record cannot break the whole page.
+    Used by the faculty dashboard. Both the training data and the scored rows
+    are limited to ``class_ids`` (the caller's authorized classes), so students
+    outside that scope neither influence the model nor appear in its output.
+    Training happens once, and students without complete data are left out
+    instead of raising, so one incomplete record cannot break the page.
 
     Returns a dict of {student_id: prediction}. Raises ValueError only when
     the model cannot be trained at all (for example, too few students).
     """
-    # The caller is already restricted at the role/class level, so the model is
-    # trained on the whole dataset but only asked about authorized students.
-    data = _load_student_data()
+    data = _load_student_data(class_ids)
     if data.empty:
         raise ValueError(
             "No students have complete attendance, marks and assignment data."
         )
 
-    model, _ = train_model()
+    model, _ = train_model(class_ids)
 
     wanted = {int(student_id) for student_id in student_ids}
     predictions = {}

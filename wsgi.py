@@ -113,6 +113,10 @@ def create_app():
     app.register_blueprint(student_views.bp)
     app.register_blueprint(faculty_views.bp)
 
+    # Error pages must be app-level so aborts raised outside main_views (the
+    # ownership checks) still produce the documented status codes.
+    main_views.register_error_handlers(app)
+
     @app.errorhandler(400)
     def bad_request(error):
         return render_template("errors/400.html", message=getattr(error, "description", "")), 400

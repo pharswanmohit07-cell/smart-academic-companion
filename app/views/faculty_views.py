@@ -89,7 +89,8 @@ def dashboard():
     if summary["students"]:
         try:
             risk_predictions = risk_model.predict_students(
-                [student["student_id"] for student in summary["students"]]
+                [student["student_id"] for student in summary["students"]],
+                class_ids=auth_module.owned_class_ids(),
             )
         except Exception:  # noqa: BLE001 - a model error must not crash the page
             risk_lookup_error = (
@@ -196,11 +197,13 @@ def manage():
                     _create_class(connection, account)
 
                 elif action == "save_attendance":
+                    # Authorization first: a caller who does not own this student
+                    # gets 403 regardless of how malformed the rest of the body is.
                     student_id = int(request.form.get("student_id", ""))
+                    auth_module.require_student_ids([student_id])
                     subject_id = int(request.form.get("subject_id", ""))
                     total = int(request.form.get("total_classes", ""))
                     attended = int(request.form.get("attended_classes", ""))
-                    auth_module.require_student_ids([student_id])
                     if total < 1 or attended < 0 or attended > total:
                         raise ValueError(
                             "Attendance must satisfy 0 <= attended classes <= total classes."
@@ -218,11 +221,11 @@ def manage():
 
                 elif action == "save_marks":
                     student_id = int(request.form.get("student_id", ""))
+                    auth_module.require_student_ids([student_id])
                     subject_id = int(request.form.get("subject_id", ""))
                     exam_name = request.form.get("exam_name", "")
                     obtained = float(request.form.get("marks_obtained", ""))
                     maximum = float(request.form.get("max_marks", ""))
-                    auth_module.require_student_ids([student_id])
                     if exam_name not in ("Midterm", "End Term"):
                         raise ValueError("Choose Midterm or End Term.")
                     if maximum <= 0 or obtained < 0 or obtained > maximum:
@@ -266,8 +269,8 @@ def manage():
                 elif action == "save_submission":
                     assessment_id = int(request.form.get("assessment_id", ""))
                     student_id = int(request.form.get("student_id", ""))
-                    submitted = 1 if request.form.get("submitted") == "1" else 0
                     auth_module.require_student_ids([student_id])
+                    submitted = 1 if request.form.get("submitted") == "1" else 0
                     connection.execute(
                         """INSERT INTO assessment_submissions
                                (assessment_id, student_id, submitted, updated_at)
@@ -459,6 +462,12 @@ def classes():
             log.exception("class save failed")
             error = "Could not save the class record."
         except Exception as exc:  # noqa: BLE001 - surfaced as a page message
+            # Authorization failures (403/404) must reach Flask, not be turned
+            # into a 200 with an error banner.
+            from werkzeug.exceptions import HTTPException
+
+            if isinstance(exc, HTTPException):
+                raise
             log.exception("class action failed")
             error = "Could not save the class record. Check the values and try again."
 

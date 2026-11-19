@@ -186,12 +186,23 @@ CREATE INDEX IF NOT EXISTS idx_faculty_classes_owner ON faculty_classes(owner_te
 CREATE INDEX IF NOT EXISTS idx_teachers_auth_user ON teachers(auth_user_id);
 
 -- Foreign keys for columns that may have been added above.
+--
+-- A foreign key cannot be added over violating rows. If an older deployment
+-- linked students to auth users that no longer exist, or classes to teachers
+-- that were removed, the offending columns are NULLed first: they carry no
+-- academic data (the record itself stays), and an FK violation could otherwise
+-- only be fixed by hand. This mirrors ON DELETE SET NULL, the behaviour the
+-- constraint would have produced.
 -- app-migration:
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'students_auth_user_id_fkey'
     ) THEN
+        UPDATE students AS s
+           SET auth_user_id = NULL
+         WHERE s.auth_user_id IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM auth.users AS u WHERE u.id = s.auth_user_id);
         ALTER TABLE students
             ADD CONSTRAINT students_auth_user_id_fkey
             FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
@@ -204,6 +215,10 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'faculty_classes_owner_teacher_id_fkey'
     ) THEN
+        UPDATE faculty_classes AS c
+           SET owner_teacher_id = NULL
+         WHERE c.owner_teacher_id IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM teachers AS t WHERE t.teacher_id = c.owner_teacher_id);
         ALTER TABLE faculty_classes
             ADD CONSTRAINT faculty_classes_owner_teacher_id_fkey
             FOREIGN KEY (owner_teacher_id) REFERENCES teachers(teacher_id) ON DELETE SET NULL;

@@ -68,9 +68,25 @@ def _own_summary(account):
 
 
 def _risk_for(account):
-    """The student's own risk estimate; never fails the dashboard."""
+    """The student's own risk estimate; never fails the dashboard.
+
+    A student is scored from their own class only, never from the whole
+    institution's data.
+    """
     try:
-        return risk_model.predict_students([account.student_id]).get(account.student_id)
+        from contextlib import closing
+
+        from db import get_connection
+
+        with closing(get_connection()) as connection:
+            row = connection.execute(
+                "SELECT class_id FROM students WHERE student_id = ?",
+                (account.student_id,),
+            ).fetchone()
+        class_ids = [row["class_id"]] if row and row["class_id"] else []
+        return risk_model.predict_students(
+            [account.student_id], class_ids=class_ids
+        ).get(account.student_id)
     except Exception:  # noqa: BLE001 - a model problem must not break the page
         log.info("risk estimate unavailable for student %s", account.student_id)
         return None

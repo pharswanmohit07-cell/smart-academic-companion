@@ -14,6 +14,13 @@ import os
 bind = f"0.0.0.0:{os.environ.get('PORT', '10000')}"
 
 # Each worker loads pandas and scikit-learn, so keep the count modest.
+#
+# Connection budget: every request opens its own PostgreSQL connection and
+# closes it before the response returns (see db.get_connection usage), so the
+# live connections are bounded by workers x threads. With points below
+# (2 x 4 = 8) plus Supabase's own sessions, a Session-pooler DATABASE_URL is
+# required; the direct database port allows far fewer connections. Increase
+# WEB_CONCURRENCY only together with the Supabase connection limit.
 workers = int(os.environ.get("WEB_CONCURRENCY", min(2, multiprocessing.cpu_count())))
 threads = int(os.environ.get("GUNICORN_THREADS", "4"))
 worker_class = "gthread"

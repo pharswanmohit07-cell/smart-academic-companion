@@ -1,90 +1,127 @@
 {% extends "base.html" %}
-
-{#
-  Landing page. Signed-in visitors are sent straight to their dashboard by the
-  ``home`` view, so this page is only shown to visitors who are not signed in.
-#}
+{% block title %}Smart Academic Companion · Academic tools in one workspace{% endblock %}
 {% block content %}
-<section class="page-head mb-5">
-    <span class="badge text-bg-primary mb-3">Academic Management</span>
-    <h1 class="display-6 fw-semibold mb-3">
-        Your academic workspace, <span class="text-primary">all in one place.</span>
-    </h1>
-    <p class="lead text-secondary mb-4" style="max-width: 760px;">
-        Plan attendance, find available classrooms, build a study schedule,
-        and review student academic performance from one place.
-    </p>
-    <div class="d-flex flex-wrap gap-2">
-        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Sign in</a>
-        <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary">Create a student account</a>
-    </div>
-</section>
-
-<div class="row g-4">
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card feature-card h-100">
-            <div class="card-body d-flex flex-column">
-                <div class="feature-icon mb-3" aria-hidden="true">&#10003;</div>
-                <h2 class="h5">Safe Attendance Calculator</h2>
-                <p class="text-secondary">
-                    Calculate the classes you need to reach your attendance
-                    target, and how many upcoming classes you can miss.
-                </p>
-            </div>
+<div class="landing-page">
+  <section class="landing-hero">
+    <div class="landing-hero-grid">
+      <div>
+        <span class="landing-eyebrow">Academic workspace</span>
+        <h1 class="landing-title">A clearer way to manage academic life.</h1>
+        <p class="landing-lead">Bring attendance planning, classroom availability, study schedules and academic progress together in one focused workspace.</p>
+        <div class="landing-actions">
+          <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">Create a student account</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">Sign in</a>
         </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card feature-card h-100">
-            <div class="card-body d-flex flex-column">
-                <div class="feature-icon mb-3" aria-hidden="true">&#8962;</div>
-                <h2 class="h5">Classroom Finder</h2>
-                <p class="text-secondary">
-                    See which rooms are free on a chosen day and time, and
-                    check for timetable clashes.
-                </p>
+        <p class="landing-trustline">For students and faculty · Role-based access · Built around practical academic workflows</p>
+      </div>
+      <div class="product-preview" aria-label="Illustrative preview of the academic workspace">
+        <div class="preview-topbar"><strong>Smart Academic Companion</strong><span>Workspace preview</span></div>
+        <div class="preview-window">
+          <aside class="preview-sidebar" aria-hidden="true">
+            <span>Overview</span><span>Attendance</span><span>Classrooms</span><span>Study planner</span><span>Records</span>
+          </aside>
+          <div class="preview-content">
+            <div class="preview-title">Academic overview</div>
+            <div class="preview-subtitle">A single place to review your academic activity</div>
+            <div class="preview-metrics">
+              <div class="preview-metric"><strong>—</strong><small>Attendance</small></div>
+              <div class="preview-metric"><strong>—</strong><small>Subjects</small></div>
+              <div class="preview-metric"><strong>—</strong><small>Pending work</small></div>
             </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card feature-card h-100">
-            <div class="card-body d-flex flex-column">
-                <div class="feature-icon mb-3" aria-hidden="true">&#9673;</div>
-                <h2 class="h5">AI Study Planner</h2>
-                <p class="text-secondary">
-                    Add your topics, how prepared you feel and how much time
-                    you have, then get a study order with time for each topic.
-                </p>
+            <div class="preview-table">
+              <div class="preview-row head"><span>Workspace</span><span>Purpose</span><span>Access</span></div>
+              <div class="preview-row"><span>Attendance</span><span>Plan</span><span>Student</span></div>
+              <div class="preview-row"><span>Classrooms</span><span>Find</span><span>Student</span></div>
+              <div class="preview-row"><span>Study planner</span><span>Organise</span><span>Student</span></div>
+              <div class="preview-row"><span>Academic records</span><span>Review</span><span>Faculty</span></div>
             </div>
+            <p class="preview-note">Illustrative layout. Your dashboard displays your own available records after sign-in.</p>
+          </div>
         </div>
+      </div>
     </div>
+  </section>
 
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card feature-card h-100">
-            <div class="card-body d-flex flex-column">
-                <div class="feature-icon mb-3" aria-hidden="true">&#9636;</div>
-                <h2 class="h5">Faculty Academic Dashboard</h2>
-                <p class="text-secondary">
-                    Review student attendance, exam marks, assignment
-                    completion and records that may need attention &mdash;
-                    limited to the classes faculty are assigned to.
-                </p>
-            </div>
-        </div>
+  <section class="landing-section student-tools-section">
+    <div class="section-heading">
+      <span class="section-kicker">One connected workspace</span>
+      <h2>Tools for the everyday work of studying.</h2>
+      <p>Practical utilities help turn academic information into clear next steps, without adding unnecessary complexity.</p>
     </div>
+    <div class="landing-feature-grid">
+      <article class="landing-feature">
+        <span class="feature-index">01 / ATTENDANCE</span>
+        <h3>Safe Attendance Calculator</h3>
+        <p>Understand your current attendance, calculate the classes needed to reach a target, and estimate how many upcoming classes you can miss.</p>
+      </article>
+      <article class="landing-feature">
+        <span class="feature-index">02 / CAMPUS</span>
+        <h3>Classroom Finder</h3>
+        <p>Check room availability for a selected day and time, identify timetable clashes, and find open slots.</p>
+      </article>
+      <article class="landing-feature">
+        <span class="feature-index">03 / STUDY</span>
+        <h3>AI Study Planner</h3>
+        <p>List your topics, set your preparation level and available time, then receive a prioritised study schedule.</p>
+      </article>
+      <article class="landing-feature">
+        <span class="feature-index">04 / PROGRESS</span>
+        <h3>Student Dashboard</h3>
+        <p>Review attendance, recorded marks, assessments and academic updates in one personal overview.</p>
+      </article>
+      <article class="landing-feature">
+        <span class="feature-index">05 / FACULTY</span>
+        <h3>Academic Overview</h3>
+        <p>Faculty can review student records, attendance, exam performance and incomplete academic information for their assigned classes.</p>
+      </article>
+      <article class="landing-feature">
+        <span class="feature-index">06 / ORGANISATION</span>
+        <h3>Class Management</h3>
+        <p>Create classes, organise student lists and keep faculty records scoped to the classes they manage.</p>
+      </article>
+    </div>
+  </section>
 
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card feature-card h-100">
-            <div class="card-body d-flex flex-column">
-                <div class="feature-icon mb-3" aria-hidden="true">&#9638;</div>
-                <h2 class="h5">Class Management</h2>
-                <p class="text-secondary">
-                    Create classes, add students to them, and filter the
-                    faculty dashboard by class.
-                </p>
-            </div>
-        </div>
+  <section class="landing-section alt workflow-section">
+    <div class="section-heading">
+      <span class="section-kicker">A straightforward workflow</span>
+      <h2>Get from information to action.</h2>
+      <p>The application is designed around the tasks students and faculty already need to complete.</p>
     </div>
+    <div class="workflow-grid">
+      <div class="workflow-step"><strong>01. Sign in securely</strong><p>Use your account to open the workspace assigned to your role. New public registrations are student accounts.</p></div>
+      <div class="workflow-step"><strong>02. Choose a task</strong><p>Open the relevant tool to plan attendance, find a classroom, organise study time or review academic records.</p></div>
+      <div class="workflow-step"><strong>03. Review your next step</strong><p>Use clear calculations, schedules and academic summaries to decide what needs attention.</p></div>
+    </div>
+  </section>
+
+  <section class="landing-section faculty-tools-section">
+    <div class="section-heading">
+      <span class="section-kicker">Designed for each role</span>
+      <h2>Student tools and faculty oversight, kept in their place.</h2>
+      <p>Each account sees the tools and records permitted for its role. Faculty-only operations are not exposed through public student registration.</p>
+    </div>
+    <div class="role-grid">
+      <article class="role-panel">
+        <span class="section-kicker">For students</span>
+        <h3>Stay on top of your own academic work.</h3>
+        <p>Use the student workspace to understand your progress and plan the work ahead.</p>
+        <ul><li>Attendance calculations and planning</li><li>Study schedules based on topic preparation</li><li>Personal marks and assessment status</li><li>Classroom availability tools</li></ul>
+      </article>
+      <article class="role-panel">
+        <span class="section-kicker">For faculty</span>
+        <h3>Review records for the classes you manage.</h3>
+        <p>Faculty access is provisioned by an administrator and scoped to assigned classes.</p>
+        <ul><li>Attendance and assessment records</li><li>Midterm and end-term marks</li><li>Class and student organisation</li><li>Academic indicators for guidance, not automated decisions</li></ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="landing-section landing-footer">
+    <div class="landing-cta">
+      <div><span class="section-kicker">Get started</span><h2>Bring your academic work into focus.</h2><p>Create your student account or sign in to continue to your workspace.</p></div>
+      <div class="landing-actions mt-0"><a href="{{ url_for('auth.signup') }}" class="btn btn-primary">Create an account</a><a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">Sign in</a></div>
+    </div>
+  </section>
 </div>
 {% endblock %}

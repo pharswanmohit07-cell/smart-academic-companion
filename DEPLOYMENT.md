@@ -1,223 +1,183 @@
 # Deployment guide — Render + Supabase
 
-This document is the operational checklist for the `feat/supabase-auth-render`
-branch. Nothing here has been applied to the live Supabase project or to
-Render yet: the steps below are meant to be run once, by you, after reviewing
-the branch.
+This guide describes the current feat/supabase-auth-render branch and the
+connected Supabase project. The live database migrations 0001–0009 have
+already been applied and verified. The Render web service has not yet been
+created; its Blueprint is prepared but its first plan must be reviewed and
+approved.
 
 ---
 
-## 1. What is deployed
+## 1. Current deployment state
 
-| Piece | Where |
+| Component | State |
 | --- | --- |
-| Web app | Render Web Service (Python, Gunicorn) |
-| Credentials | Supabase Auth (GoTrue) |
-| Data | Supabase PostgreSQL (`DATABASE_URL`) |
-| C core | `c_core/libcore.so`, compiled in the Render build step |
+| Supabase PostgreSQL schema | Migrations 0001–0009 applied |
+| Auth profile and role trigger | Installed; new users default to student |
+| RLS | Enabled and forced on all application tables |
+| Admin bootstrap storage | RLS enabled, forced, and denied to API roles |
+| Security advisor | No security findings at last check |
+| Render Blueprint | Created; first sync still needs a successful plan and approval |
+| Academic records | Empty; no student/faculty accounts have been created |
 
-The application connects to PostgreSQL as the database owner and performs its
-own role/ownership checks; the RLS policies in `migrations/` protect the
-Supabase API from the browser side. The service-role key is optional and only
-read server-side.
+The application connects to PostgreSQL through a server-side DATABASE_URL.
+Do not put that connection string in GitHub, browser code, screenshots, or chat.
+The Supabase publishable key is not a database password; the service-role key
+is not required for the normal login flow.
 
 ## 2. Render environment variables
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `SECRET_KEY` | yes | Flask session key. `render.yaml` generates one. Never reuse the dev key. |
-| `DATABASE_URL` | yes | Supabase **Session pooler** URI: `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`. |
-| `SUPABASE_URL` | yes | `https://dofildfkumoboghnrgox.supabase.co` |
-| `SUPABASE_PUBLISHABLE_KEY` | yes | Project anon/publishable key (safe for the browser, not used there). |
-| `SUPABASE_SECRET_KEY` | no | Service role. Leave empty unless a server task needs it. **Never** commit it. |
-| `APP_BASE_URL` | recommended | Public URL, e.g. `https://smart-academic-companion.onrender.com`. Used for email links. (`RENDER_EXTERNAL_URL` is used automatically if unset.) |
-| `FLASK_ENV` | yes | `production` |
-| `FLASK_DEBUG` | yes | `0` |
-| `COOKIE_SECURE` | yes | `1` |
-| `ALLOWED_EMAIL_DOMAINS` | optional | e.g. `college.edu.in` to restrict sign-ups. |
-| `SESSION_LIFETIME_MINUTES` | optional | Default 480. |
+| SECRET_KEY | generated | Render generates a Flask session signing key. |
+| DATABASE_URL | yes | Supabase Session pooler URI, SSL required. Enter it in Render's secret environment-variable field. |
+| SUPABASE_URL | yes | https://dofildfkumoboghnrgox.supabase.co |
+| SUPABASE_PUBLISHABLE_KEY | yes | Project publishable key. |
+| SUPABASE_SECRET_KEY | no | Not needed for the normal Auth flow. |
+| APP_BASE_URL | no | The app falls back to Render's RENDER_EXTERNAL_URL. |
+| FLASK_ENV | set by Blueprint | production |
+| FLASK_DEBUG | set by Blueprint | 0 |
+| COOKIE_SECURE | set by Blueprint | 1 |
+| WEB_CONCURRENCY | set by Blueprint | 1 |
+| GUNICORN_THREADS | set by Blueprint | 2 |
 
-`DATABASE_URL`, `SUPABASE_*` and `APP_BASE_URL` are `sync: false` in
-`render.yaml`, so Render asks for them in the dashboard and they never enter
-Git.
+DATABASE_URL, SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are marked sync:false
+in render.yaml. Render asks for these during Blueprint sync; they are not
+committed to the repository.
 
-## 3. Exact build and start commands
+### Getting the database URI without sharing it with an AI agent
 
-```bash
-# Build (scripts/build.sh)
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-gcc -std=c11 -O2 -Wall -Wextra -shared -fPIC -o c_core/libcore.so c_core/core.c
-gcc -std=c11 -O2 -Wall -Wextra -o /tmp/core_tests c_core/core.c c_core/test_core.c -lm
-/tmp/core_tests
-python -c "import wsgi; print('ok')"
+In Supabase Dashboard → Project Settings → Database → Connection string,
+choose Session pooler and copy the URI. Use the password already set for
+this database. Paste it directly into Render's DATABASE_URL field. Do not
+paste it into this chat or commit it to .env.example.
 
-# Start
+Expected URI shape:
+
+~~~
+postgresql://postgres.<project-ref>:<database-password>@<session-pooler-host>:5432/postgres?sslmode=require
+~~~
+
+Use the Session pooler rather than the direct connection because Render
+instances may use IPv4 and the application opens short-lived database
+connections per request.
+
+## 3. Build and start commands
+
+The Blueprint uses:
+
+~~~bash
+bash scripts/build.sh
 gunicorn -c gunicorn.conf.py wsgi:app
-```
+~~~
 
-Health check path: `/healthz` (returns 200 with `{"status": "ok"}`; 503 if the
-database is unreachable, migrations are pending, or production secrets are
-missing).
+The build script installs Python requirements, compiles
+c_core/libcore.so, runs the C tests and imports the Flask application.
 
-## 4. First-time Supabase steps
+Health check path: /healthz. It returns 200 only when required production
+configuration, database connectivity, migrations and the C core are ready.
 
-1. **Apply migrations** from your machine (never from the browser):
+The Blueprint uses Render's Free plan to avoid a paid service. Free
+instances can sleep while idle and have a smaller memory budget. The Gunicorn
+configuration is deliberately limited to one worker and two threads, with
+BLAS thread counts set to one. If the application exceeds the free instance's
+memory limit during model use, the correct fix is a measured upgrade or model
+memory reduction—not silently creating a paid service.
 
-   ```bash
-   export DATABASE_URL='postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require'
-   python manage.py migrate --status     # review
-   python manage.py migrate              # apply
-   python manage.py check-db             # tables, RLS, pending migrations
-   ```
+Academic data is stored in Supabase PostgreSQL, not on Render's ephemeral
+filesystem, so a Render restart does not erase student records.
 
-   Every statement is idempotent (`IF NOT EXISTS`, `CREATE OR REPLACE`,
-   `DROP POLICY IF EXISTS`). Existing tables are not recreated and no column
-   is dropped.
+## 4. Supabase migrations and verification
 
-2. **Review the `user_profiles` policies** that already existed (the migration
-   does not touch them):
+The connected Supabase project already has all nine application migrations.
+The application migration ledger records these exact files:
 
-   ```sql
-   select policyname, cmd, qual, with_check
-     from pg_policies where tablename = 'user_profiles';
-   select has_column_privilege('authenticated', 'public.user_profiles', 'role', 'UPDATE');
-   -- expected: false
-   ```
+- 0001_initial_schema.sql
+- 0002_auth_helpers.sql
+- 0003_rls_policies.sql
+- 0004_demo_data_flag.sql
+- 0005_profile_email_and_rls_hardening.sql
+- 0006_profile_rls_initplan.sql
+- 0007_private_migration_ledger.sql
+- 0008_fk_indexes_and_ledger_deny_policy.sql
+- 0009_harden_admin_bootstrap.sql
 
-3. **Auth URL configuration** (Dashboard → Authentication → URL Configuration):
+After setting DATABASE_URL in Render, the startup health check verifies the
+migration ledger. Do not run seed_data.py or demo_data.py against the live
+database; those are for isolated demo/test databases only.
 
-   * Site URL: `https://<your-service>.onrender.com`
-   * Redirect URLs: `https://<your-service>.onrender.com/auth/confirm`
+For an operator using a local shell with a privately configured
+DATABASE_URL, these commands are read/verification first:
 
-4. **Email templates** (Authentication → Email Templates). Use the
-   **token-hash** flow: the link lands on this server, which exchanges the token
-   for a session, so it does not depend on which browser opens the email.
+~~~bash
+python manage.py migrate --status
+python manage.py check-db
+python scripts/verify_postgres.py --inspect
+~~~
 
-   Set **Site URL** to the deployed app root first, because `{{ .SiteURL }}` is
-   used below:
+The live Supabase database currently has no Auth users and no academic rows.
+Do not create demo records in the live database unless explicitly intended.
 
-   ```
-   https://<your-service>.onrender.com
-   ```
+## 5. Supabase Auth URL configuration
 
-   Register **Redirect URLs** (Authentication → URL Configuration):
+After the Render service exists, copy its exact public URL. In Supabase
+Dashboard → Authentication → URL Configuration:
 
-   ```
-   https://<your-service>.onrender.com/auth/confirm
-   http://127.0.0.1:5000/auth/confirm          # local testing only
-   ```
+- Set Site URL to the Render service root, e.g.
+  https://<service-name>.onrender.com.
+- Add redirect URL https://<service-name>.onrender.com/auth/confirm.
 
-   Then replace the link in each template (keep the surrounding HTML):
+In Authentication → Email Templates, use the server-side token-hash flow.
+Keep each template's surrounding HTML and replace its confirmation link:
 
-   * **Confirm signup** — `{{ .ConfirmationURL }}` becomes
-     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
-   * **Reset password** — `{{ .ConfirmationURL }}` becomes
-     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
-   * **Invite user** (only if you invite faculty that way) —
-     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite`
-   * **Magic Link** — not used by this app; leave it unchanged.
+- Confirm signup: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
+- Reset password: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery
+- Invite user (only if inviting faculty): {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite
 
-   After saving, **verify** that the button href in a received email begins with
-   `https://<your-service>.onrender.com/auth/confirm?token_hash=` — if it begins
-   with `...supabase.co/auth/v1/verify` or ends in `#access_token`, the template
-   was not saved and confirmation will fall back to a flow this app does not use.
+After saving, check that a real email's button URL starts with the Render
+service's /auth/confirm?token_hash= path. If it points to the Supabase
+/auth/v1/verify endpoint or ends with #access_token, the template is not
+using the flow expected by this server.
 
-   Set the same public URL in Render as `APP_BASE_URL` so server-generated
-   links match.
+## 6. First administrator and faculty accounts
 
-5. **The first administrator** is created only by an explicit, operator-authorized
-   step. Public registration can never grant a role.
+Public signup always creates a student. The role is read from
+public.user_profiles; the browser cannot select or update it.
 
-   ```bash
-   python manage.py issue-bootstrap      # prints a single-use code (once)
-   python manage.py bootstrap-status     # shows whether a code is outstanding
-   ```
+The first administrator must be created by an operator. After the Render
+service has its database URL, use the private operator procedure in
+manage.py to issue a single-use bootstrap code, then register the first
+account and enter that code. Alternatively, an operator can provision an
+already registered account with:
 
-   Then register normally at `/auth/signup` and paste the code into
-   *Administrator setup code*. It promotes that one account to `admin`, only
-   while `public.user_profiles` is still empty, and cannot be reused or replayed.
-   Rerunning `issue-bootstrap` invalidates any unused code. The SHA-256 hash is
-   stored in `public.admin_bootstrap`; the plaintext is never stored or logged.
+~~~bash
+python manage.py provision-admin you@college.edu.in
+~~~
 
-   If you prefer not to use a code, create the account first and then:
+Faculty accounts are also provisioned by an operator, not through public
+signup:
 
-   ```bash
-   python manage.py provision-admin you@college.edu.in
-   ```
+~~~bash
+python manage.py provision-faculty faculty@college.edu.in --name "Dr A. Name"
+~~~
 
-6. **Faculty accounts** (there is no faculty sign-up):
+Faculty can then create classes they own. Class ownership scopes their access
+to student records and faculty tools.
 
-   ```bash
-   python manage.py provision-faculty faculty@college.edu.in --name "Dr A. Name"
-   python manage.py link-student student@college.edu.in --create   # if needed
-   ```
+## 7. After the first deployment
 
-   Faculty then create and own their classes; ownership is what grants access
-   to those classes' records.
+1. GET /healthz returns 200 with database and C-core status.
+2. Register a student account; confirm the email and sign in.
+3. Confirm the student dashboard only shows that student's records.
+4. Provision a faculty account and sign in using the same login page.
+5. Confirm faculty can use student-facing features and their own faculty tools.
+6. Confirm a student cannot open faculty-only routes (403).
+7. Test password recovery using the configured email template.
+8. Re-check Supabase Security and Health advisors.
 
-## 5. Deploying on Render
+## 8. Local SQLite data
 
-**Do not deploy before the migrations are applied.** The health check reports
-`503` with `pending_migrations` while they are outstanding, which is the
-intended signal, not a fault.
-
-Option A — Blueprint: Render dashboard → **New → Blueprint** → pick this
-repository → branch `feat/supabase-auth-render`. `render.yaml` supplies every
-setting below.
-
-Option B — manual Web Service. Use these exact values:
-
-| Field | Value |
-| --- | --- |
-| Runtime | Python 3 |
-| Branch | `feat/supabase-auth-render` |
-| Build command | `bash scripts/build.sh` |
-| Start command | `gunicorn -c gunicorn.conf.py wsgi:app` |
-| Health check path | `/healthz` |
-| Instance type | Starter or larger (sklearn + pandas exceed 512 MB) |
-
-Environment variables (names are case-sensitive):
-
-| Name | Value |
-| --- | --- |
-| `PYTHON_VERSION` | `3.13.3` |
-| `FLASK_ENV` | `production` |
-| `FLASK_DEBUG` | `0` |
-| `COOKIE_SECURE` | `1` |
-| `PYTHONUNBUFFERED` | `1` |
-| `SECRET_KEY` | generate (`generateValue` in the blueprint) |
-| `DATABASE_URL` | Supabase **Session pooler** URI, ends `?sslmode=require` |
-| `SUPABASE_URL` | `https://dofildfkumoboghnrgox.supabase.co` |
-| `SUPABASE_PUBLISHABLE_KEY` | anon/publishable key |
-| `SUPABASE_SECRET_KEY` | optional; service role, server-side only |
-| `APP_BASE_URL` | `https://<your-service>.onrender.com` |
-
-Keep `autoDeploy` off (as in `render.yaml`) so a push never deploys without
-your review.
-
-> Render's default plan runs `chmod +x` on shell scripts only if they are
-> committed as executable; if the build fails with "Permission denied", use
-> `bash scripts/build.sh` as the build command.
-
-## 6. Verifying after deploy
-
-1. `GET /healthz` → `{"status": "ok", "database": "ok", "c_core": "ok"}`
-2. Sign up with a new email → student dashboard.
-3. Sign in as a provisioned faculty account → faculty dashboard.
-4. Try `/faculty/admin/users` as a student → 403 page.
-5. Password reset → email → new password → sign in.
-6. Supabase → Advisors → Security / Performance: no new findings from
-   `migrations/`.
-
-## 7. Local SQLite data
-
-The existing `academic_companion.db` is untouched. The PostgreSQL migrations
-never read or modify it, and `manage.py` refuses to run without
-`DATABASE_URL`. To move data over deliberately:
-
-```bash
-python manage.py migrate
-# export rows from SQLite and import them with a script you review first;
-# there is intentionally no automatic importer.
-```
+The existing local academic_companion.db is untouched. The PostgreSQL
+migrations do not import it. Any transfer of local student/demo data must be a
+separate, reviewed export/import operation; there is intentionally no
+automatic importer.

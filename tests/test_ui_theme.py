@@ -183,7 +183,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
-        for selector in (b"--app-accent: #315b83", b".app-main",
+        for selector in (b"--app-accent:#315b83", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):

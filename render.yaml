@@ -1,12 +1,12 @@
 # Render blueprint for the Smart Academic Companion.
 #
-# Secrets are marked sync:false: Render prompts for them in the dashboard and
-# they are never stored in this repository. See DEPLOYMENT.md for the values.
+# Supabase PostgreSQL stores all persistent academic data. Render's filesystem
+# is not used for records. Free instances sleep while idle.
 services:
   - type: web
     name: smart-academic-companion
     runtime: python
-    plan: starter
+    plan: free
     region: singapore
     branch: feat/supabase-auth-render
     buildCommand: bash scripts/build.sh
@@ -24,6 +24,16 @@ services:
         value: "1"
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: GUNICORN_THREADS
+        value: "2"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
@@ -31,8 +41,4 @@ services:
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_PUBLISHABLE_KEY
-        sync: false
-      - key: SUPABASE_SECRET_KEY
-        sync: false
-      - key: APP_BASE_URL
         sync: false

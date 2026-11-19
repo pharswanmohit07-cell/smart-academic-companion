@@ -1,7 +1,7 @@
 # Deployment guide — Render + Supabase
 
 This guide describes the current feat/supabase-auth-render branch and the
-connected Supabase project. The live database migrations 0001–0009 have
+connected Supabase project. The live database migrations 0001–0010 have
 already been applied and verified. The Render web service has not yet been
 created; its Blueprint is prepared but its first plan must be reviewed and
 approved.
@@ -41,9 +41,10 @@ is not required for the normal login flow.
 | WEB_CONCURRENCY | set by Blueprint | 1 |
 | GUNICORN_THREADS | set by Blueprint | 2 |
 
-DATABASE_URL, SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are marked sync:false
-in render.yaml. Render asks for these during Blueprint sync; they are not
-committed to the repository.
+Only DATABASE_URL is marked sync:false in render.yaml. The Supabase project
+URL and publishable key are public configuration values and are preconfigured
+in the Blueprint. The database password remains private and is entered only
+in Render.
 
 ### Getting the database URI without sharing it with an AI agent
 
@@ -89,7 +90,7 @@ filesystem, so a Render restart does not erase student records.
 
 ## 4. Supabase migrations and verification
 
-The connected Supabase project already has all nine application migrations.
+The connected Supabase project already has all ten application migrations.
 The application migration ledger records these exact files:
 
 - 0001_initial_schema.sql
@@ -101,6 +102,7 @@ The application migration ledger records these exact files:
 - 0007_private_migration_ledger.sql
 - 0008_fk_indexes_and_ledger_deny_policy.sql
 - 0009_harden_admin_bootstrap.sql
+- 0010_signup_trigger_display_name_safety.sql
 
 After setting DATABASE_URL in Render, the startup health check verifies the
 migration ledger. Do not run seed_data.py or demo_data.py against the live

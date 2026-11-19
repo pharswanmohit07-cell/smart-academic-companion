@@ -253,6 +253,10 @@ class TestMigrationFiles(unittest.TestCase):
         # Writes to protected academic records are server-side only.
         self.assertNotIn("FOR UPDATE TO authenticated", text.split("assignments_update_own")[0])
 
+    def test_runner_skips_alter_policy_migrations_on_sqlite(self):
+        source = (Path(__file__).resolve().parent.parent / "manage.py").read_text("utf-8")
+        self.assertIn('"ALTER POLICY"', source)
+
     def test_runner_is_idempotent_and_records_a_ledger(self):
         source = (Path(__file__).resolve().parent.parent / "manage.py").read_text("utf-8")
         self.assertIn("ON CONFLICT (filename) DO NOTHING", source)

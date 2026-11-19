@@ -6,10 +6,13 @@
     <h1 class="h3 mb-1">Faculty Data Management</h1>
     <p class="text-secondary mb-0">Maintain student records, attendance, exam marks and assessment submissions.</p>
   </div>
-  <a class="btn btn-primary" href="{{ url_for('faculty_classes') }}">Manage Classes</a><a class="btn btn-outline-primary" href="{{ url_for('risk_dashboard') }}">Back to dashboard</a>
+  <a class="btn btn-primary" href="{{ url_for('faculty.classes') }}">Manage Classes</a><a class="btn btn-outline-primary" href="{{ url_for('faculty.dashboard') }}">Back to dashboard</a>
 </div>
 
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+{% for category, text in get_flashed_messages(with_categories=true) %}
+<div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }}" role="status">{{ text }}</div>
+{% endfor %}
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
 

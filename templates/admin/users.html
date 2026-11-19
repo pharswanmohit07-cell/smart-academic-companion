@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Users · Smart Academic Companion{% endblock %}
+
+{% block content %}
+<div class="page-head mb-4">
+    <h1 class="h3 mb-1">Users and roles</h1>
+    <p class="text-secondary mb-0">
+        Roles come from <code>public.user_profiles</code>. New signups are students;
+        an administrator can grant faculty access here. Admin roles are only
+        assigned with the server command line (<code>python manage.py provision-admin</code>).
+    </p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Profiles</strong></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0 align-middle">
+                <thead>
+                    <tr><th>Email</th><th>Name</th><th>Role</th><th class="text-end">Change</th></tr>
+                </thead>
+                <tbody>
+                {% for profile in profiles %}
+                    <tr>
+                        <td>{{ profile.email }}</td>
+                        <td>{{ profile.display_name or '—' }}</td>
+                        <td><span class="badge text-bg-secondary">{{ profile.role }}</span></td>
+                        <td class="text-end">
+                            {% if profile.email|lower != (current_user.email or '')|lower and profile.role != 'admin' %}
+                            <form method="post" action="{{ url_for('faculty.admin_set_role') }}"
+                                  class="d-inline-flex gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="email" value="{{ profile.email }}">
+                                <select class="form-select form-select-sm" name="role" aria-label="New role">
+                                    <option value="student" {% if profile.role == 'student' %}selected{% endif %}>student</option>
+                                    <option value="faculty" {% if profile.role == 'faculty' %}selected{% endif %}>faculty</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                            </form>
+                            {% else %}
+                            <span class="text-secondary small">&mdash;</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" class="text-secondary">No profiles yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>Faculty directory</strong></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0 align-middle">
+                <thead><tr><th>Name</th><th>Email</th></tr></thead>
+                <tbody>
+                {% for teacher in teachers %}
+                    <tr><td>{{ teacher.name }}</td><td>{{ teacher.email or '—' }}</td></tr>
+                {% else %}
+                    <tr><td colspan="2" class="text-secondary">No faculty accounts yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

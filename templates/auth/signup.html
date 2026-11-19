@@ -1,0 +1,44 @@
+{% extends "auth/_layout.html" %}
+{% block title %}Create an account · Smart Academic Companion{% endblock %}
+{% block auth_title %}Create your student account{% endblock %}
+{% block auth_subtitle %}Use your college email address. Faculty accounts are created by an administrator.{% endblock %}
+
+{% block auth_body %}
+<form method="post" action="{{ url_for('auth.signup') }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="mb-3">
+    <label class="form-label" for="display_name">Full name</label>
+    <input class="form-control" type="text" id="display_name" name="display_name"
+           value="{{ values.display_name }}" maxlength="120" autocomplete="name" required autofocus>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="email">Email address</label>
+    <input class="form-control" type="email" id="email" name="email"
+           value="{{ values.email }}" autocomplete="email" maxlength="254" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-control" type="password" id="password" name="password"
+           minlength="{{ min_password }}" autocomplete="new-password" required>
+    <div class="form-text">At least {{ min_password }} characters.</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label" for="confirm_password">Confirm password</label>
+    <input class="form-control" type="password" id="confirm_password"
+           name="confirm_password" minlength="{{ min_password }}"
+           autocomplete="new-password" required>
+  </div>
+
+  {# No role selector: every signup is a student. The server ignores a posted "role". #}
+
+  <button class="btn btn-primary w-100" type="submit">Create account</button>
+</form>
+
+<p class="text-center mt-3 mb-0">
+  <a href="{{ url_for('auth.login') }}" class="small">I already have an account</a>
+</p>
+{% endblock %}

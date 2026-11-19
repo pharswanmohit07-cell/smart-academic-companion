@@ -586,7 +586,7 @@
 
     <nav class="navbar navbar-expand-lg app-navbar sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home') }}">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
                 Smart Academic Companion
             </a>
 
@@ -598,40 +598,63 @@
             <div class="collapse navbar-collapse" id="mainNavigation">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     {% set endpoint = request.endpoint %}
+                    {% if not current_user %}
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'home' %}active{% endif %}" {% if endpoint=='home'
-                            %}aria-current="page" {% endif %} href="{{ url_for('home') }}">Home</a>
+                            %}aria-current="page" {% endif %} href="{{ url_for('main.home') }}">Home</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('auth.login') }}">Sign in</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if endpoint == 'dashboard' %}active{% endif %}" {% if
+                            endpoint=='dashboard' %}aria-current="page" {% endif %}
+                            href="{{ url_for('main.dashboard') }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if
                             endpoint=='attendance' %}aria-current="page" {% endif %}
-                            href="{{ url_for('attendance') }}">Attendance</a>
+                            href="{{ url_for('academic.attendance') }}">Attendance</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if
                             endpoint=='classrooms' %}aria-current="page" {% endif %}
-                            href="{{ url_for('classrooms') }}">Classrooms</a>
+                            href="{{ url_for('academic.classrooms') }}">Classrooms</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if
                             endpoint=='study_planner_page' %}aria-current="page" {% endif %}
-                            href="{{ url_for('study_planner_page') }}">Study Planner</a>
+                            href="{{ url_for('academic.study_planner_page') }}">Study Planner</a>
                     </li>
+                    {% if current_user.is_faculty %}
                     <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'risk_dashboard' %}active{% endif %}" {% if
-                            endpoint=='risk_dashboard' %}aria-current="page" {% endif %}
-                            href="{{ url_for('risk_dashboard') }}">Faculty Dashboard</a>
+                        <a class="nav-link {% if endpoint == 'faculty_dashboard' %}active{% endif %}" {% if
+                            endpoint=='faculty_dashboard' %}aria-current="page" {% endif %}
+                            href="{{ url_for('faculty.dashboard') }}">Faculty Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if
                             endpoint=='faculty_manage' %}aria-current="page" {% endif %}
-                            href="{{ url_for('faculty_manage') }}">Manage Records</a>
+                            href="{{ url_for('faculty.manage') }}">Manage Records</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if endpoint == 'faculty_classes' %}active{% endif %}" {% if
                             endpoint=='faculty_classes' %}aria-current="page" {% endif %}
-                            href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+                            href="{{ url_for('faculty.classes') }}">Manage Classes</a>
                     </li>
+                    {% endif %}
+                    <li class="nav-item ms-lg-2 d-flex align-items-center gap-2">
+                        <span class="text-secondary small d-none d-xl-inline" title="{{ current_user.email }}">
+                            {{ current_user.display_name }}
+                            <span class="badge text-bg-secondary ms-1">{{ current_user.role }}</span>
+                        </span>
+                        <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">Sign out</button>
+                        </form>
+                    </li>
+                    {% endif %}
                     <li class="nav-item ms-lg-2">
                         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode"
                             aria-pressed="false" title="Switch to dark mode">
@@ -652,99 +675,15 @@
     </nav>
 
     <main class="container py-4 py-lg-5">
-        {% block content %}
-        <section class="page-head mb-5">
-            <span class="badge text-bg-primary mb-3">Academic Management</span>
-            <h1 class="display-6 fw-semibold mb-3">
-                Your academic workspace, <span class="text-primary">all in one place.</span>
-            </h1>
-            <p class="lead text-secondary mb-0" style="max-width: 760px;">
-                Plan attendance, find available classrooms, build a study schedule,
-                and review student academic performance from one place.
-            </p>
-        </section>
-
-        <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="feature-icon mb-3" aria-hidden="true">&#10003;</div>
-                        <h2 class="h5">Safe Attendance Calculator</h2>
-                        <p class="text-secondary">
-                            Calculate the classes you need to reach your attendance
-                            target, and how many upcoming classes you can miss.
-                        </p>
-                        <a href="{{ url_for('attendance') }}" class="btn btn-primary mt-auto">
-                            Open Attendance Calculator
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="feature-icon mb-3" aria-hidden="true">&#8962;</div>
-                        <h2 class="h5">Classroom Finder</h2>
-                        <p class="text-secondary">
-                            See which rooms are free on a chosen day and time, and
-                            check for timetable clashes.
-                        </p>
-                        <a href="{{ url_for('classrooms') }}" class="btn btn-primary mt-auto">
-                            Find a Classroom
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="feature-icon mb-3" aria-hidden="true">&#9673;</div>
-                        <h2 class="h5">AI Study Planner</h2>
-                        <p class="text-secondary">
-                            Add your topics, how prepared you feel and how much time
-                            you have, then get a study order with time for each topic.
-                        </p>
-                        <a href="{{ url_for('study_planner_page') }}" class="btn btn-primary mt-auto">
-                            Build a Study Plan
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="feature-icon mb-3" aria-hidden="true">&#9636;</div>
-                        <h2 class="h5">Faculty Academic Dashboard</h2>
-                        <p class="text-secondary">
-                            Review student attendance, exam marks, assignment
-                            completion and records that may need attention.
-                        </p>
-                        <a href="{{ url_for('risk_dashboard') }}" class="btn btn-primary mt-auto">
-                            Open Faculty Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="feature-icon mb-3" aria-hidden="true">&#9638;</div>
-                        <h2 class="h5">Class Management</h2>
-                        <p class="text-secondary">
-                            Create classes, add students to them, and filter the
-                            faculty dashboard by class.
-                        </p>
-                        <a href="{{ url_for('faculty_classes') }}" class="btn btn-primary mt-auto">
-                            Manage Classes
-                        </a>
-                    </div>
-                </div>
-            </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }} alert-dismissible fade show" role="status">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        {% endfor %}
+        {% endwith %}
+        {% block content %}
         {% endblock %}
     </main>
 

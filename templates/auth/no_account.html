@@ -1,0 +1,17 @@
+{% extends "auth/_layout.html" %}
+{% block title %}Account not linked · Smart Academic Companion{% endblock %}
+{% block auth_title %}Account not linked yet{% endblock %}
+{% block auth_subtitle %}You are signed in, but no academic record is attached to this login.{% endblock %}
+
+{% block auth_body %}
+<p class="text-secondary">
+  Ask your faculty or administrator to link your email address
+  ({{ current_user.email }}) to your student or faculty record. You can sign
+  out and try again once they have done that.
+</p>
+
+<form method="post" action="{{ url_for('auth.logout') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-outline-secondary w-100" type="submit">Sign out</button>
+</form>
+{% endblock %}

@@ -4,8 +4,8 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
   <div class="page-head"><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-secondary mb-0">View student performance, attendance and academic records.</p></div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-outline-secondary" href="{{ url_for('faculty_manage') }}">Manage Records</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('faculty_classes') }}">Manage Classes</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('faculty.manage') }}">Manage Records</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('faculty.classes') }}">Manage Classes</a>
   </div>
 </div>
 {% set risk_predictions = risk_predictions or {} %}
@@ -119,7 +119,7 @@
   }
   classFilter.addEventListener("change", () => {
     const value = classFilter.value;
-    window.location.href = value === "all" ? "{{ url_for('risk_dashboard') }}" : "{{ url_for('risk_dashboard') }}?class_id=" + encodeURIComponent(value);
+    window.location.href = value === "all" ? "{{ url_for('faculty.dashboard') }}" : "{{ url_for('faculty.dashboard') }}?class_id=" + encodeURIComponent(value);
   });
   searchInput.addEventListener("input", updateStudents);
   issueFilter.addEventListener("change", updateStudents);

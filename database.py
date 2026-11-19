@@ -31,10 +31,9 @@ __all__ = [
 
 def _add_column_if_missing(connection, table, column, definition):
     """Add a known compatibility column only when it is absent."""
-    existing = connection._connection.execute(
-        f"PRAGMA table_info({table})"
-    ).fetchall()
-    if column not in {row["name"] for row in existing}:
+    existing = {row[1] for row in
+                connection._connection.execute(f"PRAGMA table_info({table})")}
+    if column not in existing:
         connection.execute(
             f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
         )
@@ -59,7 +58,23 @@ def _apply_compatibility_migrations(connection):
     )
 
     for table, column, definition in migrations:
-        _add_column_if_missing(connection, table, column, definition)
+        try:
+            _add_column_if_missing(connection, table, column, definition)
+        except DatabaseError as exc:
+            # A fresh schema.sql already contains the column; an old project
+            # file may contain it too. Neither is an error.
+            if "duplicate column" not in str(exc).lower():
+                raise
+
+    # Indexes on those columns come last: an older local database did not have
+    # them, and SQLite resolves index columns even with IF NOT EXISTS.
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_students_class ON students(class_id)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_faculty_classes_owner "
+        "ON faculty_classes(owner_teacher_id)"
+    )
 
 
 def _assign_legacy_students_to_classes(connection):
@@ -156,6 +171,18 @@ def initialize_database():
             _apply_compatibility_migrations(connection)
             _assign_legacy_students_to_classes(connection)
             connection.commit()
+            # Students created by signing up start with a placeholder name; a
+            # capitalised name is the signal that a real one was entered.
+            # (Wrapped: the column set differs between project schema versions.)
+            try:
+                connection.execute(
+                    """UPDATE students
+                           SET name = upper(substr(name, 1, 1)) || substr(name, 2)
+                         WHERE name GLOB '[a-z]*'"""
+                )
+                connection.commit()
+            except DatabaseError:
+                connection.rollback()
         except Exception:
             connection.rollback()
             raise

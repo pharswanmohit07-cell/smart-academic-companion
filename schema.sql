@@ -87,9 +87,8 @@ CREATE TABLE IF NOT EXISTS timetable (
     CHECK (start_time < end_time)
 );
 
--- New optional columns are added separately so an older academic_companion.db
--- gains them without being recreated.
-ALTER TABLE timetable ADD COLUMN building TEXT NOT NULL DEFAULT 'Main';
+-- New optional columns are added by database._apply_compatibility_migrations so
+-- an older academic_companion.db gains them without being recreated.
 
 CREATE TABLE IF NOT EXISTS room_locations (
     room_number TEXT PRIMARY KEY,
@@ -144,5 +143,6 @@ CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id);
 CREATE INDEX IF NOT EXISTS idx_marks_student_subject ON marks(student_id, subject_id);
 CREATE INDEX IF NOT EXISTS idx_timetable_day ON timetable(day_of_week);
 CREATE INDEX IF NOT EXISTS idx_assessment_submissions_student ON assessment_submissions(student_id);
-CREATE INDEX IF NOT EXISTS idx_students_class ON students(class_id);
-CREATE INDEX IF NOT EXISTS idx_faculty_classes_owner ON faculty_classes(owner_teacher_id);
+
+-- Indexes on columns that older local databases may not have yet are created
+-- after the compatibility step in database._apply_compatibility_migrations.

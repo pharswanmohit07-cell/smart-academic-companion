@@ -5,9 +5,12 @@
     <h1 class="h3 mb-1">Class & Section Management</h1>
     <p class="text-secondary mb-0">Create custom classes and manage each class's student list separately.</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('faculty_manage') }}">Faculty Data Management</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('faculty.manage') }}">Faculty Data Management</a>
 </div>
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+{% for category, text in get_flashed_messages(with_categories=true) %}
+<div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }}" role="status">{{ text }}</div>
+{% endfor %}
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
 <div class="row g-4">
@@ -31,7 +34,7 @@
       {% if classes %}
       <div class="list-group">
         {% for class_item in classes %}
-        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 {% if selected_class_id == class_item.class_id %}active{% endif %}" href="{{ url_for('faculty_classes', class_id=class_item.class_id) }}">
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 {% if selected_class_id == class_item.class_id %}active{% endif %}" href="{{ url_for('faculty.classes', class_id=class_item.class_id) }}">
           <span><strong>{{ class_item.class_name }}</strong><br><small>{{ class_item.program }} · Semester {{ class_item.semester }} · Section {{ class_item.section }}</small></span>
           <span class="badge text-bg-secondary">{{ class_item.student_count }} students</span>
         </a>

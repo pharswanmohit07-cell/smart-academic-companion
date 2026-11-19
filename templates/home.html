@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{#
+  Landing page. Signed-in visitors are sent straight to their dashboard by the
+  ``home`` view, so this page is only shown to visitors who are not signed in.
+#}
+{% block content %}
+<section class="page-head mb-5">
+    <span class="badge text-bg-primary mb-3">Academic Management</span>
+    <h1 class="display-6 fw-semibold mb-3">
+        Your academic workspace, <span class="text-primary">all in one place.</span>
+    </h1>
+    <p class="lead text-secondary mb-4" style="max-width: 760px;">
+        Plan attendance, find available classrooms, build a study schedule,
+        and review student academic performance from one place.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Sign in</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary">Create a student account</a>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="feature-icon mb-3" aria-hidden="true">&#10003;</div>
+                <h2 class="h5">Safe Attendance Calculator</h2>
+                <p class="text-secondary">
+                    Calculate the classes you need to reach your attendance
+                    target, and how many upcoming classes you can miss.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="feature-icon mb-3" aria-hidden="true">&#8962;</div>
+                <h2 class="h5">Classroom Finder</h2>
+                <p class="text-secondary">
+                    See which rooms are free on a chosen day and time, and
+                    check for timetable clashes.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="feature-icon mb-3" aria-hidden="true">&#9673;</div>
+                <h2 class="h5">AI Study Planner</h2>
+                <p class="text-secondary">
+                    Add your topics, how prepared you feel and how much time
+                    you have, then get a study order with time for each topic.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="feature-icon mb-3" aria-hidden="true">&#9636;</div>
+                <h2 class="h5">Faculty Academic Dashboard</h2>
+                <p class="text-secondary">
+                    Review student attendance, exam marks, assignment
+                    completion and records that may need attention &mdash;
+                    limited to the classes faculty are assigned to.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card feature-card h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="feature-icon mb-3" aria-hidden="true">&#9638;</div>
+                <h2 class="h5">Class Management</h2>
+                <p class="text-secondary">
+                    Create classes, add students to them, and filter the
+                    faculty dashboard by class.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

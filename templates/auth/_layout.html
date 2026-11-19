@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{#
+  Shared frame for the sign-in, sign-up and password screens. The pages keep
+  the application's navbar and theme; only the content block differs.
+#}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-9 col-lg-6 col-xl-5">
+    <div class="page-head mb-4 text-center">
+      <h1 class="h3 mb-2">{% block auth_title %}{% endblock %}</h1>
+      <p class="text-secondary mb-0">{% block auth_subtitle %}{% endblock %}</p>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }}" role="status">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endwith %}
+
+        {% if error %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+
+        {% block auth_body %}{% endblock %}
+      </div>
+    </div>
+
+    <p class="text-center text-secondary small mt-3 mb-0">
+      {% block auth_footer %}{% endblock %}
+    </p>
+  </div>
+</div>
+{% endblock %}

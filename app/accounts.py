@@ -223,6 +223,22 @@ def ensure_profile(user_id, email, display_name=None):
             except IntegrityError:
                 # A concurrent request (or the trigger) inserted it first.
                 connection.rollback()
+        else:
+            # The Auth trigger creates a student profile before this request
+            # completes. Fill display_name only when the trigger left it blank;
+            # never change the role or overwrite a name already set by staff.
+            connection.execute(
+                f"""UPDATE {table}
+                       SET email = COALESCE(?, email),
+                           display_name = CASE
+                               WHEN COALESCE(display_name, '') = ''
+                               THEN COALESCE(?, display_name)
+                               ELSE display_name
+                           END
+                     WHERE user_id = ?""",
+                (email or None, display_name or None, user_id),
+            )
+            connection.commit()
     account = load_account(user_id, email, display_name)
     if account.student_id is None and account.is_student:
         account.student_id = ensure_student_record(account)

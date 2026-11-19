@@ -261,10 +261,19 @@ def confirm():
             return redirect(url_for("auth.forgot_password"))
     elif code:
         try:
+            # The authorization-code flow needs the PKCE verifier that the
+            # browser generated. This server-side app never starts that flow, so
+            # such a link cannot be completed here; it is reported as an expired
+            # link rather than silently failing.
             result = get_auth().exchange_code(code)
         except AuthError as exc:
-            flash(exc.message, "danger")
-            return redirect(url_for("auth.login"))
+            log.warning("code redirect could not be completed: %s", exc)
+            flash(
+                "That link was opened in a different browser or has expired. "
+                "Request a new email.",
+                "danger",
+            )
+            return redirect(url_for("auth.forgot_password"))
     else:
         flash("This link is incomplete or has expired. Request a new one.", "danger")
         return redirect(url_for("auth.login"))

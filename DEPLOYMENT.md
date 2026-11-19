@@ -90,16 +90,41 @@ missing).
    * Site URL: `https://<your-service>.onrender.com`
    * Redirect URLs: `https://<your-service>.onrender.com/auth/confirm`
 
-4. **Email templates** (Authentication → Email Templates). The app handles both
-   link styles, but the server-side token_hash form is recommended because it
-   does not depend on the browser:
+4. **Email templates** (Authentication → Email Templates). Use the
+   **token-hash** flow: the link lands on this server, which exchanges the token
+   for a session, so it does not depend on which browser opens the email.
 
-   * Confirm signup and Magic Link:
+   Set **Site URL** to the deployed app root first, because `{{ .SiteURL }}` is
+   used below:
+
+   ```
+   https://<your-service>.onrender.com
+   ```
+
+   Register **Redirect URLs** (Authentication → URL Configuration):
+
+   ```
+   https://<your-service>.onrender.com/auth/confirm
+   http://127.0.0.1:5000/auth/confirm          # local testing only
+   ```
+
+   Then replace the link in each template (keep the surrounding HTML):
+
+   * **Confirm signup** — `{{ .ConfirmationURL }}` becomes
      `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
-   * Reset password:
+   * **Reset password** — `{{ .ConfirmationURL }}` becomes
      `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
-   * Invite user:
+   * **Invite user** (only if you invite faculty that way) —
      `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite`
+   * **Magic Link** — not used by this app; leave it unchanged.
+
+   After saving, **verify** that the button href in a received email begins with
+   `https://<your-service>.onrender.com/auth/confirm?token_hash=` — if it begins
+   with `...supabase.co/auth/v1/verify` or ends in `#access_token`, the template
+   was not saved and confirmation will fall back to a flow this app does not use.
+
+   Set the same public URL in Render as `APP_BASE_URL` so server-generated
+   links match.
 
 5. **The first administrator** is created only by an explicit, operator-authorized
    step. Public registration can never grant a role.
@@ -133,14 +158,43 @@ missing).
 
 ## 5. Deploying on Render
 
-```bash
-# in the Render dashboard: New > Blueprint, pick this repository
-# branch: feat/supabase-auth-render
-```
+**Do not deploy before the migrations are applied.** The health check reports
+`503` with `pending_migrations` while they are outstanding, which is the
+intended signal, not a fault.
 
-or, without the blueprint: New Web Service → Runtime **Python**, Build
-**`bash scripts/build.sh`**, Start **`gunicorn -c gunicorn.conf.py wsgi:app`**,
-Health check **`/healthz`**, then add the variables from section 2.
+Option A — Blueprint: Render dashboard → **New → Blueprint** → pick this
+repository → branch `feat/supabase-auth-render`. `render.yaml` supplies every
+setting below.
+
+Option B — manual Web Service. Use these exact values:
+
+| Field | Value |
+| --- | --- |
+| Runtime | Python 3 |
+| Branch | `feat/supabase-auth-render` |
+| Build command | `bash scripts/build.sh` |
+| Start command | `gunicorn -c gunicorn.conf.py wsgi:app` |
+| Health check path | `/healthz` |
+| Instance type | Starter or larger (sklearn + pandas exceed 512 MB) |
+
+Environment variables (names are case-sensitive):
+
+| Name | Value |
+| --- | --- |
+| `PYTHON_VERSION` | `3.13.3` |
+| `FLASK_ENV` | `production` |
+| `FLASK_DEBUG` | `0` |
+| `COOKIE_SECURE` | `1` |
+| `PYTHONUNBUFFERED` | `1` |
+| `SECRET_KEY` | generate (`generateValue` in the blueprint) |
+| `DATABASE_URL` | Supabase **Session pooler** URI, ends `?sslmode=require` |
+| `SUPABASE_URL` | `https://dofildfkumoboghnrgox.supabase.co` |
+| `SUPABASE_PUBLISHABLE_KEY` | anon/publishable key |
+| `SUPABASE_SECRET_KEY` | optional; service role, server-side only |
+| `APP_BASE_URL` | `https://<your-service>.onrender.com` |
+
+Keep `autoDeploy` off (as in `render.yaml`) so a push never deploys without
+your review.
 
 > Render's default plan runs `chmod +x` on shell scripts only if they are
 > committed as executable; if the build fails with "Permission denied", use

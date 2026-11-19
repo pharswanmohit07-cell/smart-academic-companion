@@ -82,12 +82,31 @@ def inspect():
         if connection.backend != "postgresql":
             raise SystemExit("DATABASE_URL does not point at PostgreSQL.")
 
+        from config import settings
+
         version = connection.execute("SELECT version() AS v").fetchone()["v"]
         ssl = connection.execute(
             "SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()"
         ).fetchone()
+        database = connection.execute("SELECT current_database() AS d").fetchone()["d"]
         print("server :", version.split(",")[0])
+        print("database:", database)
         print("ssl    :", "enabled" if ssl and ssl["ssl"] else "NOT enabled")
+
+        # Confirm which project the connection really reaches. The project ref is
+        # the database user (postgres.<ref>) or the pooler host
+        # (aws-0-<region>.pooler.supabase.com of project <ref>).
+        if settings.SUPABASE_URL:
+            expected = settings.SUPABASE_URL.replace("https://", "").split(".")[0]
+            user = connection.execute(
+                "SELECT current_user AS u").fetchone()["u"]
+            host = connection.execute(
+                "SELECT inet_server_addr()::text AS h").fetchone()["h"]
+            print(f"project ref expected : {expected}")
+            print(f"connected as         : {user}  (host {host or 'local/socket'})")
+            if expected not in (user or ""):
+                print("WARNING: the connection user does not name the expected "
+                      "project ref; verify DATABASE_URL before any migration.")
 
         rows = connection.execute(
             "SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class "
@@ -114,6 +133,11 @@ def inspect():
                     f"SELECT COUNT(*) AS n FROM public.{table}").fetchone()["n"]
                 print(f"  {table:<24} {count}")
 
+        expected = set(TABLES) | {"app_migrations", "admin_bootstrap"}
+        unexpected = sorted(set(state) - expected)
+        print("\ntables not created by this project:",
+              ", ".join(unexpected) if unexpected else "none")
+
         try:
             ledger = [row["filename"] for row in connection.execute(
                 "SELECT filename FROM app_migrations ORDER BY filename").fetchall()]
@@ -133,13 +157,24 @@ def plan():
     from db.base import split_sql_statements
     from manage import migration_files
 
+    from config import settings
+
+    if settings.SUPABASE_URL:
+        ref = settings.SUPABASE_URL.replace("https://", "").split(".")[0]
+        print(f"target project (from SUPABASE_URL): {ref}")
+    print(f"database backend: {'postgresql' if settings.DATABASE_URL else 'sqlite (no DATABASE_URL)'}")
+    print("note: --plan prints SQL only; it connects to nothing and writes nothing.")
+
+    total = 0
     for path in migration_files():
         statements = split_sql_statements(path.read_text(encoding="utf-8"))
+        total += len(statements)
         print(f"\n== {path.name} ({len(statements)} statements)")
         for index, statement in enumerate(statements, start=1):
             first = next((line for line in statement.splitlines()
                           if line.strip() and not line.strip().startswith("--")), "")
             print(f"  {index:>2}. {first.strip()[:100]}")
+    print(f"\n{total} statements in {len(migration_files())} files")
 
 
 def full():

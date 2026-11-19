@@ -173,5 +173,22 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"how prepared you feel", body)
 
 
+    def test_landing_page_has_a_complete_product_story(self):
+        body = self.landing_page()
+        for section in (b"landing-hero", b"product-preview", b"workflow-section",
+                        b"student-tools-section", b"faculty-tools-section",
+                        b"landing-footer"):
+            with self.subTest(section=section):
+                self.assertIn(section, body)
+
+    def test_shared_layout_uses_the_refined_design_system(self):
+        body = self.page("/attendance")
+        for selector in (b"--app-accent: #315b83", b".app-main",
+                         b".section-kicker", b".page-heading",
+                         b".auth-shell"):
+            with self.subTest(selector=selector):
+                self.assertIn(selector, body)
+
+
 if __name__ == "__main__":
     unittest.main()

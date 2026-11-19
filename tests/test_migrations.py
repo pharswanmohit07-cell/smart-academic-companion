@@ -206,22 +206,45 @@ class TestMigrationFiles(unittest.TestCase):
         self.assertNotIn("SECURITY DEFINER", helpers)
 
     def test_helpers_are_security_invoker(self):
-        # Policy helpers must remain SECURITY INVOKER. The signup trigger is
-        # the sole deliberate SECURITY DEFINER function because Auth creates
-        # profiles while RLS is enabled; it must have a pinned empty search_path
-        # and no direct execution grants for API roles.
+        # Policy helpers remain SECURITY INVOKER. The Auth signup trigger is
+        # the only deliberate SECURITY DEFINER function because Auth creates
+        # profiles while RLS is enabled. Both trigger migrations must pin an
+        # empty search_path and revoke direct execution from API roles.
         helpers = _sql_only(MIGRATIONS[1])
         self.assertNotIn("SECURITY DEFINER", helpers)
         self.assertEqual(helpers.count("SECURITY INVOKER"), 9)
 
-        trigger = _sql_only(MIGRATIONS[4])
-        self.assertIn("CREATE OR REPLACE FUNCTION public.handle_new_user()", trigger)
-        self.assertIn("SECURITY DEFINER", trigger)
-        self.assertIn("SET search_path = ''", trigger)
+        allowed_definer = {
+            "0005_profile_email_and_rls_hardening.sql",
+            "0010_signup_trigger_display_name_safety.sql",
+        }
+        for path in MIGRATIONS:
+            text = _sql_only(path)
+            if path.name not in allowed_definer:
+                with self.subTest(file=path.name):
+                    self.assertNotIn("SECURITY DEFINER", text)
+            else:
+                with self.subTest(file=path.name):
+                    self.assertIn(
+                        "CREATE OR REPLACE FUNCTION public.handle_new_user()", text
+                    )
+                    self.assertIn("SECURITY DEFINER", text)
+                    self.assertIn("SET search_path = ''", text)
+                    self.assertIn(
+                        "REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated",
+                        text,
+                    )
+
+    def test_admin_bootstrap_storage_is_private(self):
+        text = _sql_only(MIGRATIONS[8])
+        self.assertIn("CREATE TABLE IF NOT EXISTS public.admin_bootstrap", text)
+        self.assertIn("ENABLE ROW LEVEL SECURITY", text)
+        self.assertIn("FORCE ROW LEVEL SECURITY", text)
         self.assertIn(
-            "REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated",
-            trigger,
+            "REVOKE ALL ON TABLE public.admin_bootstrap FROM PUBLIC, anon, authenticated",
+            text,
         )
+        self.assertIn("CREATE POLICY admin_bootstrap_deny_clients", text)
 
     def test_student_policies_restrict_to_own_rows(self):
         text = _sql_only(MIGRATIONS[2])

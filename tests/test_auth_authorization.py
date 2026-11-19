@@ -256,9 +256,10 @@ class TestAuthentication(AppTestBase, unittest.TestCase):
             ).fetchone()
         self.assertEqual(profile["role"], "student")
 
-    def test_first_account_bootstraps_admin_and_later_ones_do_not(self):
+    def test_public_signup_never_grants_admin(self):
+        """Registering first must not confer admin: that was the old behaviour."""
         response = self.submit("/auth/signup", {
-            "display_name": "Owner", "email": "owner@example.com",
+            "display_name": "First Visitor", "email": "owner@example.com",
             "password": "long-enough-pass",
             "confirm_password": "long-enough-pass",
         })
@@ -267,10 +268,10 @@ class TestAuthentication(AppTestBase, unittest.TestCase):
             role = connection.execute(
                 "SELECT role FROM user_profiles WHERE email = 'owner@example.com'"
             ).fetchone()["role"]
-        self.assertEqual(role, "admin")
+        self.assertEqual(role, "student")
 
         self.client = self.app.test_client()
-        response = self.submit("/auth/signup", {
+        self.submit("/auth/signup", {
             "display_name": "Second", "email": "second@example.com",
             "password": "long-enough-pass",
             "confirm_password": "long-enough-pass",
@@ -280,6 +281,50 @@ class TestAuthentication(AppTestBase, unittest.TestCase):
                 "SELECT role FROM user_profiles WHERE email = 'second@example.com'"
             ).fetchone()["role"]
         self.assertEqual(role, "student")
+
+    def test_bootstrap_code_is_required_and_single_use(self):
+        """Only the operator-issued code promotes, and only once."""
+        import hashlib
+
+        from app import accounts
+        from db import get_connection
+
+        # Exactly one profile: the state a fresh deployment is in.
+        user_id = self.make_profile("owner@example.com", role="student")
+        with self.connect() as connection:
+            connection.execute(
+                "CREATE TABLE admin_bootstrap (id INTEGER PRIMARY KEY, code_hash TEXT, "
+                "created_at TEXT DEFAULT CURRENT_TIMESTAMP, claimed_at TEXT, claimed_by TEXT)"
+            )
+            connection.commit()
+
+        code = "operator-issued-code"
+        digest = hashlib.sha256(code.encode()).hexdigest()
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO admin_bootstrap (id, code_hash) VALUES (1, ?)", (digest,))
+            connection.commit()
+
+        # A wrong code changes nothing.
+        self.assertFalse(accounts.bootstrap_signup(user_id, "wrong-code"))
+        # No code at all changes nothing (public registration alone is a no-op).
+        self.assertFalse(accounts.bootstrap_signup(user_id, None))
+
+        conn = get_connection()
+        try:
+            self.assertEqual(accounts.count_profiles_connection(conn), 1)
+            self.assertTrue(accounts.claim_bootstrap(conn, user_id, code))
+            conn.commit()
+            # The same code cannot be replayed.
+            self.assertFalse(accounts.claim_bootstrap(conn, user_id, code))
+        finally:
+            conn.close()
+
+        with self.connect() as connection:
+            role = connection.execute(
+                "SELECT role FROM user_profiles WHERE user_id = ?", (user_id,)
+            ).fetchone()["role"]
+        self.assertEqual(role, "admin")
 
     def test_signup_rejects_weak_or_mismatched_passwords(self):
         for data in (

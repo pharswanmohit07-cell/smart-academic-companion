@@ -101,9 +101,21 @@ missing).
    * Invite user:
      `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite`
 
-5. **The first account**: while `public.user_profiles` is empty, the first
-   sign-up is promoted to `admin` so the deployment can be administered. Every
-   later sign-up is a student. If you prefer to create the admin yourself:
+5. **The first administrator** is created only by an explicit, operator-authorized
+   step. Public registration can never grant a role.
+
+   ```bash
+   python manage.py issue-bootstrap      # prints a single-use code (once)
+   python manage.py bootstrap-status     # shows whether a code is outstanding
+   ```
+
+   Then register normally at `/auth/signup` and paste the code into
+   *Administrator setup code*. It promotes that one account to `admin`, only
+   while `public.user_profiles` is still empty, and cannot be reused or replayed.
+   Rerunning `issue-bootstrap` invalidates any unused code. The SHA-256 hash is
+   stored in `public.admin_bootstrap`; the plaintext is never stored or logged.
+
+   If you prefer not to use a code, create the account first and then:
 
    ```bash
    python manage.py provision-admin you@college.edu.in

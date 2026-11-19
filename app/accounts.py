@@ -288,66 +288,137 @@ def set_role(email, role):
     return row["user_id"]
 
 
-BOOTSTRAP_LOCK_ID = 918273645  # arbitrary but stable; guards the first-signup check
+BOOTSTRAP_LOCK_ID = 918273645  # arbitrary; serialises the one-time claim
 
 
-def bootstrap_signup(user_id):
-    """First-deployment helper: make the only account an admin, then student.
+def _ensure_bootstrap_table(connection):
+    """Create the one-time bootstrap-token table (PostgreSQL only).
 
-    Returns True when the account was promoted. Safe to call for every signup:
-    it only acts while exactly one profile exists (i.e. the account that just
-    signed up on an otherwise empty deployment).
+    The table is created lazily so a deployment can be bootstrapped without
+    re-running migrations. Nothing is ever deleted; the row records who claimed
+    it and when, and a hash of the single-use code.
     """
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS admin_bootstrap (
+               id            integer PRIMARY KEY CHECK (id = 1),
+               code_hash     text NOT NULL,
+               created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               claimed_at    timestamptz,
+               claimed_by    uuid
+           )"""
+    )
+    return "admin_bootstrap"
+
+
+def issue_bootstrap_code():
+    """Operator tooling: mint a single-use admin bootstrap code.
+
+    Requires database access (``DATABASE_URL``), which is exactly the trust
+    boundary: an anonymous visitor can never mint this. Returns the plaintext
+    code once; only its hash is stored.
+    """
+    import hashlib
+    import secrets
+
+    code = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    with closing(get_connection()) as connection:
+        if connection.backend != "postgresql":
+            raise AccountError(
+                "Admin bootstrap codes are issued on PostgreSQL only. "
+                "Use `python manage.py provision-admin <email>` for local SQLite."
+            )
+        _ensure_bootstrap_table(connection)
+        # Replacing the row invalidates any code that was issued but not used.
+        connection.execute("DELETE FROM admin_bootstrap WHERE id = 1 AND claimed_at IS NULL")
+        connection.execute(
+            "INSERT INTO admin_bootstrap (id, code_hash) VALUES (1, ?) "
+            "ON CONFLICT (id) DO UPDATE SET code_hash = excluded.code_hash, "
+            "created_at = CURRENT_TIMESTAMP, claimed_at = NULL, claimed_by = NULL",
+            (digest,),
+        )
+        connection.commit()
+    return code
+
+
+def bootstrap_open():
+    """True while no profile exists AND an operator has issued a code."""
     try:
         with closing(get_connection()) as connection:
-            if connection.backend == "postgresql":
-                connection.execute(
-                    "SELECT pg_advisory_xact_lock(?) AS locked", (BOOTSTRAP_LOCK_ID,)
-                )
-            promoted = claim_bootstrap(connection, user_id)
+            if connection.backend != "postgresql":
+                return False
+            if count_profiles_connection(connection) != 0:
+                return False
+            _ensure_bootstrap_table(connection)
+            connection.commit()
+            row = connection.execute(
+                "SELECT 1 AS found FROM admin_bootstrap "
+                "WHERE id = 1 AND claimed_at IS NULL"
+            ).fetchone()
+            return row is not None
+    except DatabaseError:
+        return False
+
+
+def count_profiles_connection(connection):
+    row = connection.execute(
+        f"SELECT COUNT(*) AS total FROM {profiles_table(connection)}"
+    ).fetchone()
+    return int(row["total"])
+
+
+def claim_bootstrap(connection, user_id, code):
+    """Promote ``user_id`` to admin only with the valid, unclaimed code.
+
+    Runs in one transaction under an advisory lock: the token is compared by
+    constant-time hash, marked claimed, and the role set. A wrong code, a used
+    code, or an already-populated profile table all return False and change
+    nothing.
+    """
+    import hashlib
+    import hmac
+
+    if not code:
+        return False
+    if connection.backend == "postgresql":
+        connection.execute(
+            "SELECT pg_advisory_xact_lock(?) AS locked", (BOOTSTRAP_LOCK_ID,)
+        )
+    if count_profiles_connection(connection) != 1:
+        return False
+    _ensure_bootstrap_table(connection)
+    row = connection.execute(
+        "SELECT code_hash FROM admin_bootstrap WHERE id = 1 AND claimed_at IS NULL"
+    ).fetchone()
+    if row is None:
+        return False
+    supplied = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    if not hmac.compare_digest(supplied, row["code_hash"]):
+        return False
+    connection.execute(
+        "UPDATE admin_bootstrap SET claimed_at = CURRENT_TIMESTAMP, claimed_by = ? "
+        "WHERE id = 1",
+        (user_id,),
+    )
+    connection.execute(
+        f"UPDATE {profiles_table(connection)} SET role = 'admin' WHERE user_id = ?",
+        (user_id,),
+    )
+    return True
+
+
+def bootstrap_signup(user_id, code=None):
+    """Promote the account only when the operator's bootstrap code matches.
+
+    Public registration alone can never grant a role: without a code this is a
+    no-op that returns False.
+    """
+    if not code:
+        return False
+    try:
+        with closing(get_connection()) as connection:
+            promoted = claim_bootstrap(connection, user_id, code)
             connection.commit()
             return promoted
     except DatabaseError:
         return False
-
-
-def is_bootstrap_open():
-    """True when no profile exists, so the first signup may become admin.
-
-    This guarantees a brand-new deployment can be administered. It closes
-    itself: once the first profile exists, signup always creates a student.
-    The check runs under a transaction-level advisory lock (PostgreSQL) so two
-    simultaneous first signups cannot both claim bootstrap.
-    """
-    try:
-        with closing(get_connection()) as connection:
-            if connection.backend == "postgresql":
-                connection.execute(
-                    "SELECT pg_advisory_xact_lock(?) AS locked", (BOOTSTRAP_LOCK_ID,)
-                )
-            row = connection.execute(
-                f"SELECT COUNT(*) AS total FROM {profiles_table(connection)}"
-            ).fetchone()
-            connection.commit()
-    except DatabaseError:
-        return False
-    return int(row["total"]) == 0
-
-
-def claim_bootstrap(connection, user_id):
-    """Promote ``user_id`` to admin if (and only if) they are the only profile.
-
-    Called with the same transaction that loaded the profiles, after the
-    advisory lock was taken by :func:`is_bootstrap_open`-style code.
-    """
-    table = profiles_table(connection)
-    row = connection.execute(
-        f"SELECT COUNT(*) AS total FROM {table}"
-    ).fetchone()
-    if int(row["total"]) != 1:
-        return False
-    connection.execute(
-        f"UPDATE {table} SET role = 'admin' WHERE user_id = ?",
-        (user_id,),
-    )
-    return True

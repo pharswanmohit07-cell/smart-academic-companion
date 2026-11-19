@@ -28,9 +28,9 @@ from flask import (
 
 from app import auth
 from app.accounts import (
-    DEFAULT_ROLE, Account, AccountError, bootstrap_signup, email_domain_allowed,
-    ensure_profile, ensure_student_record, ensure_teacher_record, load_account,
-    safe_role,
+    DEFAULT_ROLE, Account, AccountError, bootstrap_open, bootstrap_signup,
+    email_domain_allowed, ensure_profile, ensure_student_record,
+    ensure_teacher_record, load_account, safe_role,
 )
 from app.supabase_client import AuthError, get_auth
 from config import settings
@@ -156,6 +156,10 @@ def signup():
             except AuthError as exc:
                 error = exc.message
             else:
+                # Admin bootstrap is never automatic. It requires the single-use
+                # code an operator minted with `python manage.py issue-bootstrap`;
+                # without a matching code this is a no-op.
+                bootstrap_code = (request.form.get("bootstrap_code") or "").strip()
                 user = (payload or {}).get("user") or {}
                 if payload.get("session") and user.get("id"):
                     # Email confirmation is disabled: the session is already usable.
@@ -163,17 +167,18 @@ def signup():
                     account = ensure_profile(result.user_id, result.email,
                                              values["display_name"])
                     auth.sign_in(account, result.refresh_token)
-                    bootstrap_signup(account.user_id)
-                    account = auth.reload_account()
-                    flash("Your account is ready.", "success")
+                    if bootstrap_signup(account.user_id, bootstrap_code):
+                        account = auth.reload_account()
+                        log.info("admin bootstrap claimed by %s", account.email)
+                        flash("Your administrator account is ready.", "success")
+                    else:
+                        flash("Your account is ready.", "success")
                     return redirect(dashboard_for(account))
                 elif user.get("id"):
-                    # Create the profile now (the auth trigger normally does it)
-                    # and promote the very first account so the deployment can
-                    # be administered. Later signups always stay students.
+                    # Create the profile now (the auth trigger normally does it).
                     new_user = ensure_profile(
                         str(user["id"]), values["email"], values["display_name"])
-                    bootstrap_signup(new_user.user_id)
+                    bootstrap_signup(new_user.user_id, bootstrap_code)
                     flash(
                         "Check your email for the confirmation link, then sign in.",
                         "success",
@@ -191,6 +196,7 @@ def signup():
         "auth/signup.html", error=error, values=values,
         auth_configured=settings.SUPABASE_AUTH_ENABLED,
         min_password=MIN_PASSWORD_LENGTH,
+        bootstrap_open=bootstrap_open(),
     )
 
 

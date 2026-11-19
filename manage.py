@@ -285,6 +285,49 @@ def demote(email):
     print(f"student: {email}")
 
 
+def issue_bootstrap():
+    """Mint the one-time admin setup code.
+
+    This is the trusted bootstrap: it needs ``DATABASE_URL``, so only someone
+    with the database credentials can create it. The code is printed once and
+    only its SHA-256 hash is stored; it is consumed by the first registration
+    that submits it while the profile table is still empty.
+    """
+    from app.accounts import AccountError, issue_bootstrap_code
+
+    try:
+        code = issue_bootstrap_code()
+    except AccountError as exc:
+        raise SystemExit(str(exc)) from exc
+    print("Admin setup code (shown once, single use):")
+    print(f"  {code}")
+    print("Register at /auth/signup and paste it into 'Administrator setup code'.")
+    print("It is invalidated by rerunning this command and after first use.")
+
+
+def bootstrap_status():
+    connection = _connection_or_exit()
+    with closing(connection):
+        if connection.backend != "postgresql":
+            raise SystemExit("Bootstrap applies to PostgreSQL only.")
+        row = connection.execute(
+            "SELECT COUNT(*) AS total FROM public.user_profiles"
+        ).fetchone()
+        profiles = int(row["total"])
+        if profiles:
+            print(f"profiles: {profiles} -> bootstrap closed (signup creates students)")
+            return
+        try:
+            issued = connection.execute(
+                "SELECT created_at FROM admin_bootstrap "
+                "WHERE id = 1 AND claimed_at IS NULL"
+            ).fetchone()
+        except Exception:  # noqa: BLE001 - table does not exist yet
+            issued = None
+        print("profiles: 0 -> bootstrap closed unless a code is issued")
+        print("unused code:", (issued["created_at"] if issued else "none"))
+
+
 def link_student(email, auth_email=None, create=False):
     """Attach a login (auth.users) to an existing student academic record.
 
@@ -331,6 +374,14 @@ def main(argv=None):
 
     sub.add_parser("check-db", help="verify tables, RLS and pending migrations")
 
+    sub.add_parser(
+        "issue-bootstrap",
+        help="mint the one-time admin setup code (PostgreSQL only)")
+
+    bootstrap_status = sub.add_parser(
+        "bootstrap-status", help="show whether an unused bootstrap code exists")
+    bootstrap_status.add_argument("--json", action="store_true")
+
     faculty = sub.add_parser("provision-faculty", help="grant the faculty role")
     faculty.add_argument("email")
     faculty.add_argument("--name")
@@ -354,6 +405,10 @@ def main(argv=None):
             run_migrations(status_only=args.status)
     elif args.command == "check-db":
         check_database()
+    elif args.command == "issue-bootstrap":
+        issue_bootstrap()
+    elif args.command == "bootstrap-status":
+        bootstrap_status()
     elif args.command == "provision-faculty":
         provision_faculty(args.email, args.name)
     elif args.command == "provision-admin":

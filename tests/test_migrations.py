@@ -206,9 +206,22 @@ class TestMigrationFiles(unittest.TestCase):
         self.assertNotIn("SECURITY DEFINER", helpers)
 
     def test_helpers_are_security_invoker(self):
-        for path in MIGRATIONS:
-            with self.subTest(file=path.name):
-                self.assertNotIn("SECURITY DEFINER", _sql_only(path))
+        # Policy helpers must remain SECURITY INVOKER. The signup trigger is
+        # the sole deliberate SECURITY DEFINER function because Auth creates
+        # profiles while RLS is enabled; it must have a pinned empty search_path
+        # and no direct execution grants for API roles.
+        helpers = _sql_only(MIGRATIONS[1])
+        self.assertNotIn("SECURITY DEFINER", helpers)
+        self.assertEqual(helpers.count("SECURITY INVOKER"), 9)
+
+        trigger = _sql_only(MIGRATIONS[4])
+        self.assertIn("CREATE OR REPLACE FUNCTION public.handle_new_user()", trigger)
+        self.assertIn("SECURITY DEFINER", trigger)
+        self.assertIn("SET search_path = ''", trigger)
+        self.assertIn(
+            "REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated",
+            trigger,
+        )
 
     def test_student_policies_restrict_to_own_rows(self):
         text = _sql_only(MIGRATIONS[2])

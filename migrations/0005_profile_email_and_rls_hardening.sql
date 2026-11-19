@@ -27,7 +27,7 @@ BEGIN
     VALUES (
         NEW.id,
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data ->> 'full_name', ''),
+        '' ,
         'student'
     )
     ON CONFLICT (user_id) DO UPDATE

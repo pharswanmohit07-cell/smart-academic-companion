@@ -14,6 +14,8 @@ in :mod:`config`; keeping it here means tests can point ``DATABASE_FILE`` at
 a temporary file without touching the environment.
 """
 
+from pathlib import Path
+
 from . import base, pg_backend, sqlite_backend
 from .base import DatabaseError, IntegrityError, Row, SchemaMismatchError
 
@@ -98,7 +100,14 @@ def initialize_database(database_file=None, schema_path=None):
 
 
 def migrations_required():
-    """Return migration file names that have not been recorded as applied."""
+    """Return migration file names that have not been recorded as applied.
+
+    The migration ledger belongs to PostgreSQL. A local SQLite database is
+    created and upgraded by :mod:`database` directly, so there is nothing
+    pending there.
+    """
+    if not is_postgres():
+        return []
     directory = Path(__file__).resolve().parent.parent / "migrations"
     applied = _applied_migrations()
     return [
@@ -108,6 +117,16 @@ def migrations_required():
 
 
 def _applied_migrations():
-    from manage import applied_migrations
+    """Read the migration ledger directly (importing manage here is circular)."""
+    from contextlib import closing
 
-    return applied_migrations()
+    if not is_postgres():
+        # The SQLite schema is maintained by database.py, not by the ledger.
+        return set()
+    with closing(get_connection()) as connection:
+        try:
+            rows = connection.execute("SELECT filename FROM app_migrations").fetchall()
+        except DatabaseError:
+            connection.rollback()
+            return set()
+    return {row["filename"] for row in rows}

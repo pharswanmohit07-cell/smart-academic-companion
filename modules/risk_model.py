@@ -32,10 +32,16 @@ RANDOM_SEED = 42
 
 
 def _load_student_data():
-    """Build student features and demonstration labels from SQLite."""
+    """Build student features and demonstration labels from the database.
+
+    The rows are read through :mod:`db` (SQLite locally, PostgreSQL in
+    production) and handed to pandas as a list of mappings. ``pandas.read_sql``
+    is not used because it needs a raw DBAPI cursor, which the portable
+    connection deliberately does not expose.
+    """
     conn = get_connection()
     try:
-        data = pd.read_sql_query(
+        rows = conn.execute(
             """
             WITH attendance_by_student AS (
                 SELECT student_id,
@@ -87,11 +93,14 @@ def _load_student_data():
             LEFT JOIN legacy_assignment_ratio AS legacy
                 ON legacy.student_id = s.student_id
             GROUP BY s.student_id, s.name
-            """,
-            conn,
-        )
+            """
+        ).fetchall()
     finally:
         conn.close()
+
+    data = pd.DataFrame([dict(row) for row in rows], columns=(
+        "student_id", "name", "attendance_pct", "average_marks_pct",
+        "assignment_submission_ratio"))
 
     # Students with no attendance/marks/assignment rows cannot be scored.
     data = data.dropna(subset=FEATURES)
@@ -174,6 +183,8 @@ def predict_students(student_ids):
     Returns a dict of {student_id: prediction}. Raises ValueError only when
     the model cannot be trained at all (for example, too few students).
     """
+    # The caller is already restricted at the role/class level, so the model is
+    # trained on the whole dataset but only asked about authorized students.
     data = _load_student_data()
     if data.empty:
         raise ValueError(

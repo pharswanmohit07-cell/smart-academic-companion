@@ -83,29 +83,41 @@ def numeric_text(value):
 
 
 def to_minutes(value):
-    """Convert 'HH:MM', 'HH:MM:SS' or minutes-after-midnight to minutes."""
+    """Convert a time value to minutes after midnight.
+
+    Accepts ``'HH:MM'`` (SQLite TEXT), ``'HH:MM:SS'`` (PostgreSQL TIME),
+    ``Decimal('9.5')`` from ``EXTRACT(HOUR FROM ...)`` and plain numbers.
+    """
     if value is None:
         return None
     if isinstance(value, (int, float)):
-        return int(value)
+        return int(round(float(value) * 60)) if float(value) < 24 else int(value)
     text = str(value).strip()
     if ":" in text:
-        hours, minute_part = text.split(":")[:2]
-        return int(numeric_text(hours)) * 60 + int(numeric_text(minute_part))
-    return int(float(text))
+        hour_text, minute_text = text.split(":")[:2]
+        if "." in hour_text:
+            # PostgreSQL EXTRACT(HOUR) can return Decimal('9.5'): 9:30.
+            hours = float(hour_text)
+            whole = int(hours)
+            return whole * 60 + int(round((hours - whole) * 60)) + int(float(minute_text))
+        return int(hour_text) * 60 + int(minute_text)
+    number = float(text)
+    return int(round(number * 60)) if number < 24 else int(number)
 
 
 def split_sql_statements(sql_text):
-    """Split a migration file into statements at the marker line."""
+    """Split a migration file into statements at the marker line.
+
+    Lines before the first marker are only comments; a statement is complete
+    at the next marker, so ``DO $$ ... $$`` bodies keep their semicolons.
+    """
     statements = []
     current = []
 
     def flush():
-        if not current:
-            return
         lines = list(current)
         current.clear()
-        while lines and lines[0].lstrip().startswith("--"):
+        while lines and (not lines[0].strip() or lines[0].lstrip().startswith("--")):
             lines.pop(0)
         while lines and lines[-1].strip() == "":
             lines.pop()

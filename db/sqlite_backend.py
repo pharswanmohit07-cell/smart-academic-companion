@@ -16,12 +16,19 @@ DEFAULT_DATABASE_PATH = BASE_DIR / "academic_companion.db"
 
 
 def database_path():
-    """Resolve the SQLite file path from configuration."""
+    """Resolve the SQLite file path from configuration.
+
+    ``database.DATABASE_PATH`` stays authoritative (it is the name the project
+    and its tests have always used); ``DATABASE_FILE`` overrides it for an
+    isolated run.
+    """
     from config import settings
 
     if settings.DATABASE_FILE:
         return Path(settings.DATABASE_FILE)
-    return DEFAULT_DATABASE_PATH
+    import database as legacy
+
+    return Path(legacy.DATABASE_PATH)
 
 
 class Cursor:
@@ -86,6 +93,20 @@ class Connection:
 
     def commit(self):
         self._connection.commit()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        """Commit on success, roll back on error, then close."""
+        try:
+            if exc_type is None:
+                self._connection.commit()
+            else:
+                self._connection.rollback()
+        finally:
+            self._connection.close()
+        return False
 
     def rollback(self):
         self._connection.rollback()

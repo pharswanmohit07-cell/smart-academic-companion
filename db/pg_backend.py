@@ -39,7 +39,10 @@ def translate(sql):
     while index < length:
         char = sql[index]
         if in_string:
-            output.append(char)
+            if char == "%":
+                output.append("%%")
+            else:
+                output.append(char)
             if char == "'":
                 # A doubled quote is an escaped quote, not the end of string.
                 if index + 1 < length and sql[index + 1] == "'":
@@ -63,7 +66,8 @@ def translate(sql):
         elif char == "?":
             output.append("%s")
         elif char == "%":
-            # psycopg uses %s placeholders, so a literal percent must be doubled.
+            # psycopg treats % as a placeholder marker, so a literal percent
+            # must be doubled everywhere, including inside quoted strings.
             output.append("%%")
         else:
             output.append(char)
@@ -122,6 +126,20 @@ class Connection:
     def commit(self):
         self._connection.commit()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        """Commit on success, roll back on error, then close."""
+        try:
+            if exc_type is None:
+                self._connection.commit()
+            else:
+                self._connection.rollback()
+        finally:
+            self._connection.close()
+        return False
+
     def rollback(self):
         self._connection.rollback()
 
@@ -129,7 +147,7 @@ class Connection:
         self._connection.close()
 
     def table_columns(self, table):
-        rows = self._connection.cursor().execute(
+        rows = self._connection.execute(
             "SELECT column_name FROM information_schema.columns "
             "WHERE table_schema = 'public' AND table_name = %s",
             (table,),
@@ -137,7 +155,7 @@ class Connection:
         return {row[0] for row in rows}
 
     def table_exists(self, table):
-        row = self._connection.cursor().execute(
+        row = self._connection.execute(
             "SELECT 1 FROM information_schema.tables "
             "WHERE table_schema = 'public' AND table_name = %s",
             (table,),

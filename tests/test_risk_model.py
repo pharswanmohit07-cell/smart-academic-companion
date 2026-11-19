@@ -18,11 +18,20 @@ class TestRiskModel(unittest.TestCase):
             "assignment_submission_ratio": [0.8, 0.7, 0.9, 1.0],
         })
 
-        with patch.object(
-            risk_model, "get_connection"
-        ), patch.object(
-            risk_model.pd, "read_sql_query", return_value=data
-        ):
+        class _Cursor:
+            def fetchall(self):
+                return list(data.to_dict("records"))
+
+        class _Connection:
+            def execute(self, *_args, **_kwargs):
+                return _Cursor()
+
+            def close(self):
+                pass
+
+        # The module reads rows through the portable database layer, so the
+        # connection is what gets patched (not pandas.read_sql_query).
+        with patch.object(risk_model, "get_connection", return_value=_Connection()):
             result = risk_model._load_student_data()
 
         self.assertEqual(result["at_risk"].tolist(), [1, 1, 0, 0])

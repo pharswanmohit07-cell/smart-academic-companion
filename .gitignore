@@ -240,3 +240,17 @@ academic.db
 
 # Local editor settings
 .vscode/
+
+# Secrets and local-only files
+.env
+.env.local
+*.pem
+
+# Built C library (compiled per platform at build time)
+c_core/libcore.so
+c_core/libcore.dylib
+
+# Test and scratch output
+tests/_dbg*.py
+.venv-cleanup-check/
+core_tests

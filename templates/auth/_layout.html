@@ -1,38 +1,32 @@
 {% extends "base.html" %}
-
-{#
-  Shared frame for the sign-in, sign-up and password screens. The pages keep
-  the application's navbar and theme; only the content block differs.
-#}
+{# Shared authentication frame; child pages supply the existing secure forms. #}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-md-9 col-lg-6 col-xl-5">
-    <div class="page-head mb-4 text-center">
-      <h1 class="h3 mb-2">{% block auth_title %}{% endblock %}</h1>
+<div class="auth-shell">
+  <aside class="auth-aside">
+    <div>
+      <span class="auth-aside-mark">Smart Academic Companion</span>
+      <h2>Make space for better academic decisions.</h2>
+      <p>One workspace for attendance planning, study schedules and academic records.</p>
+    </div>
+    <p class="small mb-0">Student accounts are self-registered. Faculty access is provisioned by an administrator.</p>
+  </aside>
+  <section class="auth-main">
+    <div class="page-head mb-4">
+      <h1 class="page-heading">{% block auth_title %}{% endblock %}</h1>
       <p class="text-secondary mb-0">{% block auth_subtitle %}{% endblock %}</p>
     </div>
-
     <div class="card">
-      <div class="card-body p-4">
+      <div class="card-body">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% for category, message in messages %}
-            <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }}" role="status">
-              {{ message }}
-            </div>
+            <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }}" role="status">{{ message }}</div>
           {% endfor %}
         {% endwith %}
-
-        {% if error %}
-          <div class="alert alert-danger" role="alert">{{ error }}</div>
-        {% endif %}
-
+        {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
         {% block auth_body %}{% endblock %}
       </div>
     </div>
-
-    <p class="text-center text-secondary small mt-3 mb-0">
-      {% block auth_footer %}{% endblock %}
-    </p>
-  </div>
+    <p class="text-secondary small mt-4 mb-0">{% block auth_footer %}{% endblock %}</p>
+  </section>
 </div>
 {% endblock %}

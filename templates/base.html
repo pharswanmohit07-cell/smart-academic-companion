@@ -601,6 +601,24 @@ h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
 @media(max-width:767.98px){.landing-title{font-size:2.55rem}.landing-section{padding:3.2rem 0}.landing-feature-grid,.workflow-grid,.role-grid{grid-template-columns:1fr}.landing-cta{padding:1.5rem;align-items:flex-start;flex-direction:column}.auth-shell{grid-template-columns:1fr;margin:.5rem auto}.auth-aside{padding:1.4rem;border-right:0;border-bottom:1px solid var(--app-border)}.auth-aside h2{font-size:1.3rem;margin:.5rem 0}.auth-aside p{margin-bottom:0}.auth-main{padding:1.5rem}}
 @media(max-width:575.98px){.preview-window{grid-template-columns:1fr}.preview-sidebar{display:none}.landing-title{font-size:2.2rem}.landing-trustline{line-height:1.6}}
 
+
+/* Consistent hierarchy and data-dense workspace pages */
+.app-main .page-head h1,.app-main > .d-flex h1{font-size:clamp(1.55rem,2.7vw,2.05rem);font-weight:700;letter-spacing:-.045em}
+.app-main .page-head p,.app-main > .d-flex .text-secondary{line-height:1.65}
+.app-main .row.g-4>.col-12>.card,.app-main .row.g-3>.col-12>.card{height:100%}
+.app-main .table-responsive{border-radius:7px}
+.app-main .table-responsive .table{margin-bottom:0}
+.app-main .list-group-item{padding:.9rem 1rem}
+.app-main .list-group-item.active{background:var(--app-accent-soft);border-color:var(--app-border);color:var(--app-text)}
+.app-main .list-group-item.active small{color:var(--app-text-muted)!important}
+.app-main .form-text{color:var(--app-text-muted);font-size:.78rem}
+.app-main .card .card-header{display:flex;align-items:center;min-height:54px}
+.student-picker-results{background:var(--app-surface)!important;border-color:var(--app-border)!important;box-shadow:0 8px 20px rgba(20,35,50,.1)}
+.student-picker-results .list-group-item,.student-picker-results .student-picker-empty{background:var(--app-surface)!important;color:var(--app-text)!important;border-color:var(--app-border)!important}
+.student-picker-results .list-group-item:hover,.student-picker-results .list-group-item:focus{background:var(--app-hover)!important;color:var(--app-text)!important}
+@media(max-width:767.98px){.app-main{padding-left:1rem!important;padding-right:1rem!important}.app-footer-inner{padding-left:1rem;padding-right:1rem}.app-main .table-responsive{border:1px solid var(--app-border)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.feature-card{transition:none}}
+
     </style>
 </head>
 

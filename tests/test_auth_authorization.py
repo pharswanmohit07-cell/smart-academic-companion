@@ -256,6 +256,32 @@ class TestAuthentication(AppTestBase, unittest.TestCase):
             ).fetchone()
         self.assertEqual(profile["role"], "student")
 
+    def test_ensure_profile_fills_display_name_after_auth_trigger(self):
+        user_id = self.fake.add_user(
+            "triggered@example.com", "secret-pass-1", display_name="Trigger Name"
+        )
+        # Simulate the Supabase auth.users trigger having already created the
+        # profile, but without copying any untrusted metadata into display_name.
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO user_profiles (user_id, email, display_name, role)
+                   VALUES (?, ?, '', 'student')""",
+                (user_id, "triggered@example.com"),
+            )
+            connection.commit()
+
+        from app.accounts import ensure_profile
+        account = ensure_profile(user_id, "triggered@example.com", "Trigger Name")
+
+        with self.connect() as connection:
+            profile = connection.execute(
+                "SELECT display_name, role FROM user_profiles WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        self.assertEqual(profile["display_name"], "Trigger Name")
+        self.assertEqual(profile["role"], "student")
+        self.assertEqual(account.display_name, "Trigger Name")
+
     def test_public_signup_never_grants_admin(self):
         """Registering first must not confer admin: that was the old behaviour."""
         response = self.submit("/auth/signup", {

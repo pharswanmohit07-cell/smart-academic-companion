@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Manage Records · Smart Academic Companion{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div class="page-head">
-    <span class="section-kicker">Faculty workspace · Records</span>
-    <h1 class="h3 mb-1">Faculty Data Management</h1>
-    <p class="text-secondary mb-0">Maintain student records, attendance, exam marks and assessment submissions.</p>
+<header class="workspace-hero faculty-hero">
+  <div class="workspace-hero-copy">
+    <span class="section-kicker">Faculty workspace / Records</span>
+    <h1>Academic records, in one workspace.</h1>
+    <p>Update attendance, assessments and student details using the records you manage.</p>
   </div>
-  <a class="btn btn-primary" href="{{ url_for('faculty.classes') }}">Manage Classes</a><a class="btn btn-outline-primary" href="{{ url_for('faculty.dashboard') }}">Back to dashboard</a>
+  <div class="workspace-hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('faculty.classes') }}">Manage classes <span aria-hidden="true">→</span></a>
+    <a class="btn btn-outline-primary" href="{{ url_for('faculty.dashboard') }}">Dashboard</a>
+  </div>
+</header>
+<div class="workspace-metrics" aria-label="Current workspace records">
+  <div class="workspace-metric"><span>Students</span><strong>{{ students|length }}</strong></div>
+  <div class="workspace-metric"><span>Subjects</span><strong>{{ subjects|length }}</strong></div>
+  <div class="workspace-metric"><span>Assessments</span><strong>{{ assessments|length }}</strong></div>
+  <div class="workspace-metric"><span>Saved records</span><strong>{{ saved_marks|length + saved_attendance|length }}</strong></div>
 </div>
 
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
@@ -17,10 +26,14 @@
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
 
-<div class="row g-4">
+<div class="workspace-section-heading">
+  <div><span class="section-kicker">Record actions</span><h2>Update the academic record</h2></div>
+  <p>Choose the task below; each form saves directly to your existing faculty records.</p>
+</div>
+<div class="row g-4 faculty-action-grid">
   <div class="col-12 col-xl-6">
     <section class="card tool-faculty h-100"><div class="card-body">
-      <h2 class="h5 mb-3">Add student</h2>
+      <span class="form-step">01 · Student</span><h2 class="h5 mb-3">Add student</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="add_student">
         <div class="col-12"><label class="form-label" for="student-name">Full name</label><input class="form-control" id="student-name" name="name" required maxlength="120"></div>
@@ -115,8 +128,8 @@
   </div>
 
   <div class="col-12">
-    <section class="card tool-study"><div class="card-body">
-      <h2 class="h5 mb-3">Update submission status</h2>
+    <section class="card tool-study submission-panel"><div class="card-body">
+      <span class="form-step">07 · Follow-up</span><h2 class="h5 mb-3">Update submission status</h2>
       {% if assessments and students %}
       <form method="post" class="row g-3 align-items-end">
         <input type="hidden" name="action" value="save_submission">
@@ -137,8 +150,8 @@
 <div class="row g-4 mt-1">
   <div class="col-12">
     <section class="card tool-faculty"><div class="card-body">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div><h2 class="h5 mb-1">Retrieve saved records</h2><p class="text-secondary small mb-0">A read-only view of the records you have saved.</p></div>
+      <div class="records-heading d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><span class="section-kicker">Record library</span><h2 class="h4 mb-1">Saved academic records</h2><p class="text-secondary small mb-0">Search saved entries, then load a record directly into its edit form.</p></div>
         <div class="d-flex flex-wrap gap-2">
           <select class="form-select form-select-sm" id="saved-record-type" aria-label="Saved record type" style="width:auto">
             <option value="all">All record types</option><option value="marks">Exam marks</option><option value="attendance">Attendance</option>

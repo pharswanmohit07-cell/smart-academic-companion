@@ -116,6 +116,7 @@ def login():
     return render_template(
         "auth/login.html", error=error, email=email, next_url=next_url or "",
         auth_configured=settings.SUPABASE_AUTH_ENABLED,
+        local_preview_enabled=settings.LOCAL_PREVIEW_ENABLED,
     )
 
 
@@ -195,6 +196,7 @@ def signup():
     return render_template(
         "auth/signup.html", error=error, values=values,
         auth_configured=settings.SUPABASE_AUTH_ENABLED,
+        local_preview_enabled=settings.LOCAL_PREVIEW_ENABLED,
         min_password=MIN_PASSWORD_LENGTH,
         bootstrap_open=bootstrap_open(),
     )

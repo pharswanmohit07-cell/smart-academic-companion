@@ -123,13 +123,22 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_light_theme_uses_the_requested_palette(self):
         body = self.page("/attendance").decode("utf-8")
-        for colour in ("#f5f6f8", "#ffffff", "#2563eb", "#1f2937", "#64748b", "#e5e7eb"):
+        for colour in ("#f3f6fb", "#ffffff", "#155eef", "#172033", "#526176", "#d5deea"):
             self.assertIn(colour, body.lower())
 
     def test_dark_theme_uses_the_requested_palette(self):
         body = self.page("/attendance").decode("utf-8")
-        for colour in ("#111827", "#1f2937", "#273449", "#f3f4f6", "#cbd5e1", "#374151"):
+        for colour in ("#0b1220", "#121d30", "#192840", "#f4f7ff", "#c0cadb", "#30415d"):
             self.assertIn(colour, body.lower())
+
+    def test_text_contrast_and_focus_states_are_explicit(self):
+        body = self.page("/attendance").decode("utf-8")
+        for token in ("--app-text:#172033", "--app-text-muted:#526176",
+                      "--app-text:#f4f7ff", "--app-text-muted:#c0cadb",
+                      ":focus-visible", "outline:3px solid var(--app-cyan)",
+                      "--bs-btn-color:#fff"):
+            with self.subTest(token=token):
+                self.assertIn(token, body)
 
     def test_tables_and_forms_follow_the_theme(self):
         css = self.page("/attendance").decode("utf-8")
@@ -183,7 +192,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
-        for selector in (b"--app-accent:#315b83", b".app-main",
+        for selector in (b"--app-accent:#155eef", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):

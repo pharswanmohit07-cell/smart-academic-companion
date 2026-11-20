@@ -4,7 +4,7 @@ This branch contains a review-only version of Smart Academic Companion. It runs 
 
 ## Start the preview
 
-1. Install Python 3.10+ and GCC (MinGW-w64/MSYS2) and make sure both `py` and `gcc` work in PowerShell.
+1. Install standard 64-bit Python 3.13 (the regular `3.13` build, **not** the free-threaded `3.13t` build) and GCC (MinGW-w64/MSYS2). Make sure `py -3.13` and `gcc` work in PowerShell.
 2. Download/clone this branch: `preview/local-full-site-ui`.
 3. Open PowerShell in the project folder.
 4. If script execution is blocked for this terminal, run:
@@ -21,7 +21,7 @@ This branch contains a review-only version of Smart Academic Companion. It runs 
 
 6. Open http://127.0.0.1:5000 and use **Continue as student** or **Continue as faculty** on the sign-in page.
 
-The launcher creates a dedicated `preview_data/smart-academic-companion-preview.db` file, installs the Python dependencies in `.venv`, builds the existing C library for Windows, and seeds only that isolated preview database. It does not read or modify your existing `academic_companion.db`.
+The launcher creates a dedicated `preview_data/smart-academic-companion-preview.db` file, creates `.venv` with standard Python 3.13 (replacing an incompatible free-threaded environment if needed), installs prebuilt Python wheels only, builds the existing C library for Windows, and seeds only that isolated preview database. If a compatible wheel is unavailable, setup stops with an error instead of attempting a native package build. It does not read or modify your existing `academic_companion.db`.
 
 ## Preview boundaries
 

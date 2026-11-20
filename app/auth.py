@@ -107,6 +107,13 @@ def current_account() -> Account | None:
         sign_out()
         return None
 
+    # Local preview identities are accepted only when the explicit preview
+    # flag is enabled, production is off, and PostgreSQL is not configured.
+    # They never call Supabase or trust a browser-selected role in production.
+    if settings.LOCAL_PREVIEW_ENABLED and session.get("local_preview") is True:
+        g.account = account
+        return account
+
     # Re-read the trusted role from the database so a revoke or a promotion
     # takes effect on the next request. The cookie itself never grants access.
     fresh = load_account(account.user_id, account.email, account.display_name)

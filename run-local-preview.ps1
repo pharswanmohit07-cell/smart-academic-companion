@@ -22,7 +22,11 @@ if (-not (Test-Path ".venv\Scripts\python.exe")) {
     py -3 -m venv .venv
 }
 $python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
-& $python -m pip install -r requirements.txt
+& $python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements.txt
+if ($LASTEXITCODE -ne 0) {
+    $pythonVersion = & $python --version
+    throw "Python dependency installation failed for $pythonVersion. No source builds were attempted. Check that a supported 64-bit Python version is installed, then rerun the launcher. The preview setup stopped before database seeding or app startup."
+}
 
 # Build the existing C features for Windows. GCC/MinGW-w64 must be on PATH.
 if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) {

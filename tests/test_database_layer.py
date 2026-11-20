@@ -32,7 +32,8 @@ SKIP_DIRS = {"tests", ".git", ".venv", "venv", "__pycache__", "build", "node_mod
 # compatibility layer that migrates old local files, seed/management tooling
 # and the tests themselves.
 SQLITE_ALLOWED = {
-    "database.py", "schema.sql", "seed_data.py", "db/sqlite_backend.py",
+    "database.py", "schema.sql", "seed_data.py", "seed_preview_data.py",
+    "db/sqlite_backend.py",
     "db/base.py", "db/__init__.py",
 }
 

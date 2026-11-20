@@ -1,11 +1,12 @@
 
 import os
 import random
-import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
 
-# Use the same database file as database.py.
+# Use the shared SQLite adapter for this local-only preview database.
+from db import sqlite_backend
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("DATABASE_FILE", BASE_DIR / "academic_companion-preview.db"))
 SCHEMA_PATH = BASE_DIR / "schema.sql"
@@ -418,9 +419,7 @@ def print_summary(connection):
 
 
 def main():
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
+    connection = sqlite_backend.connect_to(DB_PATH)
 
     try:
         prepare_schema(connection)

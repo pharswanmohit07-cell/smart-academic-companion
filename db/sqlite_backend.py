@@ -91,6 +91,17 @@ class Connection:
         except sqlite3.Error as exc:
             raise DatabaseError(str(exc)) from exc
 
+    def executemany(self, sql, parameters):
+        """Execute one statement for each parameter set."""
+        try:
+            return Cursor(self._connection.executemany(
+                sql, [coerce_bool_params(params) for params in parameters]
+            ))
+        except sqlite3.IntegrityError as exc:
+            raise IntegrityError(str(exc)) from exc
+        except sqlite3.Error as exc:
+            raise DatabaseError(str(exc)) from exc
+
     def commit(self):
         self._connection.commit()
 

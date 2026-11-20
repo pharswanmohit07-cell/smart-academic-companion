@@ -34,7 +34,7 @@ if ($LASTEXITCODE -ne 0) { throw "The C core build failed." }
 # Initialize and seed ONLY the isolated preview database.
 & $python database.py
 if ($LASTEXITCODE -ne 0) { throw "Database initialization failed." }
-& $python seed_data.py
+& $python seed_preview_data.py
 if ($LASTEXITCODE -ne 0) { throw "Preview sample-data setup failed." }
 & $python demo_data.py
 if ($LASTEXITCODE -ne 0) { throw "Preview academic demo-data setup failed." }

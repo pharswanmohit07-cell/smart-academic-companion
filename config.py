@@ -146,6 +146,15 @@ class Settings:
         return _first("LOG_LEVEL", default="INFO").upper()
 
     @property
+    def LOCAL_PREVIEW_ENABLED(self):
+        """Explicit local-only demo mode; impossible on production/PostgreSQL."""
+        return (
+            _as_bool(os.environ.get("SAC_LOCAL_PREVIEW"), default=False)
+            and not self.IS_PRODUCTION
+            and not self.DATABASE_URL
+        )
+
+    @property
     def SUPABASE_AUTH_ENABLED(self):
         return bool(self.SUPABASE_URL and self.SUPABASE_PUBLISHABLE_KEY)
 

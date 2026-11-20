@@ -335,3 +335,65 @@ def reset_password():
 def no_account():
     """Signed in, but no academic record is linked to this login yet."""
     return render_template("auth/no_account.html")
+
+
+@bp.route("/demo-login", methods=["POST"])
+def demo_login():
+    """Enter a disposable local preview as a student or faculty demo identity."""
+    if not settings.LOCAL_PREVIEW_ENABLED:
+        return ("Local preview mode is disabled.", 404)
+
+    role = (request.form.get("demo_role") or "student").strip().lower()
+    if role not in {"student", "faculty"}:
+        role = "student"
+
+    from contextlib import closing
+    from db import get_connection, last_insert_id
+
+    with closing(get_connection()) as connection:
+        student = connection.execute(
+            "SELECT student_id, name, email FROM students ORDER BY student_id LIMIT 1"
+        ).fetchone()
+        if student is None:
+            connection.execute(
+                "INSERT INTO students (name, email, semester, section) VALUES (?, ?, 3, 'A')",
+                ("Aarav Sharma", "student.preview@example.local"),
+            )
+            connection.commit()
+            student = connection.execute(
+                "SELECT student_id, name, email FROM students ORDER BY student_id LIMIT 1"
+            ).fetchone()
+
+        teacher = connection.execute(
+            "SELECT teacher_id, name, email FROM teachers ORDER BY teacher_id LIMIT 1"
+        ).fetchone()
+        if teacher is None:
+            connection.execute(
+                "INSERT INTO teachers (name, email) VALUES (?, ?)",
+                ("Demo Faculty", "faculty.preview@example.local"),
+            )
+            connection.commit()
+            teacher = connection.execute(
+                "SELECT teacher_id, name, email FROM teachers ORDER BY teacher_id LIMIT 1"
+            ).fetchone()
+        connection.commit()
+
+    if role == "faculty":
+        account = Account(
+            user_id="local-preview-faculty",
+            email=teacher["email"] or "faculty.preview@example.local",
+            display_name=teacher["name"] or "Demo Faculty", role="faculty",
+            teacher_id=teacher["teacher_id"],
+        )
+    else:
+        account = Account(
+            user_id="local-preview-student",
+            email=student["email"] or "student.preview@example.local",
+            display_name=student["name"] or "Aarav Sharma", role="student",
+            student_id=student["student_id"],
+        )
+
+    auth.sign_in(account, "")
+    session["local_preview"] = True
+    flash("Local preview session. Changes stay in your local demo database.", "info")
+    return redirect(dashboard_for(account))

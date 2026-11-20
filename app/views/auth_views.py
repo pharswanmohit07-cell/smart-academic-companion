@@ -232,7 +232,8 @@ def forgot_password():
             else:
                 sent = True
     return render_template("auth/forgot_password.html", sent=sent, error=error,
-                           email=email, auth_configured=settings.SUPABASE_AUTH_ENABLED)
+                           email=email, auth_configured=settings.SUPABASE_AUTH_ENABLED,
+                           local_preview_enabled=settings.LOCAL_PREVIEW_ENABLED)
 
 
 @bp.route("/confirm", methods=["GET"])
@@ -350,7 +351,7 @@ def demo_login():
         role = "student"
 
     from contextlib import closing
-    from db import get_connection, last_insert_id
+    from db import get_connection
 
     with closing(get_connection()) as connection:
         student = connection.execute(

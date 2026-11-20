@@ -378,6 +378,18 @@ def demo_login():
             teacher = connection.execute(
                 "SELECT teacher_id, name, email FROM teachers ORDER BY teacher_id LIMIT 1"
             ).fetchone()
+        owned = connection.execute(
+            "SELECT class_id FROM faculty_classes WHERE owner_teacher_id = ? LIMIT 1",
+            (teacher["teacher_id"],),
+        ).fetchone()
+        if owned is None:
+            connection.execute(
+                """INSERT INTO faculty_classes
+                   (class_name, program, semester, section, description, owner_teacher_id)
+                   VALUES (?, ?, 3, 'A', ?, ?)""",
+                ("Preview Faculty Class", "BCA AI & Data Science",
+                 "Local preview class for faculty workspace review.", teacher["teacher_id"]),
+            )
         connection.commit()
 
     if role == "faculty":

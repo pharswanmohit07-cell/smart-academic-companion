@@ -6,6 +6,12 @@ Set-Location $PSScriptRoot
 $previewDir = Join-Path $PSScriptRoot "preview_data"
 New-Item -ItemType Directory -Force -Path $previewDir | Out-Null
 $env:DATABASE_FILE = Join-Path $previewDir "smart-academic-companion-preview.db"
+$env:DATABASE_URL = ""
+$env:SUPABASE_URL = ""
+$env:SUPABASE_PUBLISHABLE_KEY = ""
+$env:SUPABASE_ANON_KEY = ""
+$env:SUPABASE_SECRET_KEY = ""
+$env:SUPABASE_SERVICE_ROLE_KEY = ""
 $env:SAC_LOCAL_PREVIEW = "1"
 $env:FLASK_ENV = "development"
 $env:FLASK_DEBUG = "0"

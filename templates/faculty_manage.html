@@ -1,29 +1,20 @@
 {% extends "base.html" %}
+{% block title %}Manage Records · Smart Academic Companion{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
   <div>
     <h1 class="h3 mb-1">Faculty Data Management</h1>
     <p class="text-secondary mb-0">Maintain student records, attendance, exam marks and assessment submissions.</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('risk_dashboard') }}">Back to dashboard</a>
+  <a class="btn btn-primary" href="{{ url_for('faculty.classes') }}">Manage Classes</a><a class="btn btn-outline-primary" href="{{ url_for('faculty.dashboard') }}">Back to dashboard</a>
 </div>
 
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+{% for category, text in get_flashed_messages(with_categories=true) %}
+<div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }}" role="status">{{ text }}</div>
+{% endfor %}
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
-<section class="card shadow-sm mb-4"><div class="card-body">
-  <h2 class="h5 mb-1">Classroom locations</h2>
-  <p class="text-secondary small">Set the building or block and floor for each timetable room. These details appear in Empty Classroom Finder results.</p>
-  <form method="post" class="row g-3 align-items-end">
-    <input type="hidden" name="action" value="save_room_location">
-    <div class="col-12 col-md-3"><label for="location-room" class="form-label">Room</label><select class="form-select" id="location-room" name="room_number" required><option value="">Choose room</option>{% for room in rooms %}<option value="{{ room.room_number }}">{{ room.room_number }}</option>{% endfor %}</select></div>
-    <div class="col-12 col-md-3"><label for="location-building" class="form-label">Building / Block</label><input class="form-control" id="location-building" name="building" placeholder="e.g. CS/IT Block" maxlength="120" required></div>
-    <div class="col-12 col-md-2"><label for="location-floor" class="form-label">Floor</label><input class="form-control" id="location-floor" name="floor" placeholder="e.g. Ground floor" maxlength="60" required></div>
-    <div class="col-12 col-md-2"><label for="location-type" class="form-label">Room type</label><select class="form-select" id="location-type" name="room_type" required><option>Classroom</option><option>Laboratory</option><option>Lecture theatre</option><option>Other</option></select></div>
-    <div class="col-12 col-md-2"><button class="btn btn-primary w-100" type="submit">Save location</button></div>
-  </form>
-  {% if room_locations %}<div class="table-responsive mt-3"><table class="table table-sm table-striped mb-0"><thead><tr><th>Room</th><th>Type</th><th>Building / Block</th><th>Floor</th></tr></thead><tbody>{% for room in room_locations %}<tr><td>{{ room.room_number }}</td><td>{{ room.room_type }}</td><td>{{ room.building }}</td><td>{{ room.floor }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
-</div></section>
 
 <div class="row g-4">
   <div class="col-12 col-xl-6">
@@ -146,7 +137,7 @@
   <div class="col-12">
     <section class="card shadow-sm"><div class="card-body">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div><h2 class="h5 mb-1">Retrieve saved records</h2><p class="text-secondary small mb-0">Read-only view of records currently stored in the database.</p></div>
+        <div><h2 class="h5 mb-1">Retrieve saved records</h2><p class="text-secondary small mb-0">A read-only view of the records you have saved.</p></div>
         <div class="d-flex flex-wrap gap-2">
           <select class="form-select form-select-sm" id="saved-record-type" aria-label="Saved record type" style="width:auto">
             <option value="all">All record types</option><option value="marks">Exam marks</option><option value="attendance">Attendance</option>

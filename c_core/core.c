@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "core.h"
@@ -521,4 +522,359 @@ int detect_booking_clashes(
     free(temp);
     free(active);
     return clash_count;
+}
+
+/*
+ * Study planner
+ * =============
+ *
+ * Min-heap: orders topics from weakest to strongest so the student can
+ * see which topic needs the most attention first. The heap key is
+ * mastery_pct (lower first), then priority_score (higher first), then
+ * topic_id (lower first).
+ *
+ * Max-heap: greedy scheduling. At every step the highest priority topic
+ * that still fits in the remaining time is selected and its estimated
+ * study time is allocated. This is a "take the best that fits" greedy
+ * strategy: it never exceeds the available time, but it is NOT
+ * guaranteed to pack topics optimally. Complexity is O(n log n).
+ *
+ * priority_score = 100 - mastery_pct   (rounded to 2 decimals)
+ *   0% mastery  -> 100 priority
+ *   50% mastery ->  50 priority
+ *   100% mastery ->  0 priority
+ */
+
+/* ------------------------------------------------------------------ */
+/* Heap helpers                                                        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * -1 when a should be served before b, 1 when b comes first, 0 if equal.
+ * O(1) time and space.
+ */
+static int topic_priority_compare(const StudyTopic *a, const StudyTopic *b) {
+    if (a->mastery_pct < b->mastery_pct) return -1;
+    if (a->mastery_pct > b->mastery_pct) return 1;
+
+    double score_a = 100.0 - a->mastery_pct;
+    double score_b = 100.0 - b->mastery_pct;
+    if (score_a > score_b) return -1;
+    if (score_a < score_b) return 1;
+
+    if (a->topic_id < b->topic_id) return -1;
+    if (a->topic_id > b->topic_id) return 1;
+    return 0;
+}
+
+/* O(1) time and space. */
+static void swap_topics(StudyTopic *a, StudyTopic *b) {
+    StudyTopic temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+/* Restore the min-heap property from index i downwards. O(log n). */
+static void min_heap_sift_down(StudyTopic heap[], int size, int index) {
+    while (1) {
+        int left = 2 * index + 1;
+        int right = left + 1;
+        int smallest = index;
+
+        if (left < size &&
+            topic_priority_compare(&heap[left], &heap[smallest]) < 0) {
+            smallest = left;
+        }
+        if (right < size &&
+            topic_priority_compare(&heap[right], &heap[smallest]) < 0) {
+            smallest = right;
+        }
+        if (smallest == index) {
+            return;
+        }
+
+        swap_topics(&heap[index], &heap[smallest]);
+        index = smallest;
+    }
+}
+
+/* Heapify an arbitrary array into a min-heap. O(n). */
+static void min_heap_build(StudyTopic heap[], int size) {
+    for (int i = size / 2 - 1; i >= 0; i--) {
+        min_heap_sift_down(heap, size, i);
+    }
+}
+
+/* Remove and return the weakest topic. O(log n). */
+static StudyTopic min_heap_pop(StudyTopic heap[], int *size) {
+    StudyTopic top = heap[0];
+    (*size)--;
+    if (*size > 0) {
+        heap[0] = heap[*size];
+        min_heap_sift_down(heap, *size, 0);
+    }
+    return top;
+}
+
+/* ------------------------------------------------------------------ */
+/* Public study planner API                                            */
+/* ------------------------------------------------------------------ */
+
+/* Return 1 for a valid topic, 0 otherwise. O(MAX_TOPIC_LEN) time. */
+static int validate_study_topic(const StudyTopic *topic) {
+    if (topic == NULL) return 0;
+
+    if (memchr(topic->topic_name, '\0', MAX_TOPIC_LEN) == NULL) return 0;
+    if (topic->topic_name[0] == '\0') return 0;
+
+    if (!(topic->mastery_pct >= 0.0 && topic->mastery_pct <= 100.0)) {
+        return 0;  /* also rejects NaN */
+    }
+
+    if (topic->estimated_minutes <= 0) return 0;
+
+    return 1;
+}
+
+
+
+/* Copy topic data into a plan item. Returns priority score rounded to 2dp. */
+static double fill_plan_item(
+    StudyPlanItem *item,
+    const StudyTopic *topic,
+    int allocated_minutes
+) {
+    double score = 100.0 - topic->mastery_pct;
+    double rounded = (double)((long)(score * 100.0 + 0.5)) / 100.0;
+
+    item->topic_id = topic->topic_id;
+    memcpy(item->topic_name, topic->topic_name, MAX_TOPIC_LEN);
+    item->topic_name[MAX_TOPIC_LEN - 1] = '\0';
+    item->mastery_pct = topic->mastery_pct;
+    item->priority_score = rounded;
+    item->allocated_minutes = allocated_minutes;
+    item->position = 0;
+    return rounded;
+}
+
+double study_priority_score(const StudyTopic *topic) {
+    if (!validate_study_topic(topic)) return -1.0;
+
+    double score = 100.0 - topic->mastery_pct;
+    return (double)((long)(score * 100.0 + 0.5)) / 100.0;
+}
+
+/*
+ * Min-heap ordering: lowest mastery first, which is the weakest topic.
+ * Time: O(n + n log n); space: O(n).
+ */
+int rank_topics_by_weakness(
+    const StudyTopic topics[],
+    int count,
+    StudyPlanItem output[],
+    int output_capacity
+) {
+    if (count < 0 || output_capacity < 0) return -1;
+    if (count > 0 && topics == NULL) return -1;
+    if (output_capacity > 0 && output == NULL) return -1;
+    if (count > 0 && output_capacity < count) return -1;
+    /* Empty input is not an error: there is simply nothing to rank. */
+    if (count == 0) return 0;
+
+    for (int i = 0; i < count; i++) {
+        if (!validate_study_topic(&topics[i])) return -2;
+    }
+
+    StudyTopic *heap = malloc((size_t)count * sizeof(StudyTopic));
+    if (heap == NULL) return -3;
+
+    for (int i = 0; i < count; i++) {
+        heap[i] = topics[i];
+    }
+
+    min_heap_build(heap, count);
+
+    int size = count;
+    for (int i = 0; i < count; i++) {
+        StudyTopic weakest = min_heap_pop(heap, &size);
+        fill_plan_item(&output[i], &weakest, weakest.estimated_minutes);
+        output[i].position = i + 1;
+    }
+
+    free(heap);
+    return count;
+}
+
+/*
+ * Max-heap by priority score (equivalently, min mastery).
+ * sift_up keeps the strongest candidate at the root.
+ */
+static void max_heap_sift_up(StudyTopic heap[], int index) {
+    while (index > 0) {
+        int parent = (index - 1) / 2;
+        if (topic_priority_compare(&heap[index], &heap[parent]) >= 0) {
+            return;
+        }
+        swap_topics(&heap[index], &heap[parent]);
+        index = parent;
+    }
+}
+
+static void max_heap_sift_down(StudyTopic heap[], int size, int index) {
+    while (1) {
+        int left = 2 * index + 1;
+        int right = left + 1;
+        int best = index;
+
+        if (left < size &&
+            topic_priority_compare(&heap[left], &heap[best]) < 0) {
+            best = left;
+        }
+        if (right < size &&
+            topic_priority_compare(&heap[right], &heap[best]) < 0) {
+            best = right;
+        }
+        if (best == index) return;
+
+        swap_topics(&heap[index], &heap[best]);
+        index = best;
+    }
+}
+
+static StudyTopic max_heap_pop(StudyTopic heap[], int *size) {
+    StudyTopic top = heap[0];
+    (*size)--;
+    if (*size > 0) {
+        heap[0] = heap[*size];
+        max_heap_sift_down(heap, *size, 0);
+    }
+    return top;
+}
+
+/*
+ * Greedy scheduling with a max-heap.
+ *
+ * Algorithm:
+ *   1. Push every valid topic into a max-heap ordered by priority, so the
+ *      weakest topic is always at the root.
+ *   2. If the root fits in the remaining time, pop it and allocate its
+ *      full estimated time.
+ *   3. If it does not fit, stop: a weaker topic may still fit, but the
+ *      stronger one has to wait for another session.
+ *   4. If the weakest topic itself does not fit, give the leftover minutes
+ *      to it as a partial block. It is then reported in output[] (partial
+ *      allocation) and in skipped[] (full size), so a caller can show
+ *      "only 45 of 60 minutes fitted".
+ *   5. Every topic still in the heap is written to skipped[] with its
+ *      full estimated time so nothing is silently lost.
+ *
+ * The sum of allocated minutes never exceeds available_minutes.
+ *
+ * Time: O(n log n); space: O(n) plus the caller's output buffers.
+ */
+int build_study_schedule(
+    const StudyTopic topics[],
+    int count,
+    int available_minutes,
+    StudyPlanItem output[],
+    int output_capacity,
+    StudyPlanItem skipped[],
+    int skipped_capacity,
+    int *scheduled_minutes,
+    int *skipped_minutes
+) {
+    if (count < 0 || output_capacity < 0 || skipped_capacity < 0) return -1;
+    if (count > 0 && topics == NULL) return -1;
+    if (output_capacity > 0 && output == NULL) return -1;
+    if (skipped_capacity > 0 && skipped == NULL) return -1;
+    if (count > output_capacity) return -1;
+    if (available_minutes <= 0) return -4;
+    if (scheduled_minutes != NULL) *scheduled_minutes = 0;
+    if (skipped_minutes != NULL) *skipped_minutes = 0;
+    if (count == 0) return 0;
+
+    for (int i = 0; i < count; i++) {
+        if (!validate_study_topic(&topics[i])) return -2;
+    }
+
+    /* The heap holds topic copies; short topics are formatted here. */
+    StudyTopic *heap = malloc((size_t)count * sizeof(StudyTopic));
+    StudyPlanItem *skipped_copy =
+        malloc((size_t)count * sizeof(StudyPlanItem));
+    if (heap == NULL || skipped_copy == NULL) {
+        free(heap);
+        free(skipped_copy);
+        return -3;
+    }
+
+    int heap_size = 0;
+    for (int i = 0; i < count; i++) {
+        heap[heap_size] = topics[i];
+        max_heap_sift_up(heap, heap_size);
+        heap_size++;
+    }
+
+    int scheduled_count = 0;
+    int skipped_count = 0;
+    int used = 0;
+    int remaining = available_minutes;
+
+    /* The strongest topic that does not fit as a whole, if any. */
+    StudyTopic partial_topic = {0};
+    int have_partial = 0;
+
+    /*
+     * The max-heap holds every unscheduled topic. In a max-heap the root
+     * is always the strongest remaining topic (priority = 100 - mastery,
+     * so the lowest mastery). The loop stops once no topic fits.
+     */
+    while (heap_size > 0) {
+        if (heap[0].estimated_minutes > remaining) {
+            partial_topic = heap[0];
+            have_partial = 1;
+            break;
+        }
+
+        StudyTopic next = max_heap_pop(heap, &heap_size);
+        fill_plan_item(
+            &output[scheduled_count], &next, next.estimated_minutes
+        );
+        output[scheduled_count].position = scheduled_count + 1;
+        used += next.estimated_minutes;
+        remaining -= next.estimated_minutes;
+        scheduled_count++;
+    }
+
+    /* Everything left in the heap received no time (or only a part). */
+    while (heap_size > 0) {
+        StudyTopic leftover = max_heap_pop(heap, &heap_size);
+        if (skipped_count < skipped_capacity) {
+            fill_plan_item(
+                &skipped_copy[skipped_count++], &leftover,
+                leftover.estimated_minutes
+            );
+        }
+    }
+
+    /* Give whatever is left to the weakest partially fitting topic. */
+    if (have_partial && remaining > 0 && scheduled_count < output_capacity) {
+        fill_plan_item(&output[scheduled_count], &partial_topic, remaining);
+        output[scheduled_count].position = scheduled_count + 1;
+        used += remaining;
+        remaining = 0;
+        scheduled_count++;
+    }
+
+    /* Only now copy out, because skipped_copy is still being written. */
+    for (int i = 0; i < skipped_count; i++) {
+        skipped[i] = skipped_copy[i];
+        skipped[i].position = 0;
+    }
+
+    if (scheduled_minutes != NULL) *scheduled_minutes = used;
+    if (skipped_minutes != NULL) *skipped_minutes = skipped_count;
+
+    free(heap);
+    free(skipped_copy);
+    return scheduled_count;
 }

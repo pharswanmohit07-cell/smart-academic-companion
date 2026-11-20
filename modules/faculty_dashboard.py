@@ -1,14 +1,44 @@
-"""Database summaries for the faculty academic dashboard."""
+"""Database summaries for the faculty academic dashboard.
+
+Every query is scoped by the classes the caller is authorized for. ``class_ids``
+is the list of class ids an faculty account owns, ``None`` for an admin (no
+filter) and ``[]`` for nobody. A specific ``class_id`` further narrows the
+result to that class.
+"""
 
 from database import get_connection
 
 
-def get_faculty_summary():
-    """Return student attendance, subject-level exam marks and assessment status."""
+def _scope_clause(class_id, class_ids, column="s.class_id"):
+    """Return (sql_fragment, params) restricting rows to allowed classes."""
+    clauses, params = [], []
+    if class_id is not None:
+        clauses.append(f"{column} = ?")
+        params.append(class_id)
+    if class_ids is not None:
+        # An explicit class selection and the owned-class list are combined.
+        if not class_ids:
+            clauses.append("1 = 0")
+        else:
+            placeholders = ", ".join("?" for _ in class_ids)
+            clauses.append(f"{column} IN ({placeholders})")
+            params.extend(class_ids)
+    if not clauses:
+        return "1 = 1", []
+    return " AND ".join(clauses), params
+
+
+def get_faculty_summary(class_id=None, class_ids=None):
+    """Return student attendance, subject-level exam marks and assessment status.
+
+    When class_id is provided, include only students assigned to that class.
+    ``class_ids`` limits the summary to the caller's authorized classes.
+    """
+    scope_sql, scope_params = _scope_clause(class_id, class_ids)
     conn = get_connection()
     try:
         students = conn.execute(
-            """
+            f"""
             SELECT
                 s.student_id, s.name, s.semester, s.section,
                 attendance.attendance_pct,
@@ -32,8 +62,10 @@ def get_faculty_summary():
                     AND sub.student_id = s.student_id
                 GROUP BY s.student_id
             ) AS assessments ON assessments.student_id = s.student_id
+            WHERE {scope_sql}
             ORDER BY s.student_id
-            """
+            """,
+            tuple(scope_params),
         ).fetchall()
 
         mark_rows = conn.execute(
@@ -128,12 +160,13 @@ def get_faculty_summary():
         conn.close()
 
 
-def get_assessment_overview():
-    """Return assessment items and their student submission counts."""
+def get_assessment_overview(class_id=None, class_ids=None):
+    """Return assessment items and submission counts, optionally for one class."""
+    scope_sql, scope_params = _scope_clause(class_id, class_ids)
     conn = get_connection()
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT ai.assessment_id, ai.assessment_type, ai.title,
                    ai.due_date, sub.subject_name,
                    COUNT(s.student_id) AS total_students,
@@ -144,9 +177,12 @@ def get_assessment_overview():
             LEFT JOIN assessment_submissions ss
                 ON ss.assessment_id = ai.assessment_id
                 AND ss.student_id = s.student_id
-            GROUP BY ai.assessment_id
+            WHERE {scope_sql}
+            GROUP BY ai.assessment_id, ai.assessment_type, ai.title,
+                     ai.due_date, sub.subject_name
             ORDER BY ai.assessment_type, ai.title
-            """
+            """,
+            tuple(scope_params),
         ).fetchall()
         return [dict(row) for row in rows]
     finally:

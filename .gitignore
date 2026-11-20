@@ -156,9 +156,12 @@ activemq-data/
 # Environments
 .env
 .envrc
+# Stray virtual environments (for example .venv-cleanup-check)
 .venv
+.venv*/
 env/
 venv/
+venv*/
 ENV/
 env.bak/
 venv.bak/
@@ -224,3 +227,33 @@ __marimo__/
 .streamlit/secrets.toml
 academic_companion.db
 academic.db
+
+# Local project data, backups and archives (never commit student data)
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+*.backup.db
+.db-backups/
+*.zip
+
+# Local editor settings
+.vscode/
+
+# Secrets and local-only files
+.env
+.env.local
+*.pem
+
+# Built C library (compiled per platform at build time)
+c_core/libcore.so
+c_core/libcore.dylib
+
+# Test and scratch output
+tests/_dbg*.py
+.venv-cleanup-check/
+core_tests
+
+# Isolated local UI review data
+preview_data/

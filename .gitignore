@@ -254,3 +254,6 @@ c_core/libcore.dylib
 tests/_dbg*.py
 .venv-cleanup-check/
 core_tests
+
+# Isolated local UI review data
+preview_data/

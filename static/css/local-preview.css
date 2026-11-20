@@ -1,16 +1,57 @@
-/* Smart Academic Companion — local full-site preview */
-:root,[data-bs-theme="light"]{--app-bg:#f4f6f8;--app-surface:#fff;--app-surface-muted:#f7f9fa;--app-border:#dfe5e9;--app-text:#24313c;--app-text-muted:#647482;--app-accent:#315b83;--app-accent-soft:#eaf0f5;--bs-primary:#315b83;--bs-primary-rgb:49,91,131;--bs-link-color:#315b83;--bs-link-hover-color:#244765;--tool-attendance:#315b83;--tool-classroom:#287d78;--tool-study:#b77932;--tool-progress:#477b61;--tool-faculty:#765d9b}
-[data-bs-theme="dark"]{--app-bg:#141b23;--app-surface:#1d2732;--app-surface-muted:#222f3c;--app-border:#344251;--app-text:#edf1f5;--app-text-muted:#aebbc8;--app-accent:#8eafd0;--app-accent-soft:#293b4d;--bs-primary:#8eafd0;--bs-primary-rgb:142,175,208;--bs-link-color:#a9c2d9;--bs-link-hover-color:#d0deea;--tool-attendance:#8eafd0;--tool-classroom:#72b9b0;--tool-study:#d7a967;--tool-progress:#83b69a;--tool-faculty:#ae9acf}
-html{scroll-behavior:smooth;scroll-padding-top:5rem}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.62;letter-spacing:-.006em}
-.local-preview-ribbon{display:flex;justify-content:center;gap:.65rem;align-items:center;padding:.42rem 1rem;background:#243b50;color:#fff;font-size:.72rem;font-weight:750;letter-spacing:.09em;text-transform:uppercase}.local-preview-ribbon span{font-weight:450;letter-spacing:0;text-transform:none;opacity:.82}
-.app-navbar{min-height:68px;box-shadow:0 1px 0 rgba(18,35,50,.04)}.app-navbar .container,.app-main{max-width:1320px}.app-navbar .navbar-brand{font-weight:720;letter-spacing:-.035em}.app-navbar .nav-link{font-size:.875rem;padding:.48rem .7rem;border-radius:5px}
-.app-main{min-height:calc(100vh - 180px);padding-top:2.25rem!important;padding-bottom:4rem!important}.page-head{margin-bottom:1.75rem!important}.page-heading{font-size:clamp(1.65rem,3vw,2.2rem);line-height:1.15;font-weight:700}.section-kicker{display:block;margin-bottom:.65rem;color:var(--app-accent);font-size:.72rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
-.card{border-radius:9px;box-shadow:0 2px 8px rgba(25,42,58,.035)}.card-header{padding:1rem 1.25rem;font-weight:650}.card-body{padding:1.35rem}.feature-card{border-color:var(--app-border);transition:border-color .16s ease,box-shadow .16s ease}.feature-card:hover{border-color:var(--app-accent);box-shadow:0 8px 22px rgba(25,42,58,.07)}
-.btn{border-radius:5px;font-weight:600;padding:.55rem .95rem}.btn-primary{--bs-btn-bg:var(--app-accent);--bs-btn-border-color:var(--app-accent);--bs-btn-hover-bg:#244765;--bs-btn-hover-border-color:#244765}[data-bs-theme="dark"] .btn-primary{--bs-btn-color:#14202b;--bs-btn-hover-color:#14202b;--bs-btn-hover-bg:#a9c2d9;--bs-btn-hover-border-color:#a9c2d9}
-.form-control,.form-select{min-height:42px;border-radius:5px}.form-control:focus,.form-select:focus{box-shadow:0 0 0 .2rem rgba(var(--bs-primary-rgb),.15)}.table{--bs-table-color:var(--app-text);--bs-table-border-color:var(--app-border)}.table thead th{font-size:.75rem;letter-spacing:.045em;text-transform:uppercase;color:var(--app-text-muted)}
-.auth-shell{max-width:1080px;margin:2rem auto;display:grid;grid-template-columns:minmax(0,.9fr) minmax(340px,1fr);gap:2rem;align-items:stretch}.auth-aside{border-radius:10px;padding:2.5rem;background:var(--app-accent-soft);display:flex;flex-direction:column;justify-content:space-between}.auth-aside h2{font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.15;margin:1.5rem 0}.auth-main{max-width:500px;width:100%;align-self:center}
-.preview-mode-note,.demo-login-panel{border:1px solid var(--app-border);border-radius:8px;padding:1rem;background:var(--app-surface-muted)}.preview-mode-note{display:flex;flex-direction:column;gap:.2rem;margin-bottom:1rem;font-size:.88rem}.preview-mode-note strong{color:var(--tool-classroom)}.demo-login-heading{display:flex;flex-direction:column;gap:.15rem}.demo-login-heading span{font-size:.82rem;color:var(--app-text-muted)}.demo-login-panel form{margin:0}
-.landing-page{max-width:1320px;margin:auto}.landing-hero{padding:clamp(2rem,5vw,4.5rem) 0}.landing-hero-grid{gap:clamp(2rem,5vw,4rem)}.landing-title{max-width:720px;font-size:clamp(2.5rem,5vw,4.3rem);line-height:1.04;letter-spacing:-.055em}.landing-lead{max-width:650px;font-size:1.08rem;color:var(--app-text-muted)}.landing-feature-grid{gap:1rem}.landing-feature,.role-panel,.workflow-step{border:1px solid var(--app-border);border-radius:8px;background:var(--app-surface);padding:1.4rem}.landing-feature h3,.role-panel h3{font-size:1.15rem;font-weight:700}.feature-index{color:var(--app-accent);font-size:.7rem;font-weight:750;letter-spacing:.1em}.landing-section{padding:3.25rem 0}.landing-section.alt{background:var(--app-surface-muted)}.landing-cta{border:1px solid var(--app-border);border-radius:10px;padding:clamp(1.5rem,4vw,2.5rem);background:var(--app-surface)}
-.tool-attendance{--tool-accent:var(--tool-attendance)}.tool-classroom{--tool-accent:var(--tool-classroom)}.tool-study{--tool-accent:var(--tool-study)}.tool-progress{--tool-accent:var(--tool-progress)}.tool-faculty{--tool-accent:var(--tool-faculty)}.tool-attendance,.tool-classroom,.tool-study,.tool-progress,.tool-faculty{border-top:3px solid var(--tool-accent)}
-@media(max-width:767.98px){.auth-shell{grid-template-columns:1fr;margin:1rem auto}.auth-aside{padding:1.5rem}.auth-aside h2{font-size:1.7rem;margin:1rem 0}.auth-main{max-width:none}.local-preview-ribbon{font-size:.65rem;flex-wrap:wrap;gap:.15rem}.landing-hero{padding-top:1.5rem}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Smart Academic Companion — shared structural layout.
+   Colour, typography, controls and component surfaces are owned by base.html.
+   Keep this file structural so it cannot override the active light/dark theme. */
+
+html{scroll-padding-top:5rem}
+.local-preview-ribbon{display:flex;justify-content:center;align-items:center;gap:.65rem;padding:.42rem 1rem;background:#18324b;color:#fff;font-size:.72rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+.local-preview-ribbon span{font-weight:450;letter-spacing:0;text-transform:none;opacity:.88}
+
+.app-navbar{min-height:68px}
+.app-navbar .container,.app-main{max-width:1360px}
+.app-navbar .nav-link{font-size:.875rem;padding:.48rem .7rem}
+.app-main{min-height:calc(100vh - 180px)}
+.page-head{margin-bottom:1.75rem!important}
+.section-kicker{display:block;margin-bottom:.65rem;font-size:.72rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+
+.auth-shell{max-width:1080px;margin:2rem auto;display:grid;grid-template-columns:minmax(0,.9fr) minmax(340px,1fr);gap:2rem;align-items:stretch}
+.auth-aside{border-radius:12px;padding:2.5rem;display:flex;flex-direction:column;justify-content:space-between}
+.auth-aside h2{font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.15;margin:1.5rem 0}
+.auth-main{max-width:500px;width:100%;align-self:center}
+
+.preview-mode-note,.demo-login-panel{border:1px solid var(--app-border);border-radius:10px;padding:1rem;background:var(--app-surface-muted)}
+.preview-mode-note{display:flex;flex-direction:column;gap:.2rem;margin-bottom:1rem;font-size:.88rem}
+.demo-login-heading{display:flex;flex-direction:column;gap:.15rem}
+.demo-login-heading span{font-size:.82rem;color:var(--app-text-muted)}
+.demo-login-panel form{margin:0}
+
+.landing-page{max-width:1360px;margin:auto}
+.landing-hero{padding:clamp(2rem,5vw,4.5rem) 0}
+.landing-hero-grid{gap:clamp(2rem,5vw,4rem)}
+.landing-title{max-width:720px;font-size:clamp(2.5rem,5vw,4.3rem);line-height:1.04;letter-spacing:-.055em}
+.landing-lead{max-width:650px;font-size:1.08rem;color:var(--app-text-muted)}
+.landing-feature-grid{gap:1rem}
+.landing-feature,.role-panel,.workflow-step{border:1px solid var(--app-border);border-radius:12px;background:var(--app-surface);padding:1.4rem}
+.landing-feature h3,.role-panel h3{font-size:1.15rem;font-weight:700}
+.landing-section{padding:3.25rem 0}
+.landing-section.alt{background:var(--app-surface-muted)}
+.landing-cta{border:1px solid var(--app-border);border-radius:12px;padding:clamp(1.5rem,4vw,2.5rem);background:var(--app-surface)}
+
+.tool-attendance,.tool-classroom,.tool-study,.tool-progress,.tool-faculty{border-top:3px solid var(--tool-accent,var(--app-accent))}
+.tool-attendance{--tool-accent:#155eef}
+.tool-classroom{--tool-accent:#087e8b}
+.tool-study{--tool-accent:#7654b8}
+.tool-progress{--tool-accent:#25845d}
+.tool-faculty{--tool-accent:#bd5d4f}
+
+@media(max-width:767.98px){
+ .auth-shell{grid-template-columns:1fr;margin:1rem auto;gap:1rem}
+ .auth-aside{padding:1.5rem}
+ .auth-aside h2{font-size:1.7rem;margin:1rem 0}
+ .auth-main{max-width:none}
+ .local-preview-ribbon{font-size:.65rem;flex-wrap:wrap;gap:.15rem;text-align:center}
+ .landing-hero{padding-top:1.5rem}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% block title %}Empty Classroom Finder · Smart Academic Companion{% endblock %}
 {% block content %}
 {% macro time12(value) -%}
   {%- set parts = value.split(':') -%}
@@ -7,18 +8,21 @@
   {%- set suffix = 'AM' if hour < 12 else 'PM' -%}
   {{ (12 if hour % 12 == 0 else hour % 12) }}:{{ parts[1] }} {{ suffix }}
 {%- endmacro %}
-<div class="card shadow-sm mb-4">
+<div class="page-head mb-4">
+  <h1 class="h3 mb-1">Empty Classroom Finder</h1>
+  <p class="text-secondary mb-0">
+    Choose a day and a time window to see which rooms are free.
+  </p>
+</div>
+
+<div class="card mb-4">
   <div class="card-body p-4">
-    <h1 class="h3 mb-1">Empty Classroom Finder</h1>
-    <p class="text-muted">
-      Choose a day and a time window. Rooms are checked by the C interval library.
-    </p>
 
     {% if error %}
     <div class="alert alert-danger" role="alert">{{ error }}</div>
     {% endif %}
 
-    <form method="post" class="row g-3">
+    <form method="post" class="row g-3 mb-2">
       <div class="col-md-4">
         <label for="day" class="form-label">Day</label>
         <select id="day" name="day" class="form-select">

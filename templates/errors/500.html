@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong · Smart Academic Companion{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-2">Something went wrong</h1>
+                <p class="text-secondary mb-3">
+                    The request could not be completed. The error has been logged.
+                    Please try again.
+                </p>
+                <a class="btn btn-primary" href="{{ url_for('main.home') }}">Back to the start</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

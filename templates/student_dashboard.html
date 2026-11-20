@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}My dashboard · Smart Academic Companion{% endblock %}
+
+{% block content %}
+<div class="page-head mb-4">
+    <h1 class="h3 mb-1">My academic overview</h1>
+    <p class="text-secondary mb-0">
+        {% if record_name %}{{ record_name }} &middot; {% endif %}{{ current_user.display_name }}{% if current_user.email %} &middot; {{ current_user.email }}{% endif %}
+    </p>
+</div>
+
+{% if not record_name %}
+<div class="alert alert-secondary" role="status">
+    No name has been entered on your academic record yet. Your faculty will add
+    your attendance, marks and assignments; they appear here once recorded.
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="stat-label">Overall attendance</div>
+                <div class="stat-value">
+                    {% if overall_attendance is not none %}{{ '%.1f'|format(overall_attendance) }}%{% else %}&mdash;{%
+                    endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="stat-label">Subjects with attendance</div>
+                <div class="stat-value">{{ attendance|length }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="stat-label">Marks recorded</div>
+                <div class="stat-value">{{ marks|length }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="stat-label">Assessments pending</div>
+                <div class="stat-value">{{ pending_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>My attendance</strong></div>
+            <div class="card-body p-0">
+                {% if attendance %}
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th class="text-end">Attended</th>
+                                <th class="text-end">Held</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in attendance %}
+                            <tr>
+                                <td>{{ row.subject_name }}{% if row.subject_code %} <span
+                                        class="text-secondary small">({{ row.subject_code }})</span>{% endif %}</td>
+                                <td class="text-end">{{ row.attended_classes }}</td>
+                                <td class="text-end">{{ row.total_classes }}</td>
+                                <td class="text-end">
+                                    {% if row.attendance_pct is not none %}{{ '%.1f'|format(row.attendance_pct) }}%{%
+                                    else %}&mdash;{% endif %}
+                                    {% if row.attendance_pct is not none and row.attendance_pct < 75 %} <span
+                                        class="badge text-bg-warning ms-1">Low</span>
+                                        {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary p-3 mb-0">No attendance has been recorded for your account yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>My marks</strong></div>
+            <div class="card-body p-0">
+                {% if marks %}
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Exam</th>
+                                <th class="text-end">Marks</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in marks %}
+                            <tr>
+                                <td>{{ row.subject_name }}</td>
+                                <td>{{ row.exam_name }}</td>
+                                <td class="text-end">{{ '%g'|format(row.marks_obtained) }} / {{
+                                    '%g'|format(row.max_marks) }}</td>
+                                <td class="text-end">{% if row.percentage is not none %}{{ '%.1f'|format(row.percentage)
+                                    }}%{% else %}&mdash;{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary p-3 mb-0">No marks have been recorded for your account yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>Assignments and term work</strong></div>
+            <div class="card-body p-0">
+                {% if assessments %}
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Due</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in assessments %}
+                            <tr>
+                                <td>{{ row.title }}</td>
+                                <td>{{ row.subject_name }}</td>
+                                <td>{{ 'Assignment' if row.assessment_type == 'assignment' else 'Term work' }}</td>
+                                <td>{{ row.due_date or '—' }}</td>
+                                <td>
+                                    {% if row.submitted %}<span class="badge text-bg-success">Submitted</span>
+                                    {% else %}<span class="badge text-bg-warning">Pending</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary p-3 mb-0">No assessments have been created yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header"><strong>Academic risk (my record)</strong></div>
+            <div class="card-body">
+                {% if risk %}
+                <p class="mb-2">
+                    Estimated risk:
+                    <span class="badge {{ 'text-bg-warning' if risk.predicted_at_risk else 'text-bg-success' }}">
+                        {{ risk.risk_percent }}%
+                    </span>
+                </p>
+                <p class="text-secondary small mb-2">
+                    Strongest factor: {{ risk.top_factor_label }} ({{ risk.top_factor_direction }}).
+                </p>
+                {% else %}
+                <p class="text-secondary mb-2">
+                    A risk estimate is not available yet. It needs attendance, marks and
+                    assignment data for your record.
+                </p>
+                {% endif %}
+                <p class="text-secondary small mb-0">
+                    These estimates come from a demonstration model and are not
+                    evidence of real academic outcomes.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <a class="btn btn-primary" href="{{ attendance_url }}">Attendance calculator</a>
+    <a class="btn btn-outline-primary" href="{{ classrooms_url }}">Find a classroom</a>
+    <a class="btn btn-outline-primary" href="{{ planner_url }}">Study planner</a>
+</div>
+{% endblock %}

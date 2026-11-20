@@ -1,4 +1,34 @@
+-- Local SQLite schema (development and tests only).
+--
+-- Production uses Supabase PostgreSQL; there the schema is created by the
+-- ordered migrations in migrations/ and installed with `python manage.py migrate`.
+-- Keep this file and migrations/0001_initial_schema.sql in step: the test suite
+-- exercises both layouts.
+
 PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS faculty_classes (
+    class_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_name TEXT NOT NULL UNIQUE,
+    program TEXT NOT NULL,
+    semester INTEGER NOT NULL CHECK (semester >= 1),
+    section TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Faculty owner used for authorization. NULL = unmanaged legacy class; only
+    -- an admin can then manage it. (PostgreSQL makes this NOT NULL.)
+    owner_teacher_id INTEGER REFERENCES teachers(teacher_id) ON DELETE SET NULL
+);
+
+-- Faculties who own classes. In SQLite a fresh database has none, exactly like
+-- the deployed Supabase project, so ownership is explicit everywhere.
+CREATE TABLE IF NOT EXISTS teachers (
+    teacher_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    auth_user_id TEXT UNIQUE,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS students (
     student_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -7,7 +37,10 @@ CREATE TABLE IF NOT EXISTS students (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     semester INTEGER NOT NULL DEFAULT 3,
     section TEXT NOT NULL DEFAULT 'A',
-    attendance_type TEXT NOT NULL DEFAULT 'regular'
+    attendance_type TEXT NOT NULL DEFAULT 'regular',
+    class_id INTEGER REFERENCES faculty_classes(class_id) ON DELETE SET NULL,
+    -- Supabase auth.users(id): UNIQUE, so one login maps to exactly one student.
+    auth_user_id TEXT UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS subjects (
@@ -53,6 +86,9 @@ CREATE TABLE IF NOT EXISTS timetable (
     FOREIGN KEY (subject_id) REFERENCES subjects(subject_id),
     CHECK (start_time < end_time)
 );
+
+-- New optional columns are added by database._apply_compatibility_migrations so
+-- an older academic_companion.db gains them without being recreated.
 
 CREATE TABLE IF NOT EXISTS room_locations (
     room_number TEXT PRIMARY KEY,
@@ -107,3 +143,6 @@ CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id);
 CREATE INDEX IF NOT EXISTS idx_marks_student_subject ON marks(student_id, subject_id);
 CREATE INDEX IF NOT EXISTS idx_timetable_day ON timetable(day_of_week);
 CREATE INDEX IF NOT EXISTS idx_assessment_submissions_student ON assessment_submissions(student_id);
+
+-- Indexes on columns that older local databases may not have yet are created
+-- after the compatibility step in database._apply_compatibility_migrations.

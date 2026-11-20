@@ -78,6 +78,7 @@ def create_app():
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.update(
+        LOCAL_PREVIEW_MODE=settings.LOCAL_PREVIEW_ENABLED,
         SECRET_KEY=_secret_key(),
         SESSION_COOKIE_NAME=settings.SESSION_COOKIE_NAME,
         SESSION_COOKIE_HTTPONLY=True,

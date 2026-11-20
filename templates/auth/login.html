@@ -4,7 +4,9 @@
 {% block auth_subtitle %}One account for students and faculty. Your dashboard opens automatically.{% endblock %}
 
 {% block auth_body %}
-{% if not auth_configured %}
+{% if local_preview_enabled %}
+<div class="preview-mode-note" role="status"><strong>Preview mode</strong><span>Use a demo workspace to review the site. No real account or cloud service is used.</span></div>
+{% elif not auth_configured %}
 <div class="alert alert-warning" role="alert">
   Authentication is not configured on this server yet. An administrator must set
   <code>SUPABASE_URL</code> and <code>SUPABASE_PUBLISHABLE_KEY</code>.
@@ -34,6 +36,24 @@
   <a href="{{ url_for('auth.forgot_password') }}" class="small">Forgot your password?</a>
   <a href="{{ url_for('auth.signup') }}" class="small">Create an account</a>
 </div>
+
+{% if local_preview_enabled %}
+<div class="demo-login-panel mt-4">
+  <div class="demo-login-heading"><strong>Explore the preview</strong><span>Choose a demo workspace</span></div>
+  <div class="d-grid gap-2 mt-3">
+    <form method="post" action="{{ url_for('auth.demo_login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="demo_role" value="student">
+      <button class="btn btn-outline-primary w-100" type="submit">Continue as student</button>
+    </form>
+    <form method="post" action="{{ url_for('auth.demo_login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="demo_role" value="faculty">
+      <button class="btn btn-outline-secondary w-100" type="submit">Continue as faculty</button>
+    </form>
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block auth_footer %}

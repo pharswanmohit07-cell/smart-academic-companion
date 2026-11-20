@@ -9,14 +9,16 @@
   {{ (12 if hour % 12 == 0 else hour % 12) }}:{{ parts[1] }} {{ suffix }}
 {%- endmacro %}
 <div class="page-head mb-4">
+  <span class="section-kicker">Student tools · Campus</span>
   <h1 class="h3 mb-1">Empty Classroom Finder</h1>
   <p class="text-secondary mb-0">
     Choose a day and a time window to see which rooms are free.
   </p>
 </div>
 
-<div class="card mb-4">
-  <div class="card-body p-4">
+<div class="card tool-classroom mb-4">
+  <div class="card-header"><strong>Search room availability</strong></div>
+  <div class="card-body">
 
     {% if error %}
     <div class="alert alert-danger" role="alert">{{ error }}</div>
@@ -47,13 +49,14 @@
 </div>
 
 {% if results %}
-<div class="alert alert-info">
+<div class="alert alert-info" role="status">
   <strong>{{ summary.free_count }}</strong> rooms are available on {{ days[form.day|int] }}
   from {{ time12(form.start) }} to {{ time12(form.end) }}.
   <span class="ms-2">Timetable clashes: <strong>{{ summary.clash_count }}</strong></span>
 </div>
-
-<div class="table-responsive">
+<div class="card tool-classroom">
+<div class="card-header"><strong>Room availability</strong></div>
+<div class="card-body p-0"><div class="table-responsive">
   <table class="table table-striped align-middle mb-0">
     <thead>
       <tr><th>Room</th><th>Type</th><th>Building / Block</th><th>Floor</th><th>Availability</th></tr>
@@ -72,6 +75,8 @@
       {% endfor %}
     </tbody>
   </table>
-</div>
+</div></div></div>
+{% else %}
+<div class="empty-state card tool-classroom" role="status"><div class="card-body"><h2 class="h5">No rooms available for that time</h2><p class="text-secondary mb-0">Try another time window to see available rooms. Timetable conflicts are checked for the full interval.</p></div></div>
 {% endif %}
 {% endblock %}

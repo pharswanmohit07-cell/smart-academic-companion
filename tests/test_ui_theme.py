@@ -34,6 +34,14 @@ TECHNICAL_TERMS = [
 
 
 class ThemeTestBase(TempDatabaseMixin):
+    def stylesheet(self):
+        response = self.client.get("/static/css/local-preview.css")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data)
+        self.assertEqual(response.mimetype, "text/css")
+        data = response.data
+        response.close()
+        return data
     def setUp(self):
         super().setUp()
         import wsgi
@@ -121,28 +129,39 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         self.assertIn(b'aria-label="Switch to dark mode"', body)
         self.assertIn(b'aria-pressed="false"', body)
 
+    def test_static_stylesheet_is_served_as_nonempty_css(self):
+        with self.app.test_request_context():
+            stylesheet_url = self.app.url_for("static", filename="css/local-preview.css")
+        self.assertEqual(stylesheet_url, "/static/css/local-preview.css")
+        response = self.client.get(stylesheet_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(len(response.data), 1000)
+        self.assertEqual(response.mimetype, "text/css")
+        self.assertIn(b"Smart Academic Companion", response.data)
+        self.assertIn(b"--app-accent: #155eef", response.data)
+
     def test_light_theme_uses_the_requested_palette(self):
-        body = self.page("/attendance").decode("utf-8")
+        css = self.stylesheet().decode("utf-8")
         for colour in ("#f3f6fb", "#ffffff", "#155eef", "#172033", "#526176", "#d5deea"):
-            self.assertIn(colour, body.lower())
+            self.assertIn(colour, css.lower())
 
     def test_dark_theme_uses_the_requested_palette(self):
-        body = self.page("/attendance").decode("utf-8")
+        css = self.stylesheet().decode("utf-8")
         for colour in ("#0b1220", "#121d30", "#192840", "#f4f7ff", "#c0cadb", "#30415d"):
-            self.assertIn(colour, body.lower())
+            self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
-        body = self.page("/attendance").decode("utf-8")
-        for token in ("--app-text:#172033", "--app-text-muted:#526176",
-                      "--app-text:#f4f7ff", "--app-text-muted:#c0cadb",
-                      ":focus-visible", "outline:3px solid var(--app-cyan)",
-                      "--bs-btn-color:#fff"):
+        css = self.stylesheet().decode("utf-8")
+        for token in ("--app-text: #172033", "--app-text-muted: #526176",
+                      "--app-text: #f4f7ff", "--app-text-muted: #c0cadb",
+                      ":focus-visible", "outline: 3px solid var(--app-cyan)",
+                      "--bs-btn-color: #fff"):
             with self.subTest(token=token):
-                self.assertIn(token, body)
+                self.assertIn(token, css)
 
     def test_tables_and_forms_follow_the_theme(self):
-        css = self.page("/attendance").decode("utf-8")
-        # Overrides must exist for the components the pages actually use.
+        css = self.stylesheet().decode("utf-8")
+        # Shared stylesheet rules cover the components used across templates.
         for selector in (".table", ".form-control", ".form-select", ".alert", ".btn-primary",
                          ".list-group-item", ".badge"):
             self.assertIn(selector, css)
@@ -192,11 +211,20 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
-        for selector in (b"--app-accent:#155eef", b".app-main",
+        css = self.stylesheet()
+        self.assertIn(b"local-preview.css?v=20261120", body)
+        for selector in (b"--app-accent: #155eef", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):
-                self.assertIn(selector, body)
+                self.assertIn(selector, css)
+
+    def test_theme_script_persists_selected_preference(self):
+        body = self.page("/attendance")
+        self.assertIn(b'window.localStorage.setItem(THEME_KEY, next)', body)
+        self.assertIn(b'button.addEventListener("click"', body)
+
+
 
 
 if __name__ == "__main__":

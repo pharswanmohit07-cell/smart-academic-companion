@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class="page-head mb-4">
+    <span class="section-kicker">Administration · Access</span>
     <h1 class="h3 mb-1">Users and roles</h1>
     <p class="text-secondary mb-0">
         Roles come from <code>public.user_profiles</code>. New signups are students;
@@ -11,7 +12,7 @@
     </p>
 </div>
 
-<div class="card mb-4">
+<div class="card tool-faculty mb-4">
     <div class="card-header"><strong>Profiles</strong></div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -43,7 +44,7 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="4" class="text-secondary">No profiles yet.</td></tr>
+                    <tr><td colspan="4" class="empty-state text-secondary py-4">No profiles yet.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -51,7 +52,7 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card tool-faculty">
     <div class="card-header"><strong>Faculty directory</strong></div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -61,7 +62,7 @@
                 {% for teacher in teachers %}
                     <tr><td>{{ teacher.name }}</td><td>{{ teacher.email or '—' }}</td></tr>
                 {% else %}
-                    <tr><td colspan="2" class="text-secondary">No faculty accounts yet.</td></tr>
+                    <tr><td colspan="2" class="empty-state text-secondary py-4">No faculty accounts yet.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-head mb-4">
+    <span class="section-kicker">Student tools · Planning</span>
     <h1 class="h3 mb-1">Safe Attendance Calculator</h1>
     <p class="text-secondary mb-0">
         Calculate the classes needed to reach your attendance target, and how
@@ -10,9 +11,9 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="card">
-            <div class="card-body p-4">
-                <form method="POST">
+        <div class="card tool-attendance">
+            <div class="card-body p-4 row g-4">
+                <form method="POST" class="col-12 col-md-5">
                     <div class="mb-3">
                         <label for="attended" class="form-label">Classes attended</label>
                         <input
@@ -58,37 +59,45 @@
                 {% endif %}
 
                 {% if result %}
-                <hr class="my-4">
-                <h2 class="h5 mb-3">Your results</h2>
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <div class="stat-tile h-100">
-                            <span class="stat-label">Current attendance</span>
-                            <span class="stat-value">{{ "%.2f"|format(result.current_percent) }}%</span>
+                <section class="col-12 col-md-7" aria-labelledby="attendance-results-title">
+                    <hr class="my-4">
+                    <h2 class="h5 mb-3" id="attendance-results-title">Your results</h2>
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="stat-tile h-100">
+                                <span class="stat-label">Current attendance</span>
+                                <span class="stat-value">{{ "%.2f"|format(result.current_percent) }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-tile h-100">
+                                <span class="stat-label">Classes needed for {{ result.target_percent }}%</span>
+                                <span class="stat-value">{{ result.needed }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-tile h-100">
+                                <span class="stat-label">Upcoming classes you can miss</span>
+                                <span class="stat-value">
+                                    {% if result.missable == -1 %}&mdash;{% else %}{{ result.missable }}{% endif %}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-sm-4">
-                        <div class="stat-tile h-100">
-                            <span class="stat-label">Classes needed for {{ result.target_percent }}%</span>
-                            <span class="stat-value">{{ result.needed }}</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <div class="stat-tile h-100">
-                            <span class="stat-label">Upcoming classes you can miss</span>
-                            <span class="stat-value">
-                                {% if result.missable == -1 %}&mdash;{% else %}{{ result.missable }}{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
 
-                {% if result.missable == -1 %}
-                <div class="alert alert-warning mt-3 mb-0">
-                    Your target cannot be reached within the upcoming
-                    {{ result.upcoming }} classes, even if you attend every one of them.
+                    {% if result.missable == -1 %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        Your target cannot be reached within the upcoming
+                        {{ result.upcoming }} classes, even if you attend every one of them.
+                    </div>
+                    {% endif %}
+                </section>
+                {% else %}
+                <div class="empty-state col-12 col-md-7" role="status">
+                    <span class="section-kicker">Your results</span>
+                    <h2 class="h5">Your plan will appear here</h2>
+                    <p class="text-secondary mb-0">Enter your current attendance, upcoming classes and target to see the classes you need to attend.</p>
                 </div>
-                {% endif %}
                 {% endif %}
             </div>
         </div>

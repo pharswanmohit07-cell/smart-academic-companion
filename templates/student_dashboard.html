@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class="page-head mb-4">
+    <span class="section-kicker">Student workspace</span>
     <h1 class="h3 mb-1">My academic overview</h1>
     <p class="text-secondary mb-0">
         {% if record_name %}{{ record_name }} &middot; {% endif %}{{ current_user.display_name }}{% if current_user.email %} &middot; {{ current_user.email }}{% endif %}
@@ -56,7 +57,7 @@
 
 <div class="row g-4">
     <div class="col-12 col-xl-6">
-        <div class="card h-100">
+        <div class="card h-100 tool-attendance">
             <div class="card-header"><strong>My attendance</strong></div>
             <div class="card-body p-0">
                 {% if attendance %}
@@ -90,14 +91,14 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-secondary p-3 mb-0">No attendance has been recorded for your account yet.</p>
+                <div class="empty-state p-3"><p class="text-secondary mb-0">No attendance has been recorded for your account yet.</p></div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <div class="col-12 col-xl-6">
-        <div class="card h-100">
+        <div class="card h-100 tool-progress">
             <div class="card-header"><strong>My marks</strong></div>
             <div class="card-body p-0">
                 {% if marks %}
@@ -126,14 +127,14 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-secondary p-3 mb-0">No marks have been recorded for your account yet.</p>
+                <div class="empty-state p-3"><p class="text-secondary mb-0">No marks have been recorded for your account yet.</p></div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <div class="col-12 col-xl-6">
-        <div class="card h-100">
+        <div class="card h-100 tool-study">
             <div class="card-header"><strong>Assignments and term work</strong></div>
             <div class="card-body p-0">
                 {% if assessments %}
@@ -165,14 +166,14 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-secondary p-3 mb-0">No assessments have been created yet.</p>
+                <div class="empty-state p-3"><p class="text-secondary mb-0">No assessments have been created yet.</p></div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <div class="col-12 col-xl-6">
-        <div class="card h-100">
+        <div class="card h-100 tool-faculty">
             <div class="card-header"><strong>Academic risk (my record)</strong></div>
             <div class="card-body">
                 {% if risk %}

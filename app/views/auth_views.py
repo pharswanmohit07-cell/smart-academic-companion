@@ -383,13 +383,24 @@ def demo_login():
             (teacher["teacher_id"],),
         ).fetchone()
         if owned is None:
-            connection.execute(
-                """INSERT INTO faculty_classes
-                   (class_name, program, semester, section, description, owner_teacher_id)
-                   VALUES (?, ?, 3, 'A', ?, ?)""",
-                ("Preview Faculty Class", "BCA AI & Data Science",
-                 "Local preview class for faculty workspace review.", teacher["teacher_id"]),
-            )
+            # Attach the first seeded class to the demo faculty account so the
+            # faculty dashboard opens with the isolated sample students.
+            available = connection.execute(
+                "SELECT class_id FROM faculty_classes ORDER BY class_id LIMIT 1"
+            ).fetchone()
+            if available is not None:
+                connection.execute(
+                    "UPDATE faculty_classes SET owner_teacher_id = ? WHERE class_id = ?",
+                    (teacher["teacher_id"], available["class_id"]),
+                )
+            else:
+                connection.execute(
+                    """INSERT INTO faculty_classes
+                       (class_name, program, semester, section, description, owner_teacher_id)
+                       VALUES (?, ?, 3, 'A', ?, ?)""",
+                    ("Preview Faculty Class", "BCA AI & Data Science",
+                     "Local preview class for faculty workspace review.", teacher["teacher_id"]),
+                )
         connection.commit()
 
     if role == "faculty":

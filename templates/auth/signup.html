@@ -4,6 +4,9 @@
 {% block auth_subtitle %}Use your college email address. Faculty accounts are created by an administrator.{% endblock %}
 
 {% block auth_body %}
+{% if local_preview_enabled %}
+<div class="preview-mode-note" role="status"><strong>Local preview</strong><span>Account creation and password recovery are visual-only in this review build. Use the demo sign-in on the login page to explore the modules.</span></div>
+{% endif %}
 <form method="post" action="{{ url_for('auth.signup') }}" novalidate>
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

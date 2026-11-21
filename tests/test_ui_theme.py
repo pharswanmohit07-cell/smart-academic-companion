@@ -201,6 +201,11 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"how prepared you feel", body)
 
 
+    def test_landing_background_bleeds_to_both_viewport_edges(self):
+        css = self.stylesheet().decode("utf-8")
+        self.assertIn(".app-main-landing > .landing-page {\n  width: 100%;\n  max-width: none;", css)
+        self.assertIn("background:", css[css.index(".app-main-landing > .landing-page {"):])
+
     def test_landing_page_has_a_complete_product_story(self):
         body = self.landing_page()
         for section in (b"landing-hero", b"product-preview", b"workflow-section",

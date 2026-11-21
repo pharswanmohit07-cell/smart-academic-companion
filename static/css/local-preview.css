@@ -512,3 +512,33 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Preview-only landing backdrop: one continuous full-viewport canvas. */
+.app-main-landing {
+  width: 100vw;
+  max-width: none !important;
+  margin: 0 0 0 calc(50% - 50vw) !important;
+  padding: 0 !important;
+  background:
+    radial-gradient(ellipse at 78% 8%, rgba(164, 100, 255, .19), transparent 34rem),
+    radial-gradient(ellipse at 8% 24%, rgba(42, 231, 209, .10), transparent 28rem),
+    var(--app-bg);
+}
+[data-bs-theme="light"] .app-main-landing {
+  background:
+    radial-gradient(ellipse at 78% 8%, rgba(130, 83, 235, .13), transparent 32rem),
+    radial-gradient(ellipse at 6% 22%, rgba(32, 194, 183, .10), transparent 27rem),
+    var(--app-bg);
+}
+.app-main-landing > .landing-page {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 6.1vw, 7rem);
+  background: transparent !important;
+}
+@media (max-width: 767.98px) {
+  .app-main-landing > .landing-page { padding-right: 1rem; padding-left: 1rem; }
+}
+html, body { max-width: 100%; overflow-x: clip; }

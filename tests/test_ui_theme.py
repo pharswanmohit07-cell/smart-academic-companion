@@ -202,12 +202,10 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
 
     def test_landing_background_bleeds_to_both_viewport_edges(self):
-        css = self.stylesheet().decode("utf-8")
-        landing_rule = css[css.index(".app-main-landing > .landing-page {"):]
-        self.assertIn("width: 100vw;", landing_rule)
-        self.assertIn("left: 50%;", landing_rule)
-        self.assertIn("margin-left: -50vw;", landing_rule)
-        self.assertIn("linear-gradient(115deg", landing_rule)
+        css = self.stylesheet().decode("utf-8").replace("\\r\\n", "\\n")
+        self.assertIn(".app-main-landing {\\n  width: 100vw;", css)
+        self.assertIn("margin: 0 0 0 calc(50% - 50vw) !important;", css)
+        self.assertIn("background: transparent !important;", css)
 
     def test_landing_page_has_a_complete_product_story(self):
         body = self.landing_page()

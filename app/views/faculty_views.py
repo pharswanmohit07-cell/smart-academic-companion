@@ -27,7 +27,6 @@ from flask import (
 from app import auth as auth_module
 from app.accounts import profiles_table
 from db import DatabaseError, IntegrityError, get_connection, last_insert_id
-from modules import risk_model
 from modules.faculty_dashboard import get_assessment_overview, get_faculty_summary
 
 log = logging.getLogger(__name__)
@@ -88,6 +87,10 @@ def dashboard():
     risk_lookup_error = None
     if summary["students"]:
         try:
+            # Load the numerical/ML stack only when a faculty dashboard is opened.
+            # Student tools and public pages should not pay its import cost.
+            from modules import risk_model
+
             risk_predictions = risk_model.predict_students(
                 [student["student_id"] for student in summary["students"]],
                 class_ids=auth_module.owned_class_ids(),

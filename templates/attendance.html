@@ -1,106 +1,76 @@
 {% extends "base.html" %}
+{% block title %}Safe Attendance Calculator · Smart Academic Companion{% endblock %}
 {% block content %}
-<div class="page-head mb-4">
-    <span class="section-kicker">Student tools · Planning</span>
-    <h1 class="h3 mb-1">Safe Attendance Calculator</h1>
-    <p class="text-secondary mb-0">
-        Calculate the classes needed to reach your attendance target, and how
-        many upcoming classes you can miss.
-    </p>
-</div>
-
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card tool-attendance">
-            <div class="card-body p-4 row g-4">
-                <form method="POST" class="col-12 col-md-5">
-                    <div class="mb-3">
-                        <label for="attended" class="form-label">Classes attended</label>
-                        <input
-                            type="number" class="form-control"
-                            id="attended" name="attended"
-                            min="0" required value="{{ request.form.get('attended', '30') }}"
-                        >
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="total" class="form-label">Total classes held</label>
-                        <input
-                            type="number" class="form-control"
-                            id="total" name="total"
-                            min="1" required value="{{ request.form.get('total', '40') }}"
-                        >
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="upcoming" class="form-label">Upcoming classes</label>
-                        <input
-                            type="number" class="form-control"
-                            id="upcoming" name="upcoming"
-                            min="0" required value="{{ request.form.get('upcoming', '12') }}"
-                        >
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="target" class="form-label">Target attendance (%)</label>
-                        <input
-                            type="number" class="form-control"
-                            id="target" name="target"
-                            min="1" max="100" step="0.1"
-                            required value="{{ request.form.get('target', '75') }}"
-                        >
-                    </div>
-
-                    <button class="btn btn-primary" type="submit">Calculate attendance</button>
-                </form>
-
-                {% if error %}
-                <div class="alert alert-danger mt-4" role="alert">{{ error }}</div>
-                {% endif %}
-
-                {% if result %}
-                <section class="col-12 col-md-7" aria-labelledby="attendance-results-title">
-                    <hr class="my-4">
-                    <h2 class="h5 mb-3" id="attendance-results-title">Your results</h2>
-                    <div class="row g-3">
-                        <div class="col-sm-4">
-                            <div class="stat-tile h-100">
-                                <span class="stat-label">Current attendance</span>
-                                <span class="stat-value">{{ "%.2f"|format(result.current_percent) }}%</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="stat-tile h-100">
-                                <span class="stat-label">Classes needed for {{ result.target_percent }}%</span>
-                                <span class="stat-value">{{ result.needed }}</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="stat-tile h-100">
-                                <span class="stat-label">Upcoming classes you can miss</span>
-                                <span class="stat-value">
-                                    {% if result.missable == -1 %}&mdash;{% else %}{{ result.missable }}{% endif %}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if result.missable == -1 %}
-                    <div class="alert alert-warning mt-3 mb-0">
-                        Your target cannot be reached within the upcoming
-                        {{ result.upcoming }} classes, even if you attend every one of them.
-                    </div>
-                    {% endif %}
-                </section>
-                {% else %}
-                <div class="empty-state col-12 col-md-7" role="status">
-                    <span class="section-kicker">Your results</span>
-                    <h2 class="h5">Your plan will appear here</h2>
-                    <p class="text-secondary mb-0">Enter your current attendance, upcoming classes and target to see the classes you need to attend.</p>
-                </div>
-                {% endif %}
-            </div>
+<header class="tool-hero attendance-hero">
+  <div class="tool-hero-copy">
+    <span class="section-kicker">Student tools / Planning</span>
+    <h1>Plan your attendance with confidence.</h1>
+    <p>See where you stand, how many classes you need to attend, and how much flexibility remains in your schedule.</p>
+  </div>
+  <div class="tool-hero-aside"><span class="hero-aside-label">Target guide</span><strong>75%</strong><span>Common attendance benchmark. Set the target required by your institution.</span></div>
+</header>
+<div class="attendance-workspace">
+  <section class="card calculator-panel">
+    <div class="card-header"><div><span class="panel-step">01 / YOUR NUMBERS</span><strong>Attendance details</strong></div><span class="panel-icon" aria-hidden="true">%</span></div>
+    <div class="card-body">
+      <p class="text-secondary mb-4">Enter your current class record and the number of upcoming classes.</p>
+      <form method="POST" class="calculator-form">
+        <div class="form-field">
+          <label for="attended" class="form-label">Classes attended</label>
+          <input type="number" class="form-control" id="attended" name="attended" min="0" required value="{{ request.form.get('attended', '30') }}">
+          <small>Classes you were present for</small>
         </div>
+        <div class="form-field">
+          <label for="total" class="form-label">Total classes held</label>
+          <input type="number" class="form-control" id="total" name="total" min="1" required value="{{ request.form.get('total', '40') }}">
+          <small>All classes conducted so far</small>
+        </div>
+        <div class="form-field">
+          <label for="upcoming" class="form-label">Upcoming classes</label>
+          <input type="number" class="form-control" id="upcoming" name="upcoming" min="0" required value="{{ request.form.get('upcoming', '12') }}">
+          <small>Classes remaining in this period</small>
+        </div>
+        <div class="form-field">
+          <label for="target" class="form-label">Required attendance (%)</label>
+          <input type="number" class="form-control" id="target" name="target" min="1" max="100" step="0.1" required value="{{ request.form.get('target', '75') }}">
+          <small>Your institution's required percentage</small>
+        </div>
+        {% if error %}<div class="alert alert-danger mb-0" role="alert">{{ error }}</div>{% endif %}
+        <button class="btn btn-primary btn-lg w-100" type="submit">Calculate my attendance <span aria-hidden="true">→</span></button>
+      </form>
     </div>
+  </section>
+  <section class="results-panel" aria-live="polite">
+    {% if result %}
+    <div class="results-heading"><span class="section-kicker">02 / YOUR OUTLOOK</span><h2>Your attendance snapshot</h2><p>Based on the values you entered above.</p></div>
+    <div class="attendance-primary-result">
+      <span>Current attendance</span>
+      <strong>{{ "%.2f"|format(result.current_percent) }}<small>%</small></strong>
+      <div class="attendance-meter" role="img" aria-label="Current attendance {{ '%.2f'|format(result.current_percent) }} percent">
+        <span style="width: {{ [0, [result.current_percent, 100]|min]|max }}%"></span>
+      </div>
+      <div class="meter-labels"><span>0%</span><span>Target {{ result.target_percent }}%</span><span>100%</span></div>
+    </div>
+    <div class="result-stat-grid">
+      <article class="result-stat"><span class="result-stat-label">Classes to attend</span><strong>{{ result.needed }}</strong><small>To reach {{ result.target_percent }}%</small></article>
+      <article class="result-stat"><span class="result-stat-label">Classes you can miss</span><strong>{% if result.missable == -1 %}—{% else %}{{ result.missable }}{% endif %}</strong><small>Within the upcoming {{ result.upcoming }}</small></article>
+    </div>
+    {% if result.missable == -1 %}
+    <div class="alert alert-warning mt-3 mb-0"><strong>Target out of reach in this period.</strong><br>Your target cannot be reached within the upcoming {{ result.upcoming }} classes, even if you attend every one.</div>
+    {% elif result.current_percent >= result.target_percent %}
+    <div class="result-guidance success-guidance"><strong>You are currently meeting your target.</strong><span>Keep tracking your attendance so you can maintain this level.</span></div>
+    {% else %}
+    <div class="result-guidance"><strong>Focus on consistent attendance.</strong><span>Prioritise the upcoming classes to move towards your required percentage.</span></div>
+    {% endif %}
+    {% else %}
+    <div class="results-empty">
+      <div class="empty-illustration" aria-hidden="true"><span>01</span><span>02</span><span>03</span></div>
+      <span class="section-kicker">Your results will appear here</span>
+      <h2>Turn your attendance record into a clear plan.</h2>
+      <p>Fill in the four fields and calculate to see your current percentage, required classes and remaining flexibility.</p>
+      <ul><li>Current attendance percentage</li><li>Classes needed to reach your target</li><li>How many upcoming classes you can miss</li></ul>
+    </div>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

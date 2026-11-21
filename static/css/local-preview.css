@@ -523,9 +523,9 @@ body {
 }
 .app-main-landing > .landing-page {
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 clamp(1rem, 4.2vw, 3.5rem);
+  max-width: none;
+  margin: 0;
+  padding: 0 clamp(1rem, 6.1vw, 7rem);
   overflow-wrap: anywhere;
 }
 .app-main-landing .landing-hero-grid {

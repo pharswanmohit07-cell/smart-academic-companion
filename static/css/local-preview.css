@@ -512,3 +512,73 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Public landing page: escape the dashboard container and use the full viewport. */
+.app-main-landing {
+  width: 100%;
+  max-width: none !important;
+  margin: 0 auto;
+  padding: 0 !important;
+}
+.app-main-landing > .landing-page {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4.2vw, 3.5rem);
+  overflow-wrap: anywhere;
+}
+.app-main-landing .landing-hero-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+}
+.app-main-landing .landing-hero-grid > *,
+.app-main-landing .landing-feature-grid > *,
+.app-main-landing .workflow-grid > *,
+.app-main-landing .role-grid > * { min-width: 0; }
+.app-main-landing .landing-title {
+  max-width: 13ch;
+  font-size: clamp(2.35rem, 5.1vw, 4.4rem);
+  overflow-wrap: normal;
+  hyphens: auto;
+}
+.app-main-landing .landing-lead,
+.app-main-landing .section-heading p { max-width: 68ch; }
+.app-main-landing .landing-feature-grid,
+.app-main-landing .workflow-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.app-main-landing .preview-window,
+.app-main-landing .preview-row { min-width: 0; }
+@media (max-width: 991.98px) {
+  .app-main-landing .landing-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .app-main-landing .product-preview { width: 100%; max-width: 760px; }
+  .app-main-landing .landing-feature-grid,
+  .app-main-landing .workflow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767.98px) {
+  .app-main-landing > .landing-page { padding-right: 1rem; padding-left: 1rem; }
+  .app-main-landing .landing-feature-grid,
+  .app-main-landing .workflow-grid,
+  .app-main-landing .role-grid { grid-template-columns: minmax(0, 1fr); }
+  .app-main-landing .landing-hero { padding-top: 2.5rem; padding-bottom: 2.75rem; }
+  .app-main-landing .landing-title {
+    max-width: 15ch;
+    font-size: clamp(2.25rem, 9vw, 3.5rem);
+  }
+  .app-main-landing .landing-cta { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 420px) {
+  .app-main-landing .preview-window { grid-template-columns: 1fr; }
+  .app-main-landing .preview-sidebar { display: none; }
+  .app-main-landing .preview-content { padding: .85rem .35rem; }
+  .app-main-landing .preview-row {
+    grid-template-columns: 1.2fr .7fr .7fr;
+    gap: .25rem;
+    font-size: .62rem;
+    overflow-wrap: anywhere;
+  }
+}
+html, body { max-width: 100%; overflow-x: clip; }

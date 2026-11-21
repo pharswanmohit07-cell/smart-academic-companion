@@ -49,7 +49,7 @@
             --bs-table-hover-bg: rgba(139,180,255,.07);
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261121-neon-campus">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261121-full-bleed-preview">
     {% block page_head %}{% endblock %}
 </head>
 
@@ -100,7 +100,7 @@
             </div>
         </div>
     </nav>
-    <main class="container app-main py-4 py-lg-5">
+    <main class="container app-main app-main-landing py-4 py-lg-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
         <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }} alert-dismissible fade show" role="status">

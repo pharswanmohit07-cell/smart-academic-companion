@@ -522,11 +522,22 @@ body {
   padding: 0 !important;
 }
 .app-main-landing > .landing-page {
-  width: 100%;
+  /* Break out of Bootstrap's centered container so one continuous canvas
+     runs edge-to-edge instead of exposing the body gradients at the sides. */
+  position: relative;
+  left: 50%;
+  width: 100vw;
   max-width: none;
-  margin: 0;
+  margin-left: -50vw;
   padding: 0 clamp(1rem, 6.1vw, 7rem);
   overflow-wrap: anywhere;
+  background: linear-gradient(115deg, #0b1020 0%, #101329 48%, #111a2d 76%, #0b2028 100%);
+}
+[data-bs-theme="dark"] .app-main-landing > .landing-page {
+  background: linear-gradient(115deg, #0b1020 0%, #101329 48%, #111a2d 76%, #0b2028 100%);
+}
+[data-bs-theme="light"] .app-main-landing > .landing-page {
+  background: linear-gradient(115deg, #f4f1ff 0%, #f2efff 48%, #eef7f8 100%);
 }
 .app-main-landing .landing-hero-grid {
   grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);

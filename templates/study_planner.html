@@ -2,6 +2,7 @@
 {% block title %}AI Study Planner · Smart Academic Companion{% endblock %}
 {% block content %}
 <div class="page-head mb-4">
+  <span class="section-kicker">Student tools · Study</span>
   <h1 class="h3 mb-1">AI Study Planner</h1>
   <p class="text-secondary mb-0">
     Create a study plan based on your topics, preparation level and available time.
@@ -12,8 +13,9 @@
 <div class="alert alert-danger" role="alert">{{ error }}</div>
 {% endif %}
 
-<div class="card mb-4">
-  <div class="card-body p-4">
+<div class="card tool-study mb-4">
+  <div class="card-header"><strong>Build your study plan</strong></div>
+  <div class="card-body">
     <h2 class="h5 mb-1">Your topics</h2>
     <p class="text-secondary small mb-3">
       Enter how well you know each topic as a percentage. Lower numbers mean
@@ -99,9 +101,10 @@
   </div>
 </div>
 
-<div class="card mb-4">
-  <div class="card-body p-4">
-    <h2 class="h5 mb-3">Recommended study order</h2>
+<div class="card tool-study mb-4">
+  <div class="card-header"><strong>Recommended study order</strong></div>
+  <div class="card-body">
+    <h2 class="visually-hidden">Recommended study order</h2>
     {% if plan.schedule %}
     <div class="table-responsive">
       <table class="table align-middle">
@@ -140,7 +143,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card tool-study">
   <div class="card-body p-4">
     <h2 class="h5 mb-1">Topics to focus on first</h2>
     <p class="text-secondary small mb-3">
@@ -173,7 +176,7 @@
 </div>
 
 {% if plan.skipped %}
-<div class="card mt-4">
+<div class="card tool-study mt-4">
   <div class="card-body p-4">
     <h2 class="h5 mb-1">Topics that did not fit</h2>
     <p class="text-secondary small mb-3">
@@ -196,6 +199,8 @@
   </div>
 </div>
 {% endif %}
+{% else %}
+<div class="empty-state card tool-study mt-4" role="status"><div class="card-body"><span class="section-kicker">Your schedule</span><h2 class="h5">Your study plan will appear here</h2><p class="text-secondary mb-0">Add topics and how much time you have. The planner will prioritise areas that need more practice.</p></div></div>
 {% endif %}
 
 <script>

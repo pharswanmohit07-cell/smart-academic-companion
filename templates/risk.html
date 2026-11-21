@@ -2,7 +2,7 @@
 {% block title %}Faculty Academic Dashboard · Smart Academic Companion{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div class="page-head"><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-secondary mb-0">View student performance, attendance and academic records.</p></div>
+  <div class="page-head"><span class="section-kicker">Faculty workspace · Overview</span><h1 class="h3 mb-1">Faculty Academic Dashboard</h1><p class="text-secondary mb-0">View student performance, attendance and academic records.</p></div>
   <div class="d-flex flex-wrap gap-2">
     <a class="btn btn-outline-secondary" href="{{ url_for('faculty.manage') }}">Manage Records</a>
     <a class="btn btn-outline-secondary" href="{{ url_for('faculty.classes') }}">Manage Classes</a>
@@ -12,7 +12,7 @@
 {% if error %}<div class="alert alert-danger">{{ error }}</div>
 {% elif summary %}
 <div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Total students</p><h2 class="h3 mb-0">{{ summary.total_students }}</h2></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card tool-faculty h-100"><div class="card-body"><p class="stat-label mb-1">Total students</p><h2 class="h3 mb-0">{{ summary.total_students }}</h2></div></div></div>
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Attendance below 75%</p><h2 class="h3 mb-0">{{ summary.low_attendance }}</h2></div></div></div>
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Low marks in either exam</p><h2 class="h3 mb-0">{{ summary.low_marks }}</h2></div></div></div>
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Incomplete records</p><h2 class="h3 mb-0">{{ summary.incomplete_records }}</h2></div></div></div>
@@ -21,7 +21,7 @@
   Risk estimates are for guidance only.
   {% if risk_lookup_error %}<span class="text-danger d-block">{{ risk_lookup_error }}</span>{% endif %}
 </p>
-<div class="card shadow-sm"><div class="card-body">
+<div class="card tool-faculty"><div class="card-body">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Student academic overview</h2><span class="small text-muted" id="student-result-count" aria-live="polite">Showing {{ summary.total_students }} of {{ summary.total_students }} students</span></div>
   <div class="row g-2 mb-3">
     <div class="col-12 col-md-3"><label for="student-search" class="form-label">Search students</label><input type="search" class="form-control" id="student-search" placeholder="Enter student name or ID" autocomplete="off"></div>
@@ -71,7 +71,7 @@
           {% endif %}
         </td>
       </tr>
-    {% else %}<tr><td colspan="10" class="text-center text-muted">No students found in the database.</td></tr>{% endfor %}
+    {% else %}<tr><td colspan="10" class="text-center text-muted py-4">No students found in the database. Create a class and add student records to begin.</td></tr>{% endfor %}
     </tbody>
   </table></div>
   <div class="text-center text-muted py-4 d-none" id="no-filter-results" role="status">No students match your search and filter. Try clearing the filters.</div>

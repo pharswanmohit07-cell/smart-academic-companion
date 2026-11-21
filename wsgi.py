@@ -87,6 +87,8 @@ def create_app():
         SESSION_COOKIE_DOMAIN=settings.COOKIE_DOMAIN,
         PERMANENT_SESSION_LIFETIME=settings.SESSION_LIFETIME_MINUTES * 60,
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,
+        # Static URLs are versioned in templates; allow browsers to reuse them.
+        SEND_FILE_MAX_AGE_DEFAULT=31536000,
         DEBUG=False,
         PREFERRED_URL_SCHEME="https" if settings.IS_PRODUCTION else "http",
         JSON_SORT_KEYS=False,

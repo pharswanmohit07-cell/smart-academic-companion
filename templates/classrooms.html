@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Empty Classroom Finder · Smart Academic Companion{% endblock %}
 {% block content %}
 {% macro time12(value) -%}
@@ -8,70 +7,55 @@
   {%- set suffix = 'AM' if hour < 12 else 'PM' -%}
   {{ (12 if hour % 12 == 0 else hour % 12) }}:{{ parts[1] }} {{ suffix }}
 {%- endmacro %}
-<div class="page-head mb-4">
-  <h1 class="h3 mb-1">Empty Classroom Finder</h1>
-  <p class="text-secondary mb-0">
-    Choose a day and a time window to see which rooms are free.
-  </p>
-</div>
-
-<div class="card mb-4">
-  <div class="card-body p-4">
-
-    {% if error %}
-    <div class="alert alert-danger" role="alert">{{ error }}</div>
-    {% endif %}
-
-    <form method="post" class="row g-3 mb-2">
-      <div class="col-md-4">
-        <label for="day" class="form-label">Day</label>
-        <select id="day" name="day" class="form-select">
-          {% for number, name in days.items() %}
-          <option value="{{ number }}" {% if form.day == number|string %}selected{% endif %}>{{ name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label for="start" class="form-label">From</label>
-        <input id="start" name="start" type="time" class="form-control" value="{{ form.start }}" required>
-      </div>
-      <div class="col-md-3">
-        <label for="end" class="form-label">To</label>
-        <input id="end" name="end" type="time" class="form-control" value="{{ form.end }}" required>
-      </div>
-      <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">Find rooms</button>
-      </div>
+<header class="tool-hero classroom-hero">
+  <div class="tool-hero-copy">
+    <span class="section-kicker">Student tools / Campus</span>
+    <h1>Find a quiet space between classes.</h1>
+    <p>Search the timetable for rooms that are free during your chosen time window. Availability is checked against the full interval.</p>
+  </div>
+  <div class="tool-hero-aside classroom-aside"><span class="hero-aside-label">Campus utility</span><strong>Room finder</strong><span>Search by day and time. No booking is made by this search.</span></div>
+</header>
+<section class="card search-workspace mb-4">
+  <div class="card-header"><div><span class="panel-step">01 / SEARCH PARAMETERS</span><strong>When do you need a room?</strong></div><span class="panel-icon" aria-hidden="true">⌕</span></div>
+  <div class="card-body">
+    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" class="room-search-form">
+      <div><label for="day" class="form-label">Day of the week</label><select id="day" name="day" class="form-select">{% for number, name in days.items() %}<option value="{{ number }}" {% if form.day == number|string %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+      <div><label for="start" class="form-label">Start time</label><input id="start" name="start" type="time" class="form-control" value="{{ form.start }}" required></div>
+      <div><label for="end" class="form-label">End time</label><input id="end" name="end" type="time" class="form-control" value="{{ form.end }}" required></div>
+      <div class="room-search-action"><button type="submit" class="btn btn-primary btn-lg w-100">Find available rooms <span aria-hidden="true">→</span></button></div>
     </form>
   </div>
-</div>
-
+</section>
 {% if results %}
-<div class="alert alert-info">
-  <strong>{{ summary.free_count }}</strong> rooms are available on {{ days[form.day|int] }}
-  from {{ time12(form.start) }} to {{ time12(form.end) }}.
-  <span class="ms-2">Timetable clashes: <strong>{{ summary.clash_count }}</strong></span>
-</div>
-
-<div class="table-responsive">
-  <table class="table table-striped align-middle mb-0">
-    <thead>
-      <tr><th>Room</th><th>Type</th><th>Building / Block</th><th>Floor</th><th>Availability</th></tr>
-    </thead>
-    <tbody>
-      {% for row in results %}
-      <tr>
-        <td class="fw-semibold">{{ row.room }}</td>
-        <td>{{ row.room_type }}</td>
-        <td>{{ row.building }}</td>
-        <td>{{ row.floor }}</td>
-        <td><span class="badge bg-success">Available</span></td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="text-center text-muted py-4">No rooms are available for this time window.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<section class="room-results-section">
+  <div class="results-heading room-results-heading">
+    <div><span class="section-kicker">02 / AVAILABILITY RESULTS</span><h2>Rooms matching your search</h2><p>{{ days[form.day|int] }} · {{ time12(form.start) }} to {{ time12(form.end) }}</p></div>
+    <div class="room-count"><strong>{{ summary.free_count }}</strong><span>rooms available</span></div>
+  </div>
+  <div class="room-summary-strip"><span><strong>{{ summary.free_count }}</strong> available rooms</span><span><strong>{{ summary.clash_count }}</strong> timetable clashes detected</span></div>
+  <div class="card tool-classroom room-results-card">
+    <div class="card-header"><strong>Available spaces</strong><span class="text-secondary small">Sorted by room</span></div>
+    <div class="card-body p-0"><div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Room</th><th>Type</th><th>Building / Block</th><th>Floor</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for row in results %}
+          <tr><td><strong class="room-name">{{ row.room }}</strong></td><td>{{ row.room_type }}</td><td>{{ row.building }}</td><td>{{ row.floor }}</td><td><span class="availability-status"><span></span>Available</span></td></tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center text-secondary py-5">No rooms are available for this time window. Try adjusting the start or end time.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</section>
+{% elif request.method == 'POST' %}
+<div class="empty-state card tool-classroom" role="status"><div class="card-body"><span class="section-kicker">No matches found</span><h2 class="h5">No rooms available for that time.</h2><p class="text-secondary mb-0">Try another time window. Timetable conflicts are checked across the full interval you selected.</p></div></div>
+{% else %}
+<section class="room-empty-state">
+  <div class="room-empty-art" aria-hidden="true"><span class="room-art-block block-one"></span><span class="room-art-block block-two"></span><span class="room-art-block block-three"></span><span class="room-art-line"></span></div>
+  <div><span class="section-kicker">Ready when you are</span><h2>Make the most of your gaps.</h2><p>Choose a day and time above. We'll check the timetable and show the rooms that are free for the entire period.</p></div>
+</section>
 {% endif %}
 {% endblock %}

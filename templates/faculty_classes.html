@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <div>
-    <h1 class="h3 mb-1">Class & Section Management</h1>
-    <p class="text-secondary mb-0">Create custom classes and manage each class's student list separately.</p>
+<header class="workspace-hero class-hero">
+  <div class="workspace-hero-copy"><span class="section-kicker">Faculty workspace / Organisation</span>
+    <h1>Build the right structure for every class.</h1>
+    <p>Create a class, select a group and maintain its roster without affecting other class data.</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('faculty.manage') }}">Faculty Data Management</a>
+  <div class="workspace-hero-actions"><a class="btn btn-outline-primary" href="{{ url_for('faculty.manage') }}">Faculty records</a></div>
+</header>
+<div class="workspace-metrics class-metrics" aria-label="Class management overview">
+  <div class="workspace-metric"><span>Your classes</span><strong>{{ classes|length }}</strong></div>
+  <div class="workspace-metric"><span>Selected group</span><strong>{{ selected_class.class_name if selected_class else '—' }}</strong></div>
+  <div class="workspace-metric"><span>Students in group</span><strong>{{ class_students|length if selected_class else '—' }}</strong></div>
 </div>
 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
 {% for category, text in get_flashed_messages(with_categories=true) %}
@@ -13,10 +18,14 @@
 {% endfor %}
 {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
 
-<div class="row g-4">
+<div class="workspace-section-heading">
+  <div><span class="section-kicker">Class organisation</span><h2>Classes and sections</h2></div>
+  <p>Select a class to review its roster and add or assign students.</p>
+</div>
+<div class="row g-4 class-workspace">
   <div class="col-12 col-xl-5">
-    <section class="card shadow-sm h-100"><div class="card-body">
-      <h2 class="h5 mb-3">Create a custom class</h2>
+    <section class="card tool-faculty h-100 create-class-panel"><div class="card-body">
+      <span class="form-step">Create</span><h2 class="h5 mb-3">Create a custom class</h2>
       <form method="post" class="row g-3">
         <input type="hidden" name="action" value="create_class">
         <div class="col-12"><label class="form-label" for="class-name">Class name</label><input class="form-control" id="class-name" name="class_name" placeholder="e.g. BCA AI & DS - A1" maxlength="120" required></div>
@@ -29,8 +38,8 @@
     </div></section>
   </div>
   <div class="col-12 col-xl-7">
-    <section class="card shadow-sm"><div class="card-body">
-      <h2 class="h5 mb-3">Your classes</h2>
+    <section class="card tool-faculty class-list-panel"><div class="card-body">
+      <span class="form-step">Select a group</span><h2 class="h5 mb-3">Your classes</h2>
       {% if classes %}
       <div class="list-group">
         {% for class_item in classes %}
@@ -40,7 +49,7 @@
         </a>
         {% endfor %}
       </div>
-      {% else %}<p class="text-secondary mb-0">No classes yet. Create your first custom class using the form.</p>{% endif %}
+      {% else %}<div class="empty-state py-3"><p class="text-secondary mb-0">No classes yet. Create your first custom class using the form.</p></div>{% endif %}
     </div></section>
   </div>
 </div>
@@ -48,7 +57,7 @@
 {% if selected_class %}
 <div class="row g-4 mt-1">
   <div class="col-12 col-xl-5">
-    <section class="card shadow-sm"><div class="card-body">
+    <section class="card tool-faculty"><div class="card-body">
       <h2 class="h5 mb-1">Add student to {{ selected_class.class_name }}</h2>
       <p class="text-secondary small">New students are added only to this selected class.</p>
       <form method="post" class="row g-3">
@@ -70,14 +79,14 @@
     </div></section>
   </div>
   <div class="col-12 col-xl-7">
-    <section class="card shadow-sm"><div class="card-body">
-      <div class="d-flex justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Students in this class</h2><span class="badge text-bg-primary">{{ class_students|length }}</span></div>
+    <section class="card tool-faculty"><div class="card-body">
+      <div class="records-heading d-flex justify-content-between align-items-center gap-2 mb-3"><div><span class="section-kicker">Selected roster</span><h2 class="h5 mb-0">Students in this class</h2></div><span class="badge text-bg-primary">{{ class_students|length }} students</span></div>
       {% if class_students %}
       <div class="table-responsive"><table class="table table-striped align-middle mb-0">
         <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Semester</th><th>Section</th></tr></thead>
         <tbody>{% for student in class_students %}<tr><td>{{ student.student_id }}</td><td>{{ student.name }}</td><td>{{ student.email or "—" }}</td><td>{{ student.semester }}</td><td>{{ student.section }}</td></tr>{% endfor %}</tbody>
       </table></div>
-      {% else %}<p class="text-secondary mb-0">This class is empty. Add students when you are ready. Your existing data is unchanged.</p>{% endif %}
+      {% else %}<div class="empty-state py-3"><p class="text-secondary mb-0">This class is empty. Add students when you are ready. Your existing data is unchanged.</p></div>{% endif %}
     </div></section>
   </div>
 </div>

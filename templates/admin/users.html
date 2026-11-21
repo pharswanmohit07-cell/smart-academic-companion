@@ -2,17 +2,21 @@
 {% block title %}Users · Smart Academic Companion{% endblock %}
 
 {% block content %}
-<div class="page-head mb-4">
-    <h1 class="h3 mb-1">Users and roles</h1>
-    <p class="text-secondary mb-0">
-        Roles come from <code>public.user_profiles</code>. New signups are students;
-        an administrator can grant faculty access here. Admin roles are only
-        assigned with the server command line (<code>python manage.py provision-admin</code>).
-    </p>
+<header class="workspace-hero admin-hero">
+    <div class="workspace-hero-copy">
+        <span class="section-kicker">Administration / Access control</span>
+        <h1>Identity and role management.</h1>
+        <p>Review account profiles and manage faculty access. New signups are students; administrator roles remain provisioned through the server command line.</p>
+    </div>
+    <div class="admin-hero-note"><span>Directory source</span><strong>public.user_profiles</strong><small>Changes are applied to profile roles.</small></div>
+</header>
+<div class="workspace-section-heading admin-section-heading">
+    <div><span class="section-kicker">Access directory</span><h2>Profiles and faculty</h2></div>
+    <p>Role changes are available only for other non-admin accounts.</p>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header"><strong>Profiles</strong></div>
+<div class="card tool-faculty mb-4 admin-directory">
+    <div class="card-header"><div><span class="form-step">01 · Accounts</span><strong>Profiles</strong></div><span class="directory-count">{{ profiles|length }} profiles</span></div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped mb-0 align-middle">
@@ -43,7 +47,7 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="4" class="text-secondary">No profiles yet.</td></tr>
+                    <tr><td colspan="4" class="empty-state text-secondary py-4">No profiles yet.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -51,8 +55,8 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header"><strong>Faculty directory</strong></div>
+<div class="card tool-faculty admin-directory">
+    <div class="card-header"><div><span class="form-step">02 · Teaching team</span><strong>Faculty directory</strong></div><span class="directory-count">{{ teachers|length }} faculty</span></div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped mb-0 align-middle">
@@ -61,7 +65,7 @@
                 {% for teacher in teachers %}
                     <tr><td>{{ teacher.name }}</td><td>{{ teacher.email or '—' }}</td></tr>
                 {% else %}
-                    <tr><td colspan="2" class="text-secondary">No faculty accounts yet.</td></tr>
+                    <tr><td colspan="2" class="empty-state text-secondary py-4">No faculty accounts yet.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>

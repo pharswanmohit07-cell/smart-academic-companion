@@ -5,692 +5,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Smart Academic Companion{% endblock %}</title>
-    <link rel="icon"
-        href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
-
-    <!--
-      Theme is applied before the stylesheet paints, so a returning visitor
-      never sees a flash of light mode. localStorage is the only source of
-      truth: the OS preference is deliberately ignored.
-    -->
+    <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAAAAAAAAAAAA">
     <script>
         (function () {
             var THEME_KEY = "sac-theme";
             var theme = "light";
             try {
-                if (window.localStorage.getItem(THEME_KEY) === "dark") {
-                    theme = "dark";
-                }
-            } catch (e) {
-                /* Private mode or storage disabled: stay on the default. */
-            }
+                if (window.localStorage.getItem(THEME_KEY) === "dark") theme = "dark";
+            } catch (e) { /* Storage unavailable: use the accessible light default. */ }
             document.documentElement.setAttribute("data-bs-theme", theme);
             document.documentElement.setAttribute("data-theme", theme);
         })();
     </script>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* ------------------------------------------------------------------
-           Colour tokens. Bootstrap 5.3 reads its own --bs-* variables, so we
-           override those for the components (cards, tables, forms, alerts)
-           and expose a few --app-* tokens for our own surfaces.
-           ------------------------------------------------------------------ */
-        :root,
-        [data-bs-theme="light"] {
-            --app-bg: #f5f6f8;
-            --app-surface: #ffffff;
-            --app-surface-muted: #f8fafc;
-            --app-border: #e5e7eb;
-            --app-text: #1f2937;
-            --app-text-muted: #64748b;
-            --app-accent: #2563eb;
-            --app-accent-soft: #eaf1fe;
-            --app-navbar-bg: #ffffff;
-            --app-navbar-text: #1f2937;
-            --app-hover: #f1f5f9;
-
-            --bs-body-bg: var(--app-bg);
-            --bs-body-color: var(--app-text);
-            --bs-border-color: var(--app-border);
-            --bs-secondary-color: var(--app-text-muted);
-            --bs-emphasis-color: var(--app-text);
-            --bs-primary: var(--app-accent);
-            --bs-primary-rgb: 37, 99, 235;
-            --bs-link-color: var(--app-accent);
-            --bs-link-hover-color: #1d4ed8;
-            --bs-card-bg: var(--app-surface);
-            --bs-card-border-color: var(--app-border);
-            --bs-tertiary-bg: var(--app-surface-muted);
+        /* Theme tokens are resolved before paint. All component styling is external. */
+        :root, [data-bs-theme="light"] {
+            --app-bg: #f3f6fb; --app-surface: #ffffff; --app-surface-muted: #edf2f8;
+            --app-border: #d5deea; --app-text: #172033; --app-text-muted: #526176;
+            --app-accent: #155eef; --app-accent-soft: #e8efff; --app-cyan: #087e8b;
+            --app-violet: #6941c6; --app-coral: #c24135; --app-success: #167348;
+            --bs-body-bg: var(--app-bg); --bs-body-color: var(--app-text);
+            --bs-border-color: var(--app-border); --bs-secondary-color: var(--app-text-muted);
+            --bs-emphasis-color: var(--app-text); --bs-primary: var(--app-accent);
+            --bs-primary-rgb: 21, 94, 239; --bs-link-color: #124fc9;
+            --bs-link-hover-color: #0d3d9f; --bs-card-bg: var(--app-surface);
+            --bs-card-border-color: var(--app-border); --bs-tertiary-bg: var(--app-surface-muted);
         }
-
         [data-bs-theme="dark"] {
-            --app-bg: #111827;
-            --app-surface: #1f2937;
-            --app-surface-muted: #273449;
-            --app-border: #374151;
-            --app-text: #f3f4f6;
-            --app-text-muted: #cbd5e1;
-            --app-accent: #60a5fa;
-            --app-accent-soft: #1e3a5f;
-            --app-navbar-bg: #1a2332;
-            --app-navbar-text: #f3f4f6;
-            --app-hover: #273449;
-
-            --bs-body-bg: var(--app-bg);
-            --bs-body-color: var(--app-text);
-            --bs-border-color: var(--app-border);
-            --bs-secondary-color: var(--app-text-muted);
-            --bs-emphasis-color: var(--app-text);
-            --bs-primary: var(--app-accent);
-            --bs-primary-rgb: 96, 165, 250;
-            --bs-link-color: var(--app-accent);
-            --bs-link-hover-color: #93c5fd;
-            --bs-card-bg: var(--app-surface);
-            --bs-card-border-color: var(--app-border);
-            --bs-tertiary-bg: var(--app-surface-muted);
-            --bs-secondary-bg: #273449;
-            --bs-table-color: var(--app-text);
-            --bs-table-bg: transparent;
-            --bs-table-striped-color: var(--app-text);
-            --bs-table-striped-bg: rgba(255, 255, 255, 0.035);
-            --bs-table-hover-color: var(--app-text);
-            --bs-table-hover-bg: rgba(255, 255, 255, 0.06);
+            --app-bg: #0b1220; --app-surface: #121d30; --app-surface-muted: #192840;
+            --app-border: #30415d; --app-text: #f4f7ff; --app-text-muted: #c0cadb;
+            --app-accent: #8bb4ff; --app-accent-soft: #1c3153; --app-cyan: #67d5df;
+            --app-violet: #c2a7ff; --app-coral: #ff9b8f; --app-success: #7ee0ae;
+            --bs-body-bg: var(--app-bg); --bs-body-color: var(--app-text);
+            --bs-border-color: var(--app-border); --bs-secondary-color: var(--app-text-muted);
+            --bs-emphasis-color: var(--app-text); --bs-primary: var(--app-accent);
+            --bs-primary-rgb: 139, 180, 255; --bs-link-color: #a9c7ff;
+            --bs-link-hover-color: #d2e1ff; --bs-card-bg: var(--app-surface);
+            --bs-card-border-color: var(--app-border); --bs-tertiary-bg: var(--app-surface-muted);
+            --bs-secondary-bg: var(--app-surface-muted); --bs-table-color: var(--app-text);
+            --bs-table-bg: transparent; --bs-table-striped-color: var(--app-text);
+            --bs-table-striped-bg: rgba(255,255,255,.035); --bs-table-hover-color: var(--app-text);
+            --bs-table-hover-bg: rgba(139,180,255,.07);
         }
-
-        /* ---------------------------- Base --------------------------------- */
-        body {
-            background-color: var(--app-bg);
-            color: var(--app-text);
-            font-size: 0.975rem;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5 {
-            letter-spacing: -0.011em;
-        }
-
-        .text-secondary,
-        .text-muted {
-            color: var(--app-text-muted) !important;
-        }
-
-        a {
-            color: var(--app-accent);
-        }
-
-        a:hover {
-            color: var(--bs-link-hover-color);
-        }
-
-        hr {
-            color: var(--app-border);
-            opacity: 1;
-        }
-
-        /* --------------------------- Navigation ---------------------------- */
-        .app-navbar {
-            background-color: var(--app-navbar-bg);
-            border-bottom: 1px solid var(--app-border);
-        }
-
-        .app-navbar .navbar-brand {
-            color: var(--app-text);
-            font-weight: 600;
-            letter-spacing: -0.015em;
-        }
-
-        .app-navbar .navbar-brand {
-            margin-right: 1.25rem;
-        }
-
-        .app-navbar .nav-link {
-            color: var(--app-text-muted);
-            padding: 0.45rem 0.6rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            white-space: nowrap;
-            font-size: 0.9rem;
-        }
-
-        /* The link row is wide; collapse to the hamburger before it wraps. */
-        @media (min-width: 992px) and (max-width: 1399.98px) {
-            .app-navbar .navbar-brand { font-size: 1rem; margin-right: 0.75rem; }
-            .app-navbar .nav-link { padding: 0.4rem 0.45rem; font-size: 0.855rem; }
-            .app-navbar .navbar { flex-wrap: nowrap; }
-        }
-
-        .app-navbar .nav-link:hover,
-        .app-navbar .nav-link:focus {
-            color: var(--app-text);
-            background-color: var(--app-hover);
-        }
-
-        .app-navbar .nav-link.active {
-            color: var(--app-accent);
-            background-color: var(--app-accent-soft);
-        }
-
-        .theme-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            border: 1px solid var(--app-border);
-            background: transparent;
-            color: var(--app-text-muted);
-            border-radius: 0.375rem;
-            padding: 0.4rem 0.7rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .theme-toggle:hover,
-        .theme-toggle:focus-visible {
-            color: var(--app-text);
-            background-color: var(--app-hover);
-            border-color: var(--app-border);
-        }
-
-        .theme-toggle:focus-visible {
-            outline: 2px solid var(--app-accent);
-            outline-offset: 2px;
-        }
-
-        .theme-toggle svg {
-            flex: 0 0 auto;
-        }
-
-        /* ----------------------------- Cards ------------------------------- */
-        .card {
-            background-color: var(--app-surface);
-            border: 1px solid var(--app-border);
-            border-radius: 0.6rem;
-            color: var(--app-text);
-        }
-
-        .card-header,
-        .card-footer {
-            background-color: var(--app-surface-muted);
-            border-color: var(--app-border);
-        }
-
-        .feature-card {
-            height: 100%;
-        }
-
-        .feature-card .card-body {
-            padding: 1.5rem;
-        }
-
-        .feature-icon {
-            width: 42px;
-            height: 42px;
-            display: grid;
-            place-items: center;
-            border-radius: 0.5rem;
-            background: var(--app-accent-soft);
-            color: var(--app-accent);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .stat-tile {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            padding: 0.9rem 1rem;
-            background: var(--app-surface-muted);
-            border: 1px solid var(--app-border);
-            border-radius: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.8125rem;
-            color: var(--app-text-muted);
-        }
-
-        .stat-value {
-            font-size: 1.35rem;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-
-        /* ----------------------------- Tables ------------------------------ */
-        .table {
-            --bs-table-color: var(--app-text);
-            --bs-table-border-color: var(--app-border);
-            --bs-table-striped-bg: rgba(15, 23, 42, 0.025);
-            --bs-table-hover-bg: rgba(15, 23, 42, 0.045);
-            --bs-table-hover-color: var(--app-text);
-            color: var(--app-text);
-            margin-bottom: 0;
-        }
-
-        [data-bs-theme="dark"] .table {
-            --bs-table-striped-bg: rgba(255, 255, 255, 0.04);
-            --bs-table-hover-bg: rgba(255, 255, 255, 0.07);
-        }
-
-        .table thead th {
-            background-color: var(--app-surface-muted);
-            color: var(--app-text-muted);
-            font-size: 0.8125rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-bottom: 1px solid var(--app-border);
-            white-space: nowrap;
-        }
-
-        .table> :not(caption)>*>* {
-            border-color: var(--app-border);
-        }
-
-        /* ---------------------------- Controls ----------------------------- */
-        .form-control,
-        .form-select {
-            background-color: var(--app-surface);
-            border-color: var(--app-border);
-            color: var(--app-text);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            background-color: var(--app-surface);
-            color: var(--app-text);
-            border-color: var(--app-accent);
-            box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.18);
-        }
-
-        .form-control::placeholder {
-            color: var(--app-text-muted);
-            opacity: 0.8;
-        }
-
-        .form-label {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        /* Keep native date/time pickers readable in dark mode. */
-        [data-bs-theme="dark"] input[type="date"],
-        [data-bs-theme="dark"] input[type="time"],
-        [data-bs-theme="dark"] input[type="number"],
-        [data-bs-theme="dark"] input[type="search"] {
-            color-scheme: dark;
-        }
-
-        /* ----------------------------- Buttons ----------------------------- */
-        .btn {
-            border-radius: 0.4rem;
-            font-weight: 500;
-        }
-
-        .btn-primary {
-            --bs-btn-bg: var(--app-accent);
-            --bs-btn-border-color: var(--app-accent);
-            --bs-btn-hover-bg: #1d4ed8;
-            --bs-btn-hover-border-color: #1d4ed8;
-            --bs-btn-active-bg: #1e40af;
-            --bs-btn-active-border-color: #1e40af;
-            --bs-btn-color: #ffffff;
-            --bs-btn-hover-color: #ffffff;
-            --bs-btn-active-color: #ffffff;
-            --bs-btn-disabled-bg: var(--app-accent);
-            --bs-btn-disabled-border-color: var(--app-accent);
-            --bs-btn-disabled-color: #ffffff;
-        }
-
-        [data-bs-theme="dark"] .btn-primary {
-            --bs-btn-color: #0b1220;
-            --bs-btn-hover-color: #0b1220;
-            --bs-btn-active-color: #0b1220;
-            --bs-btn-disabled-color: #0b1220;
-            --bs-btn-hover-bg: #93c5fd;
-            --bs-btn-hover-border-color: #93c5fd;
-            --bs-btn-active-bg: #bfdbfe;
-            --bs-btn-active-border-color: #bfdbfe;
-        }
-
-        .btn-outline-primary {
-            --bs-btn-color: var(--app-accent);
-            --bs-btn-border-color: var(--app-accent);
-            --bs-btn-hover-bg: var(--app-accent);
-            --bs-btn-hover-border-color: var(--app-accent);
-            --bs-btn-hover-color: #ffffff;
-        }
-
-        [data-bs-theme="dark"] .btn-outline-primary {
-            --bs-btn-hover-color: #0b1220;
-            --bs-btn-active-color: #0b1220;
-        }
-
-        .btn-outline-secondary {
-            --bs-btn-color: var(--app-text-muted);
-            --bs-btn-border-color: var(--app-border);
-            --bs-btn-hover-bg: var(--app-hover);
-            --bs-btn-hover-border-color: var(--app-border);
-            --bs-btn-hover-color: var(--app-text);
-            --bs-btn-active-bg: var(--app-hover);
-            --bs-btn-active-color: var(--app-text);
-            --bs-btn-active-border-color: var(--app-border);
-        }
-
-        .btn-outline-danger {
-            --bs-btn-color: #b91c1c;
-            --bs-btn-border-color: #e5b4b4;
-            --bs-btn-hover-bg: #b91c1c;
-            --bs-btn-hover-border-color: #b91c1c;
-        }
-
-        [data-bs-theme="dark"] .btn-outline-danger {
-            --bs-btn-color: #fca5a5;
-            --bs-btn-border-color: #7f3030;
-        }
-
-        /* ------------------------- Alerts & badges -------------------------- */
-        .alert {
-            border-radius: 0.5rem;
-            border-width: 1px;
-        }
-
-        .alert-danger {
-            --bs-alert-color: #991b1b;
-            --bs-alert-bg: #fdf2f2;
-            --bs-alert-border-color: #f3c9c9;
-        }
-
-        .alert-warning {
-            --bs-alert-color: #8a5300;
-            --bs-alert-bg: #fdf7ec;
-            --bs-alert-border-color: #f0dcb3;
-        }
-
-        .alert-success {
-            --bs-alert-color: #166534;
-            --bs-alert-bg: #f2f9f4;
-            --bs-alert-border-color: #c3e3cd;
-        }
-
-        .alert-info {
-            --bs-alert-color: #1e4b8f;
-            --bs-alert-bg: #f1f6fd;
-            --bs-alert-border-color: #c6daf5;
-        }
-
-        .alert-secondary {
-            --bs-alert-color: var(--app-text-muted);
-            --bs-alert-bg: var(--app-surface-muted);
-            --bs-alert-border-color: var(--app-border);
-        }
-
-        [data-bs-theme="dark"] .alert-danger {
-            --bs-alert-color: #fecaca;
-            --bs-alert-bg: #2a1a1c;
-            --bs-alert-border-color: #6b2626;
-        }
-
-        [data-bs-theme="dark"] .alert-warning {
-            --bs-alert-color: #fde68a;
-            --bs-alert-bg: #2a2318;
-            --bs-alert-border-color: #6b5220;
-        }
-
-        [data-bs-theme="dark"] .alert-success {
-            --bs-alert-color: #bbf7d0;
-            --bs-alert-bg: #16251c;
-            --bs-alert-border-color: #2f5c3e;
-        }
-
-        [data-bs-theme="dark"] .alert-info {
-            --bs-alert-color: #bfdbfe;
-            --bs-alert-bg: #172233;
-            --bs-alert-border-color: #2c4a72;
-        }
-
-        .badge {
-            font-weight: 500;
-            padding: 0.36em 0.6em;
-            border-radius: 0.35rem;
-        }
-
-        .text-bg-primary {
-            background-color: var(--app-accent) !important;
-            color: #fff !important;
-        }
-
-        [data-bs-theme="dark"] .text-bg-primary {
-            color: #0b1220 !important;
-        }
-
-        .text-bg-success {
-            background-color: #dcfce7 !important;
-            color: #166534 !important;
-        }
-
-        .text-bg-warning {
-            background-color: #fef3c7 !important;
-            color: #854d0e !important;
-        }
-
-        .text-bg-secondary {
-            background-color: #e5e7eb !important;
-            color: #374151 !important;
-        }
-
-        [data-bs-theme="dark"] .text-bg-success {
-            background-color: #16321f !important;
-            color: #bbf7d0 !important;
-        }
-
-        [data-bs-theme="dark"] .text-bg-warning {
-            background-color: #3a2c10 !important;
-            color: #fde68a !important;
-        }
-
-        [data-bs-theme="dark"] .text-bg-secondary {
-            background-color: #374151 !important;
-            color: #e5e7eb !important;
-        }
-
-        /* --------------------------- Lists/links ---------------------------- */
-        .list-group-item {
-            background-color: var(--app-surface);
-            border-color: var(--app-border);
-            color: var(--app-text);
-        }
-
-        .border-warning-subtle {
-            border-color: var(--app-border) !important;
-        }
-
-        /* --------------------------- Small screens -------------------------- */
-        @media (max-width: 991.98px) {
-            .app-navbar .navbar-nav {
-                padding-top: 0.5rem;
-                gap: 0.15rem;
-            }
-
-            .app-navbar .nav-link {
-                padding: 0.55rem 0.7rem;
-            }
-
-            .theme-toggle {
-                width: 100%;
-                justify-content: center;
-                margin-top: 0.5rem;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .table-responsive {
-                font-size: 0.875rem;
-            }
-
-            .card-body {
-                padding: 1rem;
-            }
-
-            /* Keep the topic table usable: stack the inputs on phones. */
-            .table-responsive.stack-table {
-                overflow-x: visible;
-            }
-
-            .stack-table thead {
-                display: none;
-            }
-
-            .stack-table tbody tr {
-                display: block;
-                border: 1px solid var(--app-border);
-                border-radius: 0.5rem;
-                padding: 0.75rem;
-                margin-bottom: 0.75rem;
-                background: var(--app-surface-muted);
-            }
-
-            .stack-table tbody td {
-                display: block;
-                width: 100% !important;
-                border: 0;
-                padding: 0.25rem 0;
-            }
-
-            .stack-table tbody td[data-label]::before {
-                content: attr(data-label);
-                display: block;
-                font-size: 0.75rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.03em;
-                color: var(--app-text-muted);
-                margin-bottom: 0.15rem;
-            }
-        }
-
-        /* Respect reduced-motion users. */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-                animation: none !important;
-            }
-        }
-/* Professional academic SaaS design system */
-:root,[data-bs-theme="light"]{--app-bg:#f3f5f7;--app-surface:#fff;--app-surface-muted:#f7f9fb;--app-border:#dce3e9;--app-text:#202b36;--app-text-muted:#647382;--app-accent:#315b83;--app-accent-soft:#eaf0f5;--app-navbar-bg:#fff;--app-navbar-text:#202b36;--app-hover:#f1f4f7;--bs-primary:#315b83;--bs-primary-rgb:49,91,131;--bs-link-color:#315b83;--bs-link-hover-color:#244765}
-[data-bs-theme="dark"]{--app-bg:#141b23;--app-surface:#1d2732;--app-surface-muted:#222f3c;--app-border:#344251;--app-text:#edf1f5;--app-text-muted:#aebbc8;--app-accent:#8eabc5;--app-accent-soft:#293b4d;--app-navbar-bg:#19232e;--app-navbar-text:#edf1f5;--app-hover:#293744;--bs-primary:#8eabc5;--bs-primary-rgb:142,171,197;--bs-link-color:#a9c2d9;--bs-link-hover-color:#d0deea}
-html{scroll-behavior:smooth;scroll-padding-top:5rem}
-body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:.95rem;line-height:1.65;letter-spacing:-.005em;background:var(--app-bg);color:var(--app-text)}
-h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
-.app-navbar{min-height:70px;box-shadow:0 1px 0 rgba(18,35,50,.04)}.app-navbar .container{max-width:1320px}.app-navbar .navbar-brand{display:flex;align-items:center;gap:.7rem;font-size:1.04rem;font-weight:700;letter-spacing:-.035em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--app-border);border-radius:8px;color:var(--app-accent);font-size:.72rem;font-weight:800;letter-spacing:.04em}
-.app-navbar .nav-link{font-size:.875rem;padding:.48rem .72rem;border-radius:5px}.app-navbar .nav-link.active{background:var(--app-accent-soft);color:var(--app-accent)}
-.app-main{max-width:1320px;min-height:calc(100vh - 170px);padding-top:2.25rem!important;padding-bottom:4rem!important}.page-head{margin-bottom:1.75rem!important}.page-heading{font-size:clamp(1.65rem,3vw,2.2rem);line-height:1.15;margin-bottom:.55rem}.page-head p{max-width:760px;font-size:.98rem}.section-kicker{display:block;margin-bottom:.7rem;color:var(--app-accent);font-size:.72rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
-.card{border-radius:9px;box-shadow:0 2px 8px rgba(25,42,58,.035)}.card-header{padding:1rem 1.25rem;font-size:.94rem;font-weight:650}.card-body{padding:1.35rem}.feature-card{border-color:var(--app-border);transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.feature-card:hover{border-color:#b8c8d6;box-shadow:0 8px 22px rgba(25,42,58,.07);transform:translateY(-2px)}.feature-icon{border:1px solid var(--app-border);background:var(--app-surface-muted);color:var(--app-accent);border-radius:8px}
-.btn{min-height:38px;padding:.48rem .9rem;border-radius:5px;font-size:.88rem;font-weight:600;box-shadow:none!important}.btn-sm{min-height:32px;padding:.35rem .7rem}.btn-primary{--bs-btn-bg:#315b83;--bs-btn-border-color:#315b83;--bs-btn-hover-bg:#274b6d;--bs-btn-hover-border-color:#274b6d;--bs-btn-color:#fff;--bs-btn-hover-color:#fff}[data-bs-theme="dark"] .btn-primary{--bs-btn-bg:#8eabc5;--bs-btn-border-color:#8eabc5;--bs-btn-color:#17212b;--bs-btn-hover-bg:#a8bfd3;--bs-btn-hover-border-color:#a8bfd3;--bs-btn-hover-color:#17212b}.btn-outline-primary{--bs-btn-color:var(--app-accent);--bs-btn-border-color:var(--app-accent);--bs-btn-hover-bg:var(--app-accent);--bs-btn-hover-border-color:var(--app-accent);--bs-btn-hover-color:#fff}
-.form-control,.form-select{min-height:42px;border-radius:5px;font-size:.92rem}textarea.form-control{min-height:unset}.form-label{color:var(--app-text);font-size:.84rem;font-weight:650;margin-bottom:.4rem}.table{font-size:.875rem}.table thead th{font-size:.72rem;letter-spacing:.055em}.table td,.table th{padding:.78rem .85rem}.badge{font-size:.7rem;font-weight:650;letter-spacing:.01em}.stat-tile{border-radius:8px;padding:1rem 1.1rem}.stat-value{font-size:1.55rem;letter-spacing:-.04em}.alert{padding:.85rem 1rem}.theme-toggle{border-radius:5px}
-.app-footer{border-top:1px solid var(--app-border);background:var(--app-surface);color:var(--app-text-muted)}.app-footer a{color:var(--app-text-muted);text-decoration:none}.app-footer a:hover{color:var(--app-accent)}.app-footer-inner{max-width:1320px;margin:auto;padding:1.35rem 1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;font-size:.82rem}
-.landing-page{background:var(--app-bg)}.landing-page .container{max-width:1220px}.landing-hero{padding:5.3rem 0 4.5rem}.landing-hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(380px,.95fr);align-items:center;gap:4rem}.landing-eyebrow{display:inline-flex;align-items:center;gap:.55rem;color:var(--app-accent);font-size:.76rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}.landing-eyebrow:before{content:"";width:25px;height:1px;background:currentColor}.landing-title{max-width:690px;margin:1.2rem 0 1.1rem;font-size:clamp(2.65rem,5.2vw,4.45rem);line-height:1.04;letter-spacing:-.065em;font-weight:720}.landing-lead{max-width:610px;color:var(--app-text-muted);font-size:1.13rem;line-height:1.8}.landing-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.8rem}.landing-trustline{margin-top:1.4rem;color:var(--app-text-muted);font-size:.78rem}
-.product-preview{padding:1rem;border:1px solid var(--app-border);border-radius:12px;background:var(--app-surface);box-shadow:0 24px 60px rgba(24,43,61,.11)}.preview-topbar{display:flex;justify-content:space-between;align-items:center;padding:.35rem .35rem 1rem;border-bottom:1px solid var(--app-border);font-size:.75rem;color:var(--app-text-muted)}.preview-window{display:grid;grid-template-columns:110px 1fr;min-height:310px}.preview-sidebar{padding:1.1rem .7rem;border-right:1px solid var(--app-border)}.preview-sidebar span{display:block;padding:.48rem .55rem;margin-bottom:.35rem;border-radius:4px;color:var(--app-text-muted);font-size:.68rem}.preview-sidebar span:first-child{color:var(--app-accent);background:var(--app-accent-soft);font-weight:700}.preview-content{padding:1.2rem;min-width:0}.preview-title{font-size:1rem;font-weight:700;margin-bottom:.2rem}.preview-subtitle{font-size:.68rem;color:var(--app-text-muted)}.preview-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin:1rem 0}.preview-metric{padding:.7rem;border:1px solid var(--app-border);border-radius:6px}.preview-metric strong{display:block;font-size:1.05rem}.preview-metric small{color:var(--app-text-muted);font-size:.62rem}.preview-table{border:1px solid var(--app-border);border-radius:6px;overflow:hidden}.preview-row{display:grid;grid-template-columns:1.4fr .7fr .6fr;gap:.5rem;padding:.62rem .7rem;border-bottom:1px solid var(--app-border);font-size:.67rem}.preview-row:last-child{border-bottom:0}.preview-row.head{background:var(--app-surface-muted);color:var(--app-text-muted);font-size:.6rem;text-transform:uppercase;letter-spacing:.06em}.preview-note{margin-top:.8rem;font-size:.62rem;color:var(--app-text-muted)}
-.landing-section{padding:4.5rem 0;border-top:1px solid var(--app-border)}.landing-section.alt{background:var(--app-surface)}.section-heading{max-width:720px;margin-bottom:2.2rem}.section-heading h2{font-size:clamp(1.8rem,3.5vw,2.65rem);line-height:1.15;margin-bottom:.8rem}.section-heading p{color:var(--app-text-muted);max-width:650px;margin:0;font-size:1rem}.landing-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.landing-feature{height:100%;padding:1.45rem;border:1px solid var(--app-border);border-radius:8px;background:var(--app-surface)}.landing-feature .feature-index{color:var(--app-accent);font-size:.73rem;font-weight:750;letter-spacing:.08em}.landing-feature h3{margin:.9rem 0 .55rem;font-size:1.08rem}.landing-feature p{color:var(--app-text-muted);font-size:.9rem;margin:0}
-.workflow-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}.workflow-step{border-top:2px solid var(--app-accent);padding-top:1.1rem}.workflow-step strong{display:block;margin-bottom:.5rem;font-size:1rem}.workflow-step p{color:var(--app-text-muted);font-size:.9rem;margin:0}.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.role-panel{padding:1.7rem;border:1px solid var(--app-border);border-radius:8px;background:var(--app-surface)}.role-panel h3{font-size:1.2rem;margin:.65rem 0}.role-panel p,.role-panel li{color:var(--app-text-muted);font-size:.9rem}.role-panel ul{padding-left:1.15rem;margin-bottom:0}.landing-cta{padding:3rem;background:var(--app-surface);border:1px solid var(--app-border);border-radius:9px;display:flex;align-items:center;justify-content:space-between;gap:2rem}.landing-cta h2{font-size:1.7rem;margin-bottom:.5rem}.landing-cta p{margin:0;color:var(--app-text-muted)}
-.auth-shell{max-width:1050px;margin:1.5rem auto;display:grid;grid-template-columns:.9fr 1.1fr;border:1px solid var(--app-border);border-radius:10px;overflow:hidden;background:var(--app-surface);box-shadow:0 12px 38px rgba(25,42,58,.06)}.auth-aside{padding:2.5rem;background:var(--app-surface-muted);border-right:1px solid var(--app-border);display:flex;flex-direction:column;justify-content:space-between}.auth-aside h2{font-size:1.8rem;line-height:1.2;margin:1rem 0}.auth-aside p{color:var(--app-text-muted);font-size:.92rem}.auth-aside-mark{font-size:.75rem;color:var(--app-accent);font-weight:750;letter-spacing:.12em;text-transform:uppercase}.auth-main{padding:2.6rem}.auth-main .card{border:0;box-shadow:none}.auth-main .card-body{padding:0!important}.auth-main .page-head{text-align:left!important}
-@media(max-width:991.98px){.landing-hero{padding:3.5rem 0}.landing-hero-grid{grid-template-columns:1fr;gap:2.2rem}.product-preview{max-width:650px}.landing-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.app-main{padding-top:1.5rem!important}}
-@media(max-width:767.98px){.landing-title{font-size:2.55rem}.landing-section{padding:3.2rem 0}.landing-feature-grid,.workflow-grid,.role-grid{grid-template-columns:1fr}.landing-cta{padding:1.5rem;align-items:flex-start;flex-direction:column}.auth-shell{grid-template-columns:1fr;margin:.5rem auto}.auth-aside{padding:1.4rem;border-right:0;border-bottom:1px solid var(--app-border)}.auth-aside h2{font-size:1.3rem;margin:.5rem 0}.auth-aside p{margin-bottom:0}.auth-main{padding:1.5rem}}
-@media(max-width:575.98px){.preview-window{grid-template-columns:1fr}.preview-sidebar{display:none}.landing-title{font-size:2.2rem}.landing-trustline{line-height:1.6}}
-
-
-/* Consistent hierarchy and data-dense workspace pages */
-.app-main .page-head h1,.app-main > .d-flex h1{font-size:clamp(1.55rem,2.7vw,2.05rem);font-weight:700;letter-spacing:-.045em}
-.app-main .page-head p,.app-main > .d-flex .text-secondary{line-height:1.65}
-.app-main .row.g-4>.col-12>.card,.app-main .row.g-3>.col-12>.card{height:100%}
-.app-main .table-responsive{border-radius:7px}
-.app-main .table-responsive .table{margin-bottom:0}
-.app-main .list-group-item{padding:.9rem 1rem}
-.app-main .list-group-item.active{background:var(--app-accent-soft);border-color:var(--app-border);color:var(--app-text)}
-.app-main .list-group-item.active small{color:var(--app-text-muted)!important}
-.app-main .form-text{color:var(--app-text-muted);font-size:.78rem}
-.app-main .card .card-header{display:flex;align-items:center;min-height:54px}
-.student-picker-results{background:var(--app-surface)!important;border-color:var(--app-border)!important;box-shadow:0 8px 20px rgba(20,35,50,.1)}
-.student-picker-results .list-group-item,.student-picker-results .student-picker-empty{background:var(--app-surface)!important;color:var(--app-text)!important;border-color:var(--app-border)!important}
-.student-picker-results .list-group-item:hover,.student-picker-results .list-group-item:focus{background:var(--app-hover)!important;color:var(--app-text)!important}
-@media(max-width:767.98px){.app-main{padding-left:1rem!important;padding-right:1rem!important}.app-footer-inner{padding-left:1rem;padding-right:1rem}.app-main .table-responsive{border:1px solid var(--app-border)}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.feature-card{transition:none}}
-
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261121-neon-campus">
+    {% block page_head %}{% endblock %}
 </head>
 
 <body>
     {% if config.get("LOCAL_PREVIEW_MODE") %}<div class="local-preview-ribbon">LOCAL PREVIEW <span>Demo data only · No cloud services connected</span></div>{% endif %}
-
     <nav class="navbar navbar-expand-lg app-navbar sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.home') }}">
                 <span class="brand-mark" aria-hidden="true">SA</span><span>Smart Academic Companion</span>
             </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
-                aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="mainNavigation">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     {% set endpoint = request.endpoint %}
                     {% if not current_user %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'home' %}active{% endif %}" {% if endpoint=='home'
-                            %}aria-current="page" {% endif %} href="{{ url_for('main.home') }}">Home</a>
-                    </li>
-                    <li class="nav-item ms-lg-2">
-                        <a class="btn btn-primary btn-sm" href="{{ url_for('auth.login') }}">Sign in</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'home' %}active{% endif %}" {% if endpoint=='home' %}aria-current="page"{% endif %} href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="nav-item ms-lg-2"><a class="btn btn-primary btn-sm" href="{{ url_for('auth.login') }}">Sign in</a></li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'dashboard' %}active{% endif %}" {% if
-                            endpoint=='dashboard' %}aria-current="page" {% endif %}
-                            href="{{ url_for('main.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if
-                            endpoint=='attendance' %}aria-current="page" {% endif %}
-                            href="{{ url_for('academic.attendance') }}">Attendance</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if
-                            endpoint=='classrooms' %}aria-current="page" {% endif %}
-                            href="{{ url_for('academic.classrooms') }}">Classrooms</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if
-                            endpoint=='study_planner_page' %}aria-current="page" {% endif %}
-                            href="{{ url_for('academic.study_planner_page') }}">Study Planner</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'dashboard' %}active{% endif %}" {% if endpoint=='dashboard' %}aria-current="page"{% endif %} href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if endpoint=='attendance' %}aria-current="page"{% endif %} href="{{ url_for('academic.attendance') }}">Attendance</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if endpoint=='classrooms' %}aria-current="page"{% endif %} href="{{ url_for('academic.classrooms') }}">Classrooms</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if endpoint=='study_planner_page' %}aria-current="page"{% endif %} href="{{ url_for('academic.study_planner_page') }}">Study Planner</a></li>
                     {% if current_user.is_faculty %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'faculty_dashboard' %}active{% endif %}" {% if
-                            endpoint=='faculty_dashboard' %}aria-current="page" {% endif %}
-                            href="{{ url_for('faculty.dashboard') }}">Faculty Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if
-                            endpoint=='faculty_manage' %}aria-current="page" {% endif %}
-                            href="{{ url_for('faculty.manage') }}">Manage Records</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if endpoint == 'faculty_classes' %}active{% endif %}" {% if
-                            endpoint=='faculty_classes' %}aria-current="page" {% endif %}
-                            href="{{ url_for('faculty.classes') }}">Manage Classes</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_dashboard' %}active{% endif %}" {% if endpoint=='faculty_dashboard' %}aria-current="page"{% endif %} href="{{ url_for('faculty.dashboard') }}">Faculty Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if endpoint=='faculty_manage' %}aria-current="page"{% endif %} href="{{ url_for('faculty.manage') }}">Manage Records</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_classes' %}active{% endif %}" {% if endpoint=='faculty_classes' %}aria-current="page"{% endif %} href="{{ url_for('faculty.classes') }}">Manage Classes</a></li>
                     {% endif %}
                     <li class="nav-item ms-lg-2 d-flex align-items-center gap-2">
-                        <span class="text-secondary small d-none d-xl-inline" title="{{ current_user.email }}">
-                            {{ current_user.display_name }}
-                            <span class="badge text-bg-secondary ms-1">{{ current_user.role }}</span>
-                        </span>
+                        <span class="text-secondary small d-none d-xl-inline" title="{{ current_user.email }}">{{ current_user.display_name }} <span class="badge text-bg-secondary ms-1">{{ current_user.role }}</span></span>
                         <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button class="btn btn-outline-secondary btn-sm" type="submit">Sign out</button>
@@ -698,15 +88,10 @@ h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
                     </li>
                     {% endif %}
                     <li class="nav-item ms-lg-2">
-                        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode"
-                            aria-pressed="false" title="Switch to dark mode">
-                            <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">
+                            <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="12" cy="12" r="4"></circle>
-                                <path
-                                    d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4">
-                                </path>
+                                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l-1.4 1.4M17.7 6.3l1.4-1.4"></path>
                             </svg>
                             <span id="theme-label">Light</span>
                         </button>
@@ -715,7 +100,6 @@ h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
             </div>
         </div>
     </nav>
-
     <main class="container app-main py-4 py-lg-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -725,10 +109,8 @@ h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
         </div>
         {% endfor %}
         {% endwith %}
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
-
     <footer class="app-footer"><div class="app-footer-inner">
         <span>© 2026 Smart Academic Companion</span>
         <span>Academic tools for clearer planning and better decisions.</span>
@@ -736,51 +118,33 @@ h1,h2,h3,h4,h5,h6{color:var(--app-text);letter-spacing:-.035em;font-weight:650}
     </div></footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        /*
-         * Light / dark toggle, shared by every page that extends base.html.
-         * The saved value is read by the inline script in <head>; this block only
-         * handles the button state and writes the user's choice to localStorage.
-         */
         (function () {
             var THEME_KEY = "sac-theme";
             var root = document.documentElement;
             var button = document.getElementById("theme-toggle");
             var label = document.getElementById("theme-label");
             var icon = document.getElementById("theme-icon");
-
-            var SUN = '<circle cx="12" cy="12" r="4"></circle>' +
-                '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4' +
-                'M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>';
+            var SUN = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l-1.4 1.4M17.7 6.3l1.4-1.4"></path>';
             var MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>';
-
-            if (!button) { return; }
-
+            if (!button) return;
             function apply(theme) {
                 var dark = theme === "dark";
                 root.setAttribute("data-bs-theme", dark ? "dark" : "light");
                 root.setAttribute("data-theme", dark ? "dark" : "light");
-                if (icon) { icon.innerHTML = dark ? MOON : SUN; }
-                if (label) { label.textContent = dark ? "Dark" : "Light"; }
+                if (icon) icon.innerHTML = dark ? MOON : SUN;
+                if (label) label.textContent = dark ? "Dark" : "Light";
                 button.setAttribute("aria-pressed", dark ? "true" : "false");
                 var next = dark ? "light" : "dark";
                 button.setAttribute("aria-label", "Switch to " + next + " mode");
                 button.setAttribute("title", "Switch to " + next + " mode");
             }
-
-            // Sync the button with whatever the head script already applied.
             apply(root.getAttribute("data-bs-theme") === "dark" ? "dark" : "light");
-
             button.addEventListener("click", function () {
                 var next = root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
                 apply(next);
-                try {
-                    window.localStorage.setItem(THEME_KEY, next);
-                } catch (e) {
-                    /* Storage unavailable: the choice lasts for this page only. */
-                }
+                try { window.localStorage.setItem(THEME_KEY, next); } catch (e) { /* Keep choice for current view. */ }
             });
         })();
     </script>
 </body>
-
 </html>

@@ -2,9 +2,10 @@
 {% block title %}Request rejected · Smart Academic Companion{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="card">
+    <div class="col-12 col-lg-7">
+        <div class="card empty-state">
             <div class="card-body p-4">
+                <span class="section-kicker">400 · Request check</span>
                 <h1 class="h3 mb-2">Request rejected</h1>
                 <p class="text-secondary mb-3">
                     {{ message or "The form could not be verified. Reload the page and try again." }}

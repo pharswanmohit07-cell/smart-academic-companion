@@ -1216,3 +1216,19 @@ html, body { max-width: 100%; overflow-x: clip; }
   .showcase-tool { transition:none; }
   .showcase-tool:hover { transform:none; }
 }
+
+/* Keep authenticated dashboards on a centered, readable content canvas. */
+.dashboard-shell {
+  width: min(100%, 1480px);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3.2vw, 2.75rem);
+  box-sizing: border-box;
+}
+.dashboard-shell > * { min-width: 0; }
+.dashboard-shell .dashboard-welcome { margin-top: .15rem; }
+.dashboard-shell .dashboard-stat-grid { gap: clamp(.7rem, 1.25vw, 1.1rem); }
+.dashboard-shell .dashboard-content-grid { gap: clamp(.85rem, 1.5vw, 1.25rem); }
+.dashboard-shell .dashboard-data-card { min-width: 0; }
+@media (max-width: 767.98px) {
+  .dashboard-shell { padding-inline: 0; }
+}

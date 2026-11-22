@@ -268,12 +268,24 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-apricot-navy-v2", body)
+        self.assertIn(b"local-preview.css?v=20261122-dashboard-shell-v1", body)
         for selector in (b"--app-accent: #F29A52", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):
                 self.assertIn(selector, css)
+
+    def test_student_dashboard_uses_a_centered_responsive_shell(self):
+        source, _, _ = self.app.jinja_env.loader.get_source(
+            self.app.jinja_env, "student_dashboard.html"
+        )
+        self.assertIn('<div class="dashboard-shell">', source)
+        self.assertTrue(source.rstrip().endswith("{% endblock %}"))
+        css = self.stylesheet().decode("utf-8")
+        self.assertIn(".dashboard-shell {", css)
+        self.assertIn("width: min(100%, 1480px)", css)
+        self.assertIn("padding-inline: clamp(1rem, 3.2vw, 2.75rem)", css)
+        self.assertIn("@media (max-width: 767.98px)", css)
 
     def test_theme_script_persists_selected_preference(self):
         body = self.page("/attendance")

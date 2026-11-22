@@ -109,7 +109,9 @@
         </div>
         {% endfor %}
         {% endwith %}
+        {% if current_user %}<div class="app-content-shell">{% endif %}
         {% block content %}{% endblock %}
+        {% if current_user %}</div>{% endif %}
     </main>
     <footer class="app-footer"><div class="app-footer-inner">
         <span>© 2026 Smart Academic Companion</span>

@@ -539,179 +539,67 @@ def _classes_page_data(class_ids, selected_class_id):
 
 
 # ------------------------------------------------------------------ admin
-@bp.route("/admin")
-@auth_module.admin_required
-def admin_dashboard():
-    """Combined Admin landing page backed only by current database records."""
-    try:
-        with closing_connection() as connection:
-            table = profiles_table(connection)
-            role_counts = {row["role"]: row["total"] for row in connection.execute(
-                f"SELECT role, COUNT(*) AS total FROM {table} GROUP BY role"
-            ).fetchall()}
-            class_count = connection.execute(
-                "SELECT COUNT(*) AS total FROM faculty_classes"
-            ).fetchone()["total"]
-    except DatabaseError:
-        log.exception("admin dashboard summary could not be loaded")
-        flash("Some workspace totals are unavailable right now.", "warning")
-        role_counts = {}
-        class_count = None
-    return render_template(
-        "admin/dashboard.html",
-        student_count=role_counts.get("student"),
-        faculty_count=role_counts.get("faculty"),
-        admin_count=role_counts.get("admin"),
-        class_count=class_count,
-    )
-
-
 @bp.route("/admin/users")
 @auth_module.admin_required
 def admin_users():
-    """Searchable Admin-only directory of trusted account profiles."""
-    query = (request.args.get("q") or "").strip()[:120]
-    selected_role = (request.args.get("role") or "all").strip().lower()
-    if selected_role not in ("all", "student", "faculty", "admin"):
-        selected_role = "all"
-
-    directory_error = False
-    try:
-        with closing_connection() as connection:
-            table = profiles_table(connection)
-            conditions = []
-            params = []
-            if query:
-                conditions.append(
-                    "(lower(COALESCE(email, '')) LIKE lower(?) "
-                    "OR lower(COALESCE(display_name, '')) LIKE lower(?))"
-                )
-                pattern = f"%{query}%"
-                params.extend((pattern, pattern))
-            if selected_role != "all":
-                conditions.append("role = ?")
-                params.append(selected_role)
-            where = " WHERE " + " AND ".join(conditions) if conditions else ""
-            profiles = [dict(row) for row in connection.execute(
-                f"""SELECT user_id, email, display_name, role
-                      FROM {table}{where} ORDER BY role, email""",
-                tuple(params),
-            ).fetchall()]
-
-    except DatabaseError:
-        log.exception("admin user directory could not be loaded")
-        flash("The account directory could not be loaded. Please try again.", "danger")
-        profiles = []
-        directory_error = True
-
-    return render_template(
-        "admin/users.html",
-        profiles=profiles,
-        search_query=query,
-        selected_role=selected_role,
-        directory_error=directory_error,
-    )
+    """Admin-only overview of profiles (no credentials, no secrets)."""
+    with closing_connection() as connection:
+        table = profiles_table(connection)
+        profiles = [dict(row) for row in connection.execute(
+            f"""SELECT user_id, email, display_name, role
+                  FROM {table} ORDER BY role, email"""
+        ).fetchall()]
+        teachers = [dict(row) for row in connection.execute(
+            "SELECT teacher_id, name, email FROM teachers ORDER BY name"
+        ).fetchall()]
+    return render_template("admin/users.html", profiles=profiles, teachers=teachers)
 
 
 @bp.route("/admin/set-role", methods=["POST"])
 @auth_module.admin_required
 def admin_set_role():
-    """Change a non-admin account between Student and Faculty atomically."""
+    """Change a profile's role. Admin only, and never downgrades the last admin."""
     account = _account()
     email = (request.form.get("email") or "").strip().lower()
     role = (request.form.get("role") or "").strip().lower()
-    search_query = (request.form.get("q") or "").strip()[:120]
-    selected_role = (request.form.get("filter_role") or "all").strip().lower()
-    if selected_role not in ("all", "student", "faculty", "admin"):
-        selected_role = "all"
-    redirect_url = url_for(
-        "faculty.admin_users", q=search_query, role=selected_role
-    )
-
     if role not in ("student", "faculty"):
-        flash("Choose Student or Faculty as the new role.", "danger")
-        return redirect(redirect_url)
-    if not email or email == (account.email or "").lower():
+        flash("Admins can only assign student or faculty; use the CLI for admin.", "danger")
+        return redirect(url_for("faculty.admin_users"))
+    if email == (account.email or "").lower():
         flash("You cannot change your own role.", "danger")
-        return redirect(redirect_url)
+        return redirect(url_for("faculty.admin_users"))
 
-    connection = None
     try:
         with closing_connection() as connection:
             table = profiles_table(connection)
             profile = connection.execute(
-                f"SELECT user_id, email, role, display_name FROM {table} "
-                "WHERE lower(email) = lower(?)",
+                f"SELECT user_id FROM {table} WHERE lower(email) = lower(?)",
                 (email,),
             ).fetchone()
             if profile is None:
                 flash("No profile found for that email.", "danger")
-                return redirect(redirect_url)
-            if str(profile["user_id"]) == str(account.user_id):
-                flash("You cannot change your own role.", "danger")
-                return redirect(redirect_url)
-            current_role = (profile["role"] or "").strip().lower()
-            if current_role == "admin":
-                flash("Administrator accounts are protected from role changes.", "danger")
-                return redirect(redirect_url)
-            if current_role not in ("student", "faculty"):
-                flash("That account has an unsupported role and was not changed.", "danger")
-                return redirect(redirect_url)
-            if current_role == role:
-                flash(f"{email} already has the {role} role.", "info")
-                return redirect(redirect_url)
-
+                return redirect(url_for("faculty.admin_users"))
+            connection.execute(
+                f"UPDATE {table} SET role = ? WHERE user_id = ?",
+                (role, profile["user_id"]),
+            )
             if role == "faculty":
-                existing = connection.execute(
-                    "SELECT teacher_id FROM teachers WHERE auth_user_id = ?",
-                    (profile["user_id"],),
-                ).fetchone()
-                if existing is None:
-                    unlinked = connection.execute(
-                        "SELECT teacher_id FROM teachers "
-                        "WHERE auth_user_id IS NULL AND lower(email) = lower(?)",
-                        (profile["email"],),
-                    ).fetchone()
-                    if unlinked is not None:
-                        connection.execute(
-                            "UPDATE teachers SET auth_user_id = ? WHERE teacher_id = ?",
-                            (profile["user_id"], unlinked["teacher_id"]),
-                        )
-                    else:
-                        connection.execute(
-                            """INSERT INTO teachers (auth_user_id, name, email)
-                               VALUES (?, ?, ?)
-                               ON CONFLICT (auth_user_id) DO NOTHING""",
-                            (profile["user_id"],
-                             profile["display_name"] or profile["email"],
-                             profile["email"]),
-                        )
                 connection.execute(
-                    f"UPDATE {table} SET role = ? WHERE user_id = ?",
-                    (role, profile["user_id"]),
+                    f"""INSERT INTO teachers (auth_user_id, name, email)
+                        SELECT ?, COALESCE(display_name, email), email
+                          FROM {table} WHERE user_id = ?
+                        ON CONFLICT (auth_user_id) DO NOTHING""",
+                    (profile["user_id"], profile["user_id"]),
                 )
             else:
-                connection.execute(
-                    f"UPDATE {table} SET role = ? WHERE user_id = ?",
-                    (role, profile["user_id"]),
-                )
                 connection.execute(
                     "UPDATE teachers SET auth_user_id = NULL WHERE auth_user_id = ?",
                     (profile["user_id"],),
                 )
             connection.commit()
         log.info("admin %s set role of %s to %s", account.user_id, email, role)
-        flash(
-            f"{email} is now {role}. The new dashboard access takes effect "
-            "the next time this account signs in.",
-            "success",
-        )
+        flash(f"{email} is now {role}.", "success")
     except DatabaseError:
         log.exception("role change failed")
-        if connection is not None:
-            try:
-                connection.rollback()
-            except Exception:  # noqa: BLE001 - connection may already be closed
-                pass
-        flash("Could not change that role. The previous role has been kept.", "danger")
-    return redirect(redirect_url)
+        flash("Could not change that role.", "danger")
+    return redirect(url_for("faculty.admin_users"))

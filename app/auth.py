@@ -55,8 +55,6 @@ def dashboard_endpoint(account):
     """Where an account belongs after sign-in (trusted role decides)."""
     if account is None:
         return "auth.login"
-    if account.is_admin:
-        return "faculty.admin_dashboard"
     if account.is_faculty:
         return "faculty.dashboard"
     if account.student_id is not None:

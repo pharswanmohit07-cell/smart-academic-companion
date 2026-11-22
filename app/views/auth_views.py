@@ -347,7 +347,7 @@ def demo_login():
         return ("Local preview mode is disabled.", 404)
 
     role = (request.form.get("demo_role") or "student").strip().lower()
-    if role not in {"student", "faculty", "admin"}:
+    if role not in {"student", "faculty"}:
         role = "student"
 
     from contextlib import closing
@@ -404,14 +404,7 @@ def demo_login():
                 )
         connection.commit()
 
-    if role == "admin":
-        account = Account(
-            user_id="local-preview-admin",
-            email="admin.preview@example.local",
-            display_name="Demo Administrator",
-            role="admin",
-        )
-    elif role == "faculty":
+    if role == "faculty":
         account = Account(
             user_id="local-preview-faculty",
             email=teacher["email"] or "faculty.preview@example.local",

@@ -57,7 +57,7 @@
                         <td class="text-end">
                             {% if profile.user_id|string != current_user.user_id|string and profile.role != 'admin' %}
                             <form method="post" action="{{ url_for('faculty.admin_set_role') }}"
-                                  class="admin-role-form" onsubmit="return confirm('Change {{ profile.email|e }} from {{ profile.role|e }} to ' + this.elements.role.options[this.elements.role.selectedIndex].text + '? The account must sign in again for the new access to take effect.');">
+                                  class="admin-role-form" onsubmit="return confirm('Change this account role? The account must sign in again for the new access to take effect.');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="email" value="{{ profile.email }}">
                                 <input type="hidden" name="q" value="{{ search_query }}">

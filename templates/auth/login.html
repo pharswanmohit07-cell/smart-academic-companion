@@ -34,7 +34,8 @@
 
 <div class="d-flex justify-content-between mt-3">
   <a href="{{ url_for('auth.forgot_password') }}" class="small">Forgot your password?</a>
-  <a href="{{ url_for('auth.signup') }}" class="small">Create an account</a>
+  <a href="{{ url_for('auth.login', next='/faculty/dashboard') }}" class="small">Faculty access</a>
+    <a href="{{ url_for('auth.signup') }}" class="small">Create an account</a>
 </div>
 
 {% if local_preview_enabled %}

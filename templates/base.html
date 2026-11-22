@@ -83,9 +83,6 @@
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty.manage' %}active{% endif %}" {% if endpoint=='faculty.manage' %}aria-current="page"{% endif %} href="{{ url_for('faculty.manage') }}">Manage Records</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty.classes' %}active{% endif %}" {% if endpoint=='faculty.classes' %}aria-current="page"{% endif %} href="{{ url_for('faculty.classes') }}">Manage Classes</a></li>
                     {% endif %}
-                    {% if current_user.is_admin %}
-                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty.admin_users' %}active{% endif %}" {% if endpoint=='faculty.admin_users' %}aria-current="page"{% endif %} href="{{ url_for('faculty.admin_users') }}">Users</a></li>
-                    {% endif %}
                     <li class="nav-item ms-lg-2 d-flex align-items-center gap-2">
                         <span class="text-secondary small d-none d-xl-inline" title="{{ current_user.email }}">{{ current_user.display_name }} <span class="badge text-bg-secondary ms-1">{{ current_user.role }}</span></span>
                         <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">

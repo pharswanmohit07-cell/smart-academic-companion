@@ -158,9 +158,10 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"--app-bg: #0b1220", base)
         self.assertIn(b"--app-bg: #FFF1DF", base)
 
-    def test_dark_theme_uses_the_requested_palette(self):
+    def test_dark_theme_uses_the_original_navy_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#0b0a09", "#14110f", "#211a16", "#fff3e6", "#d6c1ae", "#3a2920", "#f4a261", "#d96b27"):
+        for colour in ("#0b1220", "#121d30", "#192840", "#30415d",
+                       "#f4f7ff", "#c0cadb", "#8bb4ff", "#67d5df", "#c2a7ff"):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):

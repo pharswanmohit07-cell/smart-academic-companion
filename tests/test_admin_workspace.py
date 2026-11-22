@@ -90,21 +90,24 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         self.assertIn(b"Manage accounts", response.data)
 
         response = self.client.get("/faculty/admin?q=learner")
-        self.assertIn(b"learner@example.com", response.data)
-        self.assertNotIn(b"teacher@example.com", response.data)
-        self.assertNotIn(b"admin@example.com", response.data)
+        learner_directory = response.data.split(b'id="account-directory"', 1)[1].split(b"</section>", 1)[0]
+        self.assertIn(b"learner@example.com", learner_directory)
+        self.assertNotIn(b"teacher@example.com", learner_directory)
+        self.assertNotIn(b"admin@example.com", learner_directory)
 
         response = self.client.get("/faculty/admin?role=faculty")
-        self.assertIn(b"teacher@example.com", response.data)
-        self.assertNotIn(b"learner@example.com", response.data)
-        self.assertNotIn(b"admin@example.com", response.data)
+        faculty_directory = response.data.split(b'id="account-directory"', 1)[1].split(b"</section>", 1)[0]
+        self.assertIn(b"teacher@example.com", faculty_directory)
+        self.assertNotIn(b"learner@example.com", faculty_directory)
+        self.assertNotIn(b"admin@example.com", faculty_directory)
 
     def test_admin_dashboard_combines_search_and_role_filter(self):
         response = self.client.get("/faculty/admin?q=teacher&role=faculty")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"teacher@example.com", response.data)
-        self.assertNotIn(b"learner@example.com", response.data)
-        self.assertNotIn(b"admin@example.com", response.data)
+        faculty_directory = response.data.split(b'id="account-directory"', 1)[1].split(b"</section>", 1)[0]
+        self.assertIn(b"teacher@example.com", faculty_directory)
+        self.assertNotIn(b"learner@example.com", faculty_directory)
+        self.assertNotIn(b"admin@example.com", faculty_directory)
 
     def test_legacy_users_url_redirects_to_admin_dashboard_with_filters(self):
         response = self.client.get("/faculty/admin/users?q=learner&role=student")

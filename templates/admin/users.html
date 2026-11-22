@@ -84,21 +84,4 @@
     {% endif %}
 </section>
 
-<section class="card tool-faculty admin-directory mt-4">
-    <div class="card-header"><div><span class="form-step">02 · Teaching team</span><strong>Faculty directory</strong></div><span class="directory-count">{{ teachers|length }} faculty records</span></div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-striped mb-0 align-middle">
-                <thead><tr><th>Name</th><th>Email</th></tr></thead>
-                <tbody>
-                {% for teacher in teachers %}
-                    <tr><td>{{ teacher.name }}</td><td>{{ teacher.email or '—' }}</td></tr>
-                {% else %}
-                    <tr><td colspan="2" class="empty-state text-secondary py-4">No faculty records yet.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
 {% endblock %}

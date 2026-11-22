@@ -145,6 +145,19 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         for colour in ("#fff1df", "#f8e9d8", "#f29a52", "#34263f", "#66556a", "#ffd1a3"):
             self.assertIn(colour, css.lower())
 
+    def test_apricot_light_and_original_navy_dark_themes_are_separate(self):
+        css = self.stylesheet().decode("utf-8")
+        base = self.client.get("/").data
+        for token in ("--app-bg: #FFF1DF", "--app-surface: #F8E9D8",
+                      "--app-accent: #F29A52"):
+            self.assertIn(token, css)
+        for token in ("--app-bg: #0b1220", "--app-surface: #121d30",
+                      "--app-accent: #8bb4ff", "--app-cyan: #67d5df",
+                      "--app-violet: #c2a7ff"):
+            self.assertIn(token, css)
+        self.assertIn(b"--app-bg: #0b1220", base)
+        self.assertIn(b"--app-bg: #FFF1DF", base)
+
     def test_dark_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
         for colour in ("#0b0a09", "#14110f", "#211a16", "#fff3e6", "#d6c1ae", "#3a2920", "#f4a261", "#d96b27"):

@@ -48,8 +48,9 @@ class TestAdminWorkspaceRouting(AppTestBase, unittest.TestCase):
         admin_page = self.client.get("/faculty/admin").data
         self.assertIn(b'href="/faculty/admin">Dashboard</a>', admin_page)
         self.assertNotIn(b">Admin Overview</a>", admin_page)
-        for label in (b"Faculty Dashboard", b"Manage Records", b"Manage Classes", b"Users"):
+        for label in (b"Faculty Dashboard", b"Manage Records", b"Manage Classes"):
             self.assertIn(label, admin_page)
+        self.assertNotIn(b">Users</a>", admin_page)
 
         self.client = self.app.test_client()
         self.as_user("faculty@example.com")
@@ -77,6 +78,32 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         )
         self.as_user("admin@example.com")
 
+    def test_admin_dashboard_contains_all_roles_and_owns_account_search(self):
+        response = self.client.get("/faculty/admin")
+        self.assertEqual(response.status_code, 200)
+        for email in (
+            b"admin@example.com",
+            b"learner@example.com",
+            b"teacher@example.com",
+        ):
+            self.assertIn(email, response.data)
+        self.assertIn(b"Manage accounts", response.data)
+
+        response = self.client.get("/faculty/admin?q=learner")
+        self.assertIn(b"learner@example.com", response.data)
+        self.assertNotIn(b"teacher@example.com", response.data)
+        self.assertNotIn(b"admin@example.com", response.data)
+
+        response = self.client.get("/faculty/admin?role=faculty")
+        self.assertIn(b"teacher@example.com", response.data)
+        self.assertNotIn(b"learner@example.com", response.data)
+        self.assertNotIn(b"admin@example.com", response.data)
+
+    def test_legacy_users_url_redirects_to_admin_dashboard_with_filters(self):
+        response = self.client.get("/faculty/admin/users?q=learner&role=student")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/faculty/admin?q=learner&role=student")
+
     def test_users_directory_searches_name_and_email(self):
         response = self.client.get("/faculty/admin/users?q=learner")
         self.assertEqual(response.status_code, 200)
@@ -99,10 +126,11 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         response = self.submit(
             "/faculty/admin/set-role",
             {"email": "learner@example.com", "role": "faculty"},
-            page="/faculty/admin/users",
+            page="/faculty/admin",
             visible=True,
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request.path, "/faculty/admin")
         with self.connect() as connection:
             profile = connection.execute(
                 "SELECT role FROM user_profiles WHERE user_id = ?", (self.student_id,)
@@ -116,10 +144,11 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         response = self.submit(
             "/faculty/admin/set-role",
             {"email": "learner@example.com", "role": "student"},
-            page="/faculty/admin/users",
+            page="/faculty/admin",
             visible=True,
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request.path, "/faculty/admin")
         with self.connect() as connection:
             profile = connection.execute(
                 "SELECT role FROM user_profiles WHERE user_id = ?", (self.student_id,)

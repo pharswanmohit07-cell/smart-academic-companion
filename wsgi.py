@@ -5,12 +5,13 @@ Production and development entry point.
     Render:       gunicorn -c gunicorn.conf.py wsgi:app
 """
 
+import hmac
 import logging
 import os
 import sys
 from logging.config import dictConfig
 
-from flask import Flask, render_template
+from flask import Flask, Response, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import settings
@@ -110,6 +111,28 @@ def create_app():
         return f"{minutes // 60:02d}:{minutes % 60:02d}" if minutes is not None else value
 
     auth.init_app(app)
+
+    # Optional access gate for hosted review instances. Production has no
+    # preview credentials, so this middleware is inactive there.
+    preview_user = os.environ.get("PREVIEW_BASIC_AUTH_USER", "")
+    preview_password = os.environ.get("PREVIEW_BASIC_AUTH_PASSWORD", "")
+    if preview_user and preview_password:
+        @app.before_request
+        def require_preview_access():
+            supplied = request.authorization
+            valid_user = supplied and hmac.compare_digest(
+                supplied.username or "", preview_user
+            )
+            valid_password = supplied and hmac.compare_digest(
+                supplied.password or "", preview_password
+            )
+            if not (valid_user and valid_password):
+                return Response(
+                    "This review environment requires preview credentials.",
+                    401,
+                    {"WWW-Authenticate": 'Basic realm="Smart Academic Companion preview"'},
+                )
+
     app.register_blueprint(main_views.bp)
     app.register_blueprint(auth_views.bp)
     app.register_blueprint(academic_views.bp)

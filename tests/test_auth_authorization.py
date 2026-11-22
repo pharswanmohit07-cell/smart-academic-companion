@@ -600,7 +600,9 @@ class TestAdminOnly(AppTestBase, unittest.TestCase):
 
     def test_admin_can_open_admin_page(self):
         self.as_user("admin@example.com")
-        self.assertEqual(self.client.get("/faculty/admin/users").status_code, 200)
+        users_redirect = self.client.get("/faculty/admin/users")
+        self.assertEqual(users_redirect.status_code, 302)
+        self.assertEqual(users_redirect.headers["Location"], "/faculty/admin")
 
     def test_student_is_denied_admin_page(self):
         self.as_user("student@example.com")

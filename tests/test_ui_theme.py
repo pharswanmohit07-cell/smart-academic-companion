@@ -138,7 +138,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         self.assertGreater(len(response.data), 1000)
         self.assertEqual(response.mimetype, "text/css")
         self.assertIn(b"Smart Academic Companion", response.data)
-        self.assertIn(b"--app-accent: #14243a", response.data)
+        self.assertIn(b"--app-accent: #f29a52", response.data)
 
     def test_light_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
@@ -147,9 +147,9 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_apricot_light_and_original_navy_dark_themes_are_separate(self):
         css = self.stylesheet().decode("utf-8")
-        base = self.client.get("/").data
-        for token in ("--app-bg: #FFF1DF", "--app-surface: #F8E9D8",
-                      "--app-accent: #F29A52"):
+        base = self.landing_page()
+        for token in ("--app-bg: #fff1df", "--app-surface: #f8e9d8",
+                      "--app-accent: #f29a52"):
             self.assertIn(token, css)
         for token in ("--app-bg: #0b1220", "--app-surface: #121d30",
                       "--app-accent: #8bb4ff", "--app-cyan: #67d5df",
@@ -166,8 +166,8 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_text_contrast_and_focus_states_are_explicit(self):
         css = self.stylesheet().decode("utf-8")
-        for token in ("--app-text: #172033", "--app-text-muted: #5c5148",
-                      "--app-text: #fff4e8", "--app-text-muted: #e7d4c0",
+        for token in ("--app-text: #34263f", "--app-text-muted: #66556a",
+                      "--app-text: #f4f7ff", "--app-text-muted: #c0cadb",
                       ":focus-visible", "outline: 3px solid var(--app-cyan)",
                       "--bs-btn-color: #fff"):
             with self.subTest(token=token):
@@ -233,22 +233,23 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_dark_mode_uses_warm_terracotta_surfaces_and_plum_navy_accents(self):
         css = self.stylesheet().decode("utf-8").lower()
-        for token in ("--app-bg: #0b0a09", "--app-surface: #14110f",
-                      "--app-surface-muted: #211a16", "--app-accent: #f4a261",
-                      "--app-accent-soft: #2d211b"):
+        for token in ("--app-bg: #0b1220", "--app-surface: #121d30",
+                      "--app-surface-muted: #192840", "--app-accent: #8bb4ff",
+                      "--app-accent-soft: #1c3153"):
             with self.subTest(token=token):
                 self.assertIn(token, css)
 
     def test_login_has_no_separate_faculty_entry(self):
-        response = self.client.get("/auth/login")
+        response = self.app.test_client().get("/auth/login")
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(b"Faculty access", response.data)
         self.assertIn(b"Forgot your password?", response.data)
         self.assertIn(b"Create an account", response.data)
 
     def test_auth_forms_keep_student_and_faculty_on_the_same_sign_in(self):
-        login = self.client.get("/auth/login").data
-        signup = self.client.get("/auth/signup").data
+        anonymous = self.app.test_client()
+        login = anonymous.get("/auth/login").data
+        signup = anonymous.get("/auth/signup").data
         self.assertIn(b"Sign in to continue", login)
         self.assertIn(b"Create your student account", signup)
         self.assertNotIn(b'name="role"', signup)
@@ -258,8 +259,8 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-auth-workspace-v1", body)
-        for selector in (b"--app-accent: #14243a", b".app-main",
+        self.assertIn(b"local-preview.css?v=20261122-apricot-navy-v2", body)
+        for selector in (b"--app-accent: #F29A52", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):

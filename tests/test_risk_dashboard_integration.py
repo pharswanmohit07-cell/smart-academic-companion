@@ -120,7 +120,8 @@ class TestRiskDashboardIntegration(RiskDashboardBase, unittest.TestCase):
         self.assertIn(b"Risk estimate", response.data)
         self.assertIn(b"Main factor:", response.data)
         self.assertIn(b"%", response.data)
-        self.assertIn(b"Risk estimates are for guidance only.", response.data)
+        self.assertNotIn(b"Risk estimates are for guidance only.", response.data)
+        self.assertNotIn(b"not enough data to calculate", response.data)
         for technical in (b"logistic", b"min-heap", b"max-heap"):
             self.assertNotIn(technical, response.data)
 
@@ -135,7 +136,7 @@ class TestRiskDashboardIntegration(RiskDashboardBase, unittest.TestCase):
             connection.commit()
         response = self.client.get("/faculty/dashboard")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Not available (incomplete data)", response.data)
+        self.assertIn(b'aria-label="No estimate available"', response.data)
 
     def test_model_failure_does_not_crash_dashboard(self):
         self.seed(12)
@@ -144,8 +145,8 @@ class TestRiskDashboardIntegration(RiskDashboardBase, unittest.TestCase):
                           side_effect=RuntimeError("model exploded")):
             response = self.client.get("/faculty/dashboard")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Risk estimates are unavailable right now", response.data)
-        self.assertIn(b"unaffected", response.data)
+        self.assertNotIn(b"Risk estimates are unavailable right now", response.data)
+        self.assertNotIn(b"unaffected", response.data)
         self.assertIn(b"Faculty Academic Dashboard", response.data)
         self.assertNotIn(b"RuntimeError", response.data)
 
@@ -153,7 +154,7 @@ class TestRiskDashboardIntegration(RiskDashboardBase, unittest.TestCase):
         self.seed(3)
         response = self.client.get("/faculty/dashboard")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Risk estimates are unavailable right now", response.data)
+        self.assertNotIn(b"Risk estimates are unavailable right now", response.data)
 
     def test_class_filter_still_works_with_predictions(self):
         self.seed(12)

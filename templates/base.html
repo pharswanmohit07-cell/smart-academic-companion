@@ -74,10 +74,16 @@
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if endpoint=='attendance' %}aria-current="page"{% endif %} href="{{ url_for('academic.attendance') }}">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if endpoint=='classrooms' %}aria-current="page"{% endif %} href="{{ url_for('academic.classrooms') }}">Classrooms</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if endpoint=='study_planner_page' %}aria-current="page"{% endif %} href="{{ url_for('academic.study_planner_page') }}">Study Planner</a></li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_admin_dashboard' %}active{% endif %}" {% if endpoint=='faculty_admin_dashboard' %}aria-current="page"{% endif %} href="{{ url_for('faculty.admin_dashboard') }}">Admin Overview</a></li>
+                    {% endif %}
                     {% if current_user.is_faculty %}
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_dashboard' %}active{% endif %}" {% if endpoint=='faculty_dashboard' %}aria-current="page"{% endif %} href="{{ url_for('faculty.dashboard') }}">Faculty Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if endpoint=='faculty_manage' %}aria-current="page"{% endif %} href="{{ url_for('faculty.manage') }}">Manage Records</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_classes' %}active{% endif %}" {% if endpoint=='faculty_classes' %}aria-current="page"{% endif %} href="{{ url_for('faculty.classes') }}">Manage Classes</a></li>
+                    {% endif %}
+                    {% if current_user.is_admin %}
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_admin_users' %}active{% endif %}" {% if endpoint=='faculty_admin_users' %}aria-current="page"{% endif %} href="{{ url_for('faculty.admin_users') }}">Users</a></li>
                     {% endif %}
                     <li class="nav-item ms-lg-2 d-flex align-items-center gap-2">
                         <span class="text-secondary small d-none d-xl-inline" title="{{ current_user.email }}">{{ current_user.display_name }} <span class="badge text-bg-secondary ms-1">{{ current_user.role }}</span></span>

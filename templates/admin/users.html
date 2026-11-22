@@ -43,6 +43,7 @@
             </div>
         </form>
     </div>
+    {% if directory_error %}<div class="alert alert-danger m-3" role="alert">The account directory is unavailable. Refresh the page to try again.</div>{% else %}
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped mb-0 align-middle admin-users-table">
@@ -80,6 +81,7 @@
             </table>
         </div>
     </div>
+    {% endif %}
 </section>
 
 <section class="card tool-faculty admin-directory mt-4">

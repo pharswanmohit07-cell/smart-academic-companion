@@ -147,7 +147,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_dark_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#241b2f", "#34263f", "#4b3556", "#fff1df", "#f8e9d8", "#70577b", "#ffb978", "#ad53df"):
+        for colour in ("#0b0a09", "#14110f", "#211a16", "#fff3e6", "#d6c1ae", "#3a2920", "#f4a261", "#d96b27"):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
@@ -219,9 +219,9 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_dark_mode_uses_warm_terracotta_surfaces_and_plum_navy_accents(self):
         css = self.stylesheet().decode("utf-8").lower()
-        for token in ("--app-bg: #241b2f", "--app-surface: #34263f",
-                      "--app-surface-muted: #4b3556", "--app-accent: #ffb978",
-                      "--app-accent-soft: #4b3556"):
+        for token in ("--app-bg: #0b0a09", "--app-surface: #14110f",
+                      "--app-surface-muted: #211a16", "--app-accent: #f4a261",
+                      "--app-accent-soft: #2d211b"):
             with self.subTest(token=token):
                 self.assertIn(token, css)
 
@@ -241,7 +241,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-apricot-glow-v1", body)
+        self.assertIn(b"local-preview.css?v=20261122-orange-black-v1", body)
         for selector in (b"--app-accent: #14243a", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):

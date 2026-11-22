@@ -12,4 +12,5 @@ export COOKIE_SECURE=1
 python database.py
 python seed_preview_data.py
 python demo_data.py
+python scripts/seed_render_preview_profiles.py
 exec gunicorn -c gunicorn.conf.py wsgi:app

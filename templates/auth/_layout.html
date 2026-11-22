@@ -3,12 +3,40 @@
 {% block content %}
 <div class="auth-shell">
   <aside class="auth-aside">
-    <div>
-      <span class="auth-aside-mark">Smart Academic Companion</span>
-      <h2>Make space for better academic decisions.</h2>
-      <p>One workspace for attendance planning, study schedules and academic records.</p>
+    <div class="auth-aside-copy">
+      <span class="auth-aside-mark">SMART ACADEMIC COMPANION</span>
+      <h2>Your academic life, in one clear workspace.</h2>
+      <p>Plan your attendance, find available classrooms and keep your study work organised.</p>
     </div>
-    <p class="small mb-0">Student accounts are self-registered. Faculty access is provisioned by an administrator.</p>
+    <div class="auth-workspace-preview" aria-label="Academic workspace features">
+      <div class="auth-workspace-topline">
+        <span>YOUR WORKSPACE</span>
+        <span class="auth-workspace-dot" aria-hidden="true"></span>
+      </div>
+      <div class="auth-workspace-grid">
+        <div class="auth-workspace-tile">
+          <span class="auth-tile-index">01</span>
+          <strong>Attendance</strong>
+          <small>Plan classes</small>
+        </div>
+        <div class="auth-workspace-tile">
+          <span class="auth-tile-index">02</span>
+          <strong>Classrooms</strong>
+          <small>Find free rooms</small>
+        </div>
+        <div class="auth-workspace-tile">
+          <span class="auth-tile-index">03</span>
+          <strong>Study planner</strong>
+          <small>Organise topics</small>
+        </div>
+        <div class="auth-workspace-tile">
+          <span class="auth-tile-index">04</span>
+          <strong>Progress</strong>
+          <small>Review records</small>
+        </div>
+      </div>
+      <div class="auth-workspace-foot"><span>PLAN</span><i></i><span>ORGANISE</span><i></i><span>PROGRESS</span></div>
+    </div>
   </aside>
   <section class="auth-main">
     <div class="page-head mb-4">
@@ -26,7 +54,6 @@
         {% block auth_body %}{% endblock %}
       </div>
     </div>
-    <p class="text-secondary small mt-4 mb-0">{% block auth_footer %}{% endblock %}</p>
   </section>
-</main>
+</div>
 {% endblock %}

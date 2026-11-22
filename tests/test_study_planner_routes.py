@@ -55,7 +55,7 @@ class TestStudyPlannerPage(SignedInClientMixin, unittest.TestCase):
         page = self.client.get("/student/dashboard")
         self.assertEqual(page.status_code, 200)
         self.assertIn(b"/study-planner", page.data)
-        self.assertIn(b"Study planner", page.data)
+        self.assertIn(b"Study Planner", page.data)
 
     def test_valid_plan_is_generated(self):
         response = self.post("/study-planner", {

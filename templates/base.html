@@ -49,7 +49,7 @@
             --bs-table-hover-bg: rgba(139,180,255,.07);
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-dashboard-shell-v1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-all-panels-shell-v1">
     {% block page_head %}{% endblock %}
 </head>
 
@@ -109,7 +109,9 @@
         </div>
         {% endfor %}
         {% endwith %}
+        {% if current_user %}<div class="app-content-shell">{% endif %}
         {% block content %}{% endblock %}
+        {% if current_user %}</div>{% endif %}
     </main>
     <footer class="app-footer"><div class="app-footer-inner">
         <span>© 2026 Smart Academic Companion</span>

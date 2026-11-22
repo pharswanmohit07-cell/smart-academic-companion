@@ -1232,3 +1232,19 @@ html, body { max-width: 100%; overflow-x: clip; }
 @media (max-width: 767.98px) {
   .dashboard-shell { padding-inline: 0; }
 }
+
+/* Shared centered canvas for every authenticated workspace panel. */
+.app-content-shell {
+  width: min(100%, 1480px);
+  min-width: 0;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3.2vw, 2.75rem);
+  box-sizing: border-box;
+}
+.app-content-shell > * { min-width: 0; }
+.app-content-shell .row { min-width: 0; }
+.app-content-shell .card,
+.app-content-shell .table-responsive { min-width: 0; }
+@media (max-width: 767.98px) {
+  .app-content-shell { padding-inline: 0; }
+}

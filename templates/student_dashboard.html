@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}My dashboard · Smart Academic Companion</div>
+{% block title %}My dashboard · Smart Academic Companion
 {% endblock %}
 {% block content %}
-<div class="dashboard-shell">
+
 <header class="dashboard-welcome">
   <div><span class="section-kicker">Student workspace / Overview</span><h1>Welcome back, {{ current_user.display_name }}.</h1><p>{% if record_name %}{{ record_name }} · {% endif %}Your academic activity, progress and next steps in one place.</p></div>
   <a class="btn btn-primary" href="{{ planner_url }}">Plan study time <span aria-hidden="true">→</span></a>
@@ -35,5 +35,4 @@
   {% if risk %}<div class="risk-indicator-row"><div><small class="text-secondary">Estimated risk score</small><strong>{{ risk.risk_percent }}%</strong></div><span class="badge {{ 'text-bg-warning' if risk.predicted_at_risk else 'text-bg-success' }}">{{ 'Needs attention' if risk.predicted_at_risk else 'Lower indicated risk' }}</span></div><p>Strongest factor: <strong>{{ risk.top_factor_label }}</strong> ({{ risk.top_factor_direction }}).</p>
   {% else %}<p class="text-secondary">A risk estimate is not available yet. It needs attendance, marks and assignment data for your record.</p>{% endif %}
   <div class="risk-disclaimer">This is a demonstration estimate, not a validated prediction of academic outcomes. Use it as an informational indicator only.</div></div></section>
-</div>
 {% endblock %}

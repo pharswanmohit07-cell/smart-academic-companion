@@ -539,46 +539,38 @@ def _classes_page_data(class_ids, selected_class_id):
 
 
 # ------------------------------------------------------------------ admin
-@bp.route("/admin")
-@auth_module.admin_required
-def admin_dashboard():
-    """Combined Admin landing page backed only by current database records."""
-    try:
-        with closing_connection() as connection:
-            table = profiles_table(connection)
-            role_counts = {row["role"]: row["total"] for row in connection.execute(
-                f"SELECT role, COUNT(*) AS total FROM {table} GROUP BY role"
-            ).fetchall()}
-            class_count = connection.execute(
-                "SELECT COUNT(*) AS total FROM faculty_classes"
-            ).fetchone()["total"]
-    except DatabaseError:
-        log.exception("admin dashboard summary could not be loaded")
-        flash("Some workspace totals are unavailable right now.", "warning")
-        role_counts = {}
-        class_count = None
-    return render_template(
-        "admin/dashboard.html",
-        student_count=role_counts.get("student"),
-        faculty_count=role_counts.get("faculty"),
-        admin_count=role_counts.get("admin"),
-        class_count=class_count,
-    )
-
-
-@bp.route("/admin/users")
-@auth_module.admin_required
-def admin_users():
-    """Searchable Admin-only directory of trusted account profiles."""
+def _admin_directory_filters():
+    """Normalize the Admin dashboard's account search and role filter."""
     query = (request.args.get("q") or "").strip()[:120]
     selected_role = (request.args.get("role") or "all").strip().lower()
     if selected_role not in ("all", "student", "faculty", "admin"):
         selected_role = "all"
+    return query, selected_role
 
+
+@bp.route("/admin")
+@auth_module.admin_required
+def admin_dashboard():
+    """Admin overview and searchable account directory in one workspace."""
+    query, selected_role = _admin_directory_filters()
     directory_error = False
+    role_counts = {}
+    class_count = None
+    profiles = []
+
     try:
         with closing_connection() as connection:
             table = profiles_table(connection)
+            role_counts = {
+                row["role"]: row["total"]
+                for row in connection.execute(
+                    f"SELECT role, COUNT(*) AS total FROM {table} GROUP BY role"
+                ).fetchall()
+            }
+            class_count = connection.execute(
+                "SELECT COUNT(*) AS total FROM faculty_classes"
+            ).fetchone()["total"]
+
             conditions = []
             params = []
             if query:
@@ -592,24 +584,42 @@ def admin_users():
                 conditions.append("role = ?")
                 params.append(selected_role)
             where = " WHERE " + " AND ".join(conditions) if conditions else ""
-            profiles = [dict(row) for row in connection.execute(
-                f"""SELECT user_id, email, display_name, role
-                      FROM {table}{where} ORDER BY role, email""",
-                tuple(params),
-            ).fetchall()]
-
+            profiles = [
+                dict(row)
+                for row in connection.execute(
+                    f"""SELECT user_id, email, display_name, role
+                          FROM {table}{where} ORDER BY role, email""",
+                    tuple(params),
+                ).fetchall()
+            ]
     except DatabaseError:
-        log.exception("admin user directory could not be loaded")
-        flash("The account directory could not be loaded. Please try again.", "danger")
+        log.exception("admin dashboard data could not be loaded")
+        flash("Some account or workspace information is unavailable right now.", "warning")
+        role_counts = {}
+        class_count = None
         profiles = []
         directory_error = True
 
     return render_template(
-        "admin/users.html",
+        "admin/dashboard.html",
+        student_count=role_counts.get("student"),
+        faculty_count=role_counts.get("faculty"),
+        admin_count=role_counts.get("admin"),
+        class_count=class_count,
         profiles=profiles,
         search_query=query,
         selected_role=selected_role,
         directory_error=directory_error,
+    )
+
+
+@bp.route("/admin/users")
+@auth_module.admin_required
+def admin_users():
+    """Compatibility redirect; account management now lives on Admin Dashboard."""
+    query, selected_role = _admin_directory_filters()
+    return redirect(
+        url_for("faculty.admin_dashboard", q=query, role=selected_role)
     )
 
 
@@ -625,7 +635,7 @@ def admin_set_role():
     if selected_role not in ("all", "student", "faculty", "admin"):
         selected_role = "all"
     redirect_url = url_for(
-        "faculty.admin_users", q=search_query, role=selected_role
+        "faculty.admin_dashboard", q=search_query, role=selected_role
     )
 
     if role not in ("student", "faculty"):
@@ -682,9 +692,11 @@ def admin_set_role():
                             """INSERT INTO teachers (auth_user_id, name, email)
                                VALUES (?, ?, ?)
                                ON CONFLICT (auth_user_id) DO NOTHING""",
-                            (profile["user_id"],
-                             profile["display_name"] or profile["email"],
-                             profile["email"]),
+                            (
+                                profile["user_id"],
+                                profile["display_name"] or profile["email"],
+                                profile["email"],
+                            ),
                         )
                 connection.execute(
                     f"UPDATE {table} SET role = ? WHERE user_id = ?",

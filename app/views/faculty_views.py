@@ -597,19 +597,16 @@ def admin_users():
                       FROM {table}{where} ORDER BY role, email""",
                 tuple(params),
             ).fetchall()]
-            teachers = [dict(row) for row in connection.execute(
-                "SELECT teacher_id, name, email FROM teachers ORDER BY name"
-            ).fetchall()]
+
     except DatabaseError:
         log.exception("admin user directory could not be loaded")
         flash("The account directory could not be loaded. Please try again.", "danger")
-        profiles, teachers = [], []
+        profiles = []
         directory_error = True
 
     return render_template(
         "admin/users.html",
         profiles=profiles,
-        teachers=teachers,
         search_query=query,
         selected_role=selected_role,
         directory_error=directory_error,

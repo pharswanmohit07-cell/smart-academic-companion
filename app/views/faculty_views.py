@@ -575,6 +575,7 @@ def admin_users():
     if selected_role not in ("all", "student", "faculty", "admin"):
         selected_role = "all"
 
+    directory_error = False
     try:
         with closing_connection() as connection:
             table = profiles_table(connection)
@@ -603,6 +604,7 @@ def admin_users():
         log.exception("admin user directory could not be loaded")
         flash("The account directory could not be loaded. Please try again.", "danger")
         profiles, teachers = [], []
+        directory_error = True
 
     return render_template(
         "admin/users.html",
@@ -610,6 +612,7 @@ def admin_users():
         teachers=teachers,
         search_query=query,
         selected_role=selected_role,
+        directory_error=directory_error,
     )
 
 
@@ -635,6 +638,7 @@ def admin_set_role():
         flash("You cannot change your own role.", "danger")
         return redirect(redirect_url)
 
+    connection = None
     try:
         with closing_connection() as connection:
             table = profiles_table(connection)
@@ -707,9 +711,10 @@ def admin_set_role():
         )
     except DatabaseError:
         log.exception("role change failed")
-        try:
-            connection.rollback()
-        except Exception:  # noqa: BLE001 - connection may already be closed
-            pass
+        if connection is not None:
+            try:
+                connection.rollback()
+            except Exception:  # noqa: BLE001 - connection may already be closed
+                pass
         flash("Could not change that role. The previous role has been kept.", "danger")
     return redirect(redirect_url)

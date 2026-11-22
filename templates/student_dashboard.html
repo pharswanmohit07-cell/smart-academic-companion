@@ -1,6 +1,8 @@
 {% extends "base.html" %}
-{% block title %}My dashboard · Smart Academic Companion{% endblock %}
+{% block title %}My dashboard · Smart Academic Companion</div>
+{% endblock %}
 {% block content %}
+<div class="dashboard-shell">
 <header class="dashboard-welcome">
   <div><span class="section-kicker">Student workspace / Overview</span><h1>Welcome back, {{ current_user.display_name }}.</h1><p>{% if record_name %}{{ record_name }} · {% endif %}Your academic activity, progress and next steps in one place.</p></div>
   <a class="btn btn-primary" href="{{ planner_url }}">Plan study time <span aria-hidden="true">→</span></a>

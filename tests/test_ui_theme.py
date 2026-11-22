@@ -201,6 +201,14 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"how prepared you feel", body)
 
 
+    def test_landing_sections_have_full_bleed_canvas_and_inset_cards(self):
+        css = self.stylesheet().decode("utf-8")
+        for rule in ("width: 100vw;", "calc(50% - 50vw)",
+                     ".landing-section.alt", "border-radius: var(--app-radius-lg)",
+                     "grid-template-columns: minmax(0, 1fr)"):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, css)
+
     def test_landing_page_has_a_complete_product_story(self):
         body = self.landing_page()
         for section in (b"landing-hero", b"product-preview", b"workflow-section",

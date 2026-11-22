@@ -268,7 +268,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-all-panels-shell-v1", body)
+        self.assertIn(b"local-preview.css?v=20261122-admin-workspace-v1", body)
         for selector in (b"--app-accent: #F29A52", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):

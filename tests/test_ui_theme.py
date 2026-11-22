@@ -219,9 +219,9 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_dark_mode_uses_warm_terracotta_surfaces_and_plum_navy_accents(self):
         css = self.stylesheet().decode("utf-8").lower()
-        for token in ("--app-bg: #382b2c", "--app-surface: #493638",
-                      "--app-surface-muted: #5b4140", "--app-accent: #d9a0b2",
-                      "--app-accent-soft: #47323d"):
+        for token in ("--app-bg: #4a2c1d", "--app-surface: #603a25",
+                      "--app-surface-muted: #75482b", "--app-accent: #ffc078",
+                      "--app-accent-soft: #704126"):
             with self.subTest(token=token):
                 self.assertIn(token, css)
 
@@ -241,7 +241,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-amber-navy", body)
+        self.assertIn(b"local-preview.css?v=20261122-warm-orange-dark-v2", body)
         for selector in (b"--app-accent: #14243a", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):

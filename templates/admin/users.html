@@ -5,58 +5,85 @@
 <header class="workspace-hero admin-hero">
     <div class="workspace-hero-copy">
         <span class="section-kicker">Administration / Access control</span>
-        <h1>Identity and role management.</h1>
-        <p>Review account profiles and manage faculty access. New signups are students; administrator roles remain provisioned through the server command line.</p>
+        <h1>Manage account access.</h1>
+        <p>Find a registered account and manage Student or Faculty access. Administrator accounts are protected.</p>
     </div>
-    <div class="admin-hero-note"><span>Directory source</span><strong>public.user_profiles</strong><small>Changes are applied to profile roles.</small></div>
+    <div class="admin-hero-note"><span>Directory source</span><strong>Trusted profiles</strong><small>Role changes apply at the next sign-in.</small></div>
 </header>
+
 <div class="workspace-section-heading admin-section-heading">
-    <div><span class="section-kicker">Access directory</span><h2>Profiles and faculty</h2></div>
-    <p>Role changes are available only for other non-admin accounts.</p>
+    <div><span class="section-kicker">Access directory</span><h2>Account profiles</h2></div>
+    <p>{{ profiles|length }} matching profiles</p>
 </div>
 
-<div class="card tool-faculty mb-4 admin-directory">
-    <div class="card-header"><div><span class="form-step">01 · Accounts</span><strong>Profiles</strong></div><span class="directory-count">{{ profiles|length }} profiles</span></div>
+<section class="card tool-faculty admin-directory">
+    <div class="card-header">
+        <div><span class="form-step">01 · Directory</span><strong>Search accounts</strong></div>
+        <span class="directory-count">{{ profiles|length }} results</span>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('faculty.admin_users') }}" class="admin-directory-filters">
+            <div class="admin-search-field">
+                <label for="admin-user-search" class="form-label">Search by email or name</label>
+                <input id="admin-user-search" class="form-control" type="search" name="q"
+                       value="{{ search_query }}" placeholder="Enter an email address or name">
+            </div>
+            <div class="admin-role-filter">
+                <label for="admin-role-filter" class="form-label">Filter by role</label>
+                <select id="admin-role-filter" class="form-select" name="role">
+                    <option value="all" {% if selected_role == 'all' %}selected{% endif %}>All roles</option>
+                    <option value="student" {% if selected_role == 'student' %}selected{% endif %}>Student</option>
+                    <option value="faculty" {% if selected_role == 'faculty' %}selected{% endif %}>Faculty</option>
+                    <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-primary" type="submit">Apply filters</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('faculty.admin_users') }}">Clear</a>
+            </div>
+        </form>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-striped mb-0 align-middle">
-                <thead>
-                    <tr><th>Email</th><th>Name</th><th>Role</th><th class="text-end">Change</th></tr>
-                </thead>
+            <table class="table table-striped mb-0 align-middle admin-users-table">
+                <thead><tr><th>Email</th><th>Name</th><th>Current role</th><th class="text-end">Change role</th></tr></thead>
                 <tbody>
                 {% for profile in profiles %}
                     <tr>
-                        <td>{{ profile.email }}</td>
+                        <td class="admin-user-email">{{ profile.email }}</td>
                         <td>{{ profile.display_name or '—' }}</td>
-                        <td><span class="badge text-bg-secondary">{{ profile.role }}</span></td>
+                        <td><span class="badge text-bg-secondary">{{ profile.role|title }}</span></td>
                         <td class="text-end">
-                            {% if profile.email|lower != (current_user.email or '')|lower and profile.role != 'admin' %}
+                            {% if profile.user_id|string != current_user.user_id|string and profile.role != 'admin' %}
                             <form method="post" action="{{ url_for('faculty.admin_set_role') }}"
-                                  class="d-inline-flex gap-2">
+                                  class="admin-role-form" onsubmit="return confirm('Change {{ profile.email|e }} from {{ profile.role|e }} to ' + this.elements.role.options[this.elements.role.selectedIndex].text + '? The account must sign in again for the new access to take effect.');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="email" value="{{ profile.email }}">
-                                <select class="form-select form-select-sm" name="role" aria-label="New role">
-                                    <option value="student" {% if profile.role == 'student' %}selected{% endif %}>student</option>
-                                    <option value="faculty" {% if profile.role == 'faculty' %}selected{% endif %}>faculty</option>
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_role" value="{{ selected_role }}">
+                                <label class="visually-hidden" for="role-{{ loop.index }}">New role for {{ profile.email }}</label>
+                                <select id="role-{{ loop.index }}" class="form-select form-select-sm" name="role">
+                                    <option value="student" {% if profile.role == 'student' %}selected{% endif %}>Student</option>
+                                    <option value="faculty" {% if profile.role == 'faculty' %}selected{% endif %}>Faculty</option>
                                 </select>
-                                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Save role</button>
                             </form>
                             {% else %}
-                            <span class="text-secondary small">&mdash;</span>
+                            <span class="text-secondary small">{% if profile.role == 'admin' %}Protected{% else %}Current account{% endif %}</span>
                             {% endif %}
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="4" class="empty-state text-secondary py-4">No profiles yet.</td></tr>
+                    <tr><td colspan="4" class="empty-state text-secondary py-4">No accounts match these filters.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-</div>
+</section>
 
-<div class="card tool-faculty admin-directory">
-    <div class="card-header"><div><span class="form-step">02 · Teaching team</span><strong>Faculty directory</strong></div><span class="directory-count">{{ teachers|length }} faculty</span></div>
+<section class="card tool-faculty admin-directory mt-4">
+    <div class="card-header"><div><span class="form-step">02 · Teaching team</span><strong>Faculty directory</strong></div><span class="directory-count">{{ teachers|length }} faculty records</span></div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped mb-0 align-middle">
@@ -65,11 +92,11 @@
                 {% for teacher in teachers %}
                     <tr><td>{{ teacher.name }}</td><td>{{ teacher.email or '—' }}</td></tr>
                 {% else %}
-                    <tr><td colspan="2" class="empty-state text-secondary py-4">No faculty accounts yet.</td></tr>
+                    <tr><td colspan="2" class="empty-state text-secondary py-4">No faculty records yet.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - design/admin-unified-workspace
 
 concurrency:
   group: tests-${{ github.workflow }}-${{ github.ref }}

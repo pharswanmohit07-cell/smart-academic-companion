@@ -1248,3 +1248,34 @@ html, body { max-width: 100%; overflow-x: clip; }
 @media (max-width: 767.98px) {
   .app-content-shell { padding-inline: 0; }
 }
+
+
+/* Admin workspace controls: compact on desktop and stack cleanly on mobile. */
+.admin-directory-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) auto;
+  align-items: end;
+  gap: .9rem;
+}
+.admin-directory-filters .form-label { color: var(--app-text); font-size: .78rem; font-weight: 750; }
+.admin-filter-actions { display: flex; gap: .5rem; }
+.admin-role-form { display: inline-flex; align-items: center; justify-content: flex-end; gap: .5rem; min-width: 190px; }
+.admin-role-form .form-select { width: auto; min-width: 105px; }
+.admin-users-table th { white-space: nowrap; }
+.admin-user-email { overflow-wrap: anywhere; }
+.admin-stat-grid .dashboard-stat-card { min-width: 0; }
+.admin-quick-actions .quick-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.admin-hero-note { max-width: 260px; }
+@media (max-width: 900px) {
+  .admin-directory-filters { grid-template-columns: minmax(0, 1fr) minmax(140px, .7fr); }
+  .admin-filter-actions { grid-column: 1 / -1; }
+  .admin-quick-actions .quick-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575.98px) {
+  .admin-directory-filters { grid-template-columns: minmax(0, 1fr); }
+  .admin-filter-actions { grid-column: auto; flex-wrap: wrap; }
+  .admin-role-form { min-width: 0; }
+  .admin-role-form .form-select { min-width: 0; }
+  .admin-quick-actions .quick-action-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-hero-note { max-width: none; }
+}

@@ -342,84 +342,64 @@ def no_account():
 
 @bp.route("/demo-login", methods=["POST"])
 def demo_login():
-    """Enter a disposable local preview as a student or faculty demo identity."""
+    """Enter a disposable hosted/local preview as a seeded demo identity."""
     if not settings.LOCAL_PREVIEW_ENABLED:
         return ("Local preview mode is disabled.", 404)
 
-    role = (request.form.get("demo_role") or "student").strip().lower()
-    if role not in {"student", "faculty"}:
-        role = "student"
+    demo_identity = (request.form.get("demo_role") or "student").strip().lower()
+    identities = {
+        "student": "local-preview-student",
+        "faculty": "local-preview-faculty",
+        "admin": "local-preview-admin",
+    }
+    user_id = identities.get(demo_identity, identities["student"])
 
     from contextlib import closing
     from db import get_connection
 
     with closing(get_connection()) as connection:
-        student = connection.execute(
-            "SELECT student_id, name, email FROM students ORDER BY student_id LIMIT 1"
+        profile = connection.execute(
+            "SELECT user_id, email, display_name, role FROM user_profiles WHERE user_id = ?",
+            (user_id,),
         ).fetchone()
-        if student is None:
-            connection.execute(
-                "INSERT INTO students (name, email, semester, section) VALUES (?, ?, 3, 'A')",
-                ("Aarav Sharma", "student.preview@example.local"),
-            )
-            connection.commit()
-            student = connection.execute(
-                "SELECT student_id, name, email FROM students ORDER BY student_id LIMIT 1"
-            ).fetchone()
+        if profile is None:
+            flash("Preview demo profiles are not initialized. Please refresh later.", "danger")
+            return redirect(url_for("auth.login"))
 
-        teacher = connection.execute(
-            "SELECT teacher_id, name, email FROM teachers ORDER BY teacher_id LIMIT 1"
-        ).fetchone()
-        if teacher is None:
-            connection.execute(
-                "INSERT INTO teachers (name, email) VALUES (?, ?)",
-                ("Demo Faculty", "faculty.preview@example.local"),
+        role = (profile["role"] or "student").lower()
+        if role == "admin":
+            account = Account(
+                user_id=user_id, email=profile["email"],
+                display_name=profile["display_name"], role="admin",
             )
-            connection.commit()
+        elif role == "faculty":
             teacher = connection.execute(
-                "SELECT teacher_id, name, email FROM teachers ORDER BY teacher_id LIMIT 1"
+                "SELECT teacher_id, name, email FROM teachers WHERE auth_user_id = ?",
+                (user_id,),
             ).fetchone()
-        owned = connection.execute(
-            "SELECT class_id FROM faculty_classes WHERE owner_teacher_id = ? LIMIT 1",
-            (teacher["teacher_id"],),
-        ).fetchone()
-        if owned is None:
-            # Attach the first seeded class to the demo faculty account so the
-            # faculty dashboard opens with the isolated sample students.
-            available = connection.execute(
-                "SELECT class_id FROM faculty_classes ORDER BY class_id LIMIT 1"
+            if teacher is None:
+                flash("The demo Faculty record is unavailable.", "danger")
+                return redirect(url_for("auth.login"))
+            account = Account(
+                user_id=user_id, email=profile["email"],
+                display_name=profile["display_name"], role="faculty",
+                teacher_id=teacher["teacher_id"],
+            )
+        else:
+            student = connection.execute(
+                "SELECT student_id, name, email FROM students WHERE auth_user_id = ?",
+                (user_id,),
             ).fetchone()
-            if available is not None:
-                connection.execute(
-                    "UPDATE faculty_classes SET owner_teacher_id = ? WHERE class_id = ?",
-                    (teacher["teacher_id"], available["class_id"]),
-                )
-            else:
-                connection.execute(
-                    """INSERT INTO faculty_classes
-                       (class_name, program, semester, section, description, owner_teacher_id)
-                       VALUES (?, ?, 3, 'A', ?, ?)""",
-                    ("Preview Faculty Class", "BCA AI & Data Science",
-                     "Local preview class for faculty workspace review.", teacher["teacher_id"]),
-                )
-        connection.commit()
-
-    if role == "faculty":
-        account = Account(
-            user_id="local-preview-faculty",
-            email=teacher["email"] or "faculty.preview@example.local",
-            display_name=teacher["name"] or "Demo Faculty", role="faculty",
-            teacher_id=teacher["teacher_id"],
-        )
-    else:
-        account = Account(
-            user_id="local-preview-student",
-            email=student["email"] or "student.preview@example.local",
-            display_name=student["name"] or "Aarav Sharma", role="student",
-            student_id=student["student_id"],
-        )
+            if student is None:
+                flash("The demo Student record is unavailable.", "danger")
+                return redirect(url_for("auth.login"))
+            account = Account(
+                user_id=user_id, email=profile["email"],
+                display_name=profile["display_name"], role="student",
+                student_id=student["student_id"],
+            )
 
     auth.sign_in(account, "")
     session["local_preview"] = True
-    flash("Local preview session. Changes stay in your local demo database.", "info")
+    flash("Preview session. Changes stay in this isolated demo database.", "info")
     return redirect(dashboard_for(account))

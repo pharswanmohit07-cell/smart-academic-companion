@@ -59,5 +59,116 @@ class TestAdminWorkspaceRouting(AppTestBase, unittest.TestCase):
             self.assertNotIn(label, student_page)
 
 
+class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin_id = self.make_profile("admin@example.com", role="admin")
+        self.student_id, self.student_record_id = self.make_student(
+            "learner@example.com", "Learner One"
+        )
+        self.faculty_id, self.teacher_record_id = self.make_teacher(
+            "teacher@example.com", "Teacher One"
+        )
+        self.as_user("admin@example.com")
+
+    def test_users_directory_searches_name_and_email(self):
+        response = self.client.get("/faculty/admin/users?q=learner")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"learner@example.com", response.data)
+        self.assertNotIn(b"teacher@example.com", response.data)
+
+        response = self.client.get("/faculty/admin/users?q=teacher%40example.com")
+        self.assertIn(b"teacher@example.com", response.data)
+        self.assertNotIn(b"learner@example.com", response.data)
+
+    def test_users_directory_filters_by_role_and_invalid_filter_falls_back(self):
+        response = self.client.get("/faculty/admin/users?role=faculty")
+        self.assertIn(b"teacher@example.com", response.data)
+        self.assertNotIn(b"learner@example.com", response.data)
+        response = self.client.get("/faculty/admin/users?role=invalid")
+        self.assertIn(b"learner@example.com", response.data)
+        self.assertIn(b"teacher@example.com", response.data)
+
+    def test_student_to_faculty_links_teacher_and_demotes_back_safely(self):
+        response = self.submit(
+            "/faculty/admin/set-role",
+            {"email": "learner@example.com", "role": "faculty"},
+            page="/faculty/admin/users",
+            visible=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        with self.connect() as connection:
+            profile = connection.execute(
+                "SELECT role FROM user_profiles WHERE user_id = ?", (self.student_id,)
+            ).fetchone()
+            teacher = connection.execute(
+                "SELECT teacher_id FROM teachers WHERE auth_user_id = ?", (self.student_id,)
+            ).fetchone()
+        self.assertEqual(profile["role"], "faculty")
+        self.assertIsNotNone(teacher)
+
+        response = self.submit(
+            "/faculty/admin/set-role",
+            {"email": "learner@example.com", "role": "student"},
+            page="/faculty/admin/users",
+            visible=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        with self.connect() as connection:
+            profile = connection.execute(
+                "SELECT role FROM user_profiles WHERE user_id = ?", (self.student_id,)
+            ).fetchone()
+            teacher = connection.execute(
+                "SELECT teacher_id, auth_user_id FROM teachers WHERE teacher_id = ?",
+                (teacher["teacher_id"],),
+            ).fetchone()
+        self.assertEqual(profile["role"], "student")
+        self.assertIsNone(teacher["auth_user_id"])
+
+    def test_admin_cannot_change_self_or_another_admin(self):
+        other_admin = self.make_profile("other-admin@example.com", role="admin")
+        for email in ("admin@example.com", "other-admin@example.com"):
+            with self.subTest(email=email):
+                self.submit(
+                    "/faculty/admin/set-role",
+                    {"email": email, "role": "faculty"},
+                    page="/faculty/admin/users",
+                    visible=True,
+                )
+        with self.connect() as connection:
+            self.assertEqual(
+                connection.execute(
+                    "SELECT role FROM user_profiles WHERE user_id = ?", (self.admin_id,)
+                ).fetchone()["role"],
+                "admin",
+            )
+            self.assertEqual(
+                connection.execute(
+                    "SELECT role FROM user_profiles WHERE user_id = ?", (other_admin,)
+                ).fetchone()["role"],
+                "admin",
+            )
+
+    def test_role_change_requires_supported_target_role_and_csrf(self):
+        response = self.client.post(
+            "/faculty/admin/set-role",
+            data={"email": "learner@example.com", "role": "admin"},
+        )
+        self.assertIn(response.status_code, (400, 403))
+        with self.connect() as connection:
+            role = connection.execute(
+                "SELECT role FROM user_profiles WHERE user_id = ?", (self.student_id,)
+            ).fetchone()["role"]
+        self.assertEqual(role, "student")
+
+    def test_faculty_and_student_cannot_open_admin_users(self):
+        self.client = self.app.test_client()
+        self.as_user("teacher@example.com")
+        self.assertEqual(self.client.get("/faculty/admin/users").status_code, 403)
+        self.client = self.app.test_client()
+        self.as_user("learner@example.com")
+        self.assertEqual(self.client.get("/faculty/admin/users").status_code, 403)
+
+
 if __name__ == "__main__":
     unittest.main()

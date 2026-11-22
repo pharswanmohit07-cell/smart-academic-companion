@@ -226,7 +226,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_landing_page_has_a_complete_product_story(self):
         body = self.landing_page()
-        for section in (b"landing-hero", b"product-preview", b"workflow-section",
+        for section in (b"landing-hero", b"workspace-showcase", b"workflow-section",
                         b"student-tools-section", b"faculty-tools-section",
                         b"landing-footer"):
             with self.subTest(section=section):

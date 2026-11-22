@@ -62,7 +62,28 @@ class SignedInMixin(TempDatabaseMixin):
 
 class TestClassroomRoute(SignedInMixin, unittest.TestCase):
     def test_page_loads(self):
-        self.assertEqual(self.client.get("/classrooms").status_code, 200)
+        response = self.client.get("/classrooms")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            f'name="csrf_token" value="{self.csrf_token}"'.encode(),
+            response.data,
+        )
+
+    def test_attendance_form_submits_with_rendered_csrf_token(self):
+        page = self.client.get("/attendance")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(
+            f'name="csrf_token" value="{self.csrf_token}"'.encode(),
+            page.data,
+        )
+        response = self.post("/attendance", {
+            "attended": "30",
+            "total": "40",
+            "upcoming": "12",
+            "target": "75",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Your attendance snapshot", response.data)
 
     def test_end_before_start_shows_error(self):
         response = self.post(

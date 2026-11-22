@@ -112,20 +112,20 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         self.assertEqual(response.headers["Location"], "/faculty/admin?q=learner&role=student")
 
     def test_users_directory_searches_name_and_email(self):
-        response = self.client.get("/faculty/admin/users?q=learner")
+        response = self.client.get("/faculty/admin?q=learner")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"learner@example.com", response.data)
         self.assertNotIn(b"teacher@example.com", response.data)
 
-        response = self.client.get("/faculty/admin/users?q=teacher%40example.com")
+        response = self.client.get("/faculty/admin?q=teacher%40example.com")
         self.assertIn(b"teacher@example.com", response.data)
         self.assertNotIn(b"learner@example.com", response.data)
 
     def test_users_directory_filters_by_role_and_invalid_filter_falls_back(self):
-        response = self.client.get("/faculty/admin/users?role=faculty")
+        response = self.client.get("/faculty/admin?role=faculty")
         self.assertIn(b"teacher@example.com", response.data)
         self.assertNotIn(b"learner@example.com", response.data)
-        response = self.client.get("/faculty/admin/users?role=invalid")
+        response = self.client.get("/faculty/admin?role=invalid")
         self.assertIn(b"learner@example.com", response.data)
         self.assertIn(b"teacher@example.com", response.data)
 
@@ -174,7 +174,7 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
                 self.submit(
                     "/faculty/admin/set-role",
                     {"email": email, "role": "faculty"},
-                    page="/faculty/admin/users",
+                    page="/faculty/admin",
                     visible=True,
                 )
         with self.connect() as connection:

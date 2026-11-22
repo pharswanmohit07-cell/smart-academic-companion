@@ -69,6 +69,13 @@ class TestFacultyDashboard(unittest.TestCase):
         self.database_patch.stop()
         self.temp_dir.cleanup()
 
+    def test_subject_name_is_grouped_for_postgresql_compatibility(self):
+        source = Path("modules/faculty_dashboard.py").read_text(encoding="utf-8")
+        self.assertIn(
+            "GROUP BY m.student_id, m.subject_id, subject.subject_name, exam_type",
+            source,
+        )
+
     def test_flags_low_marks_in_any_subject_instead_of_hiding_them_in_total(self):
         summary = get_faculty_summary()
         student = summary["students"][0]

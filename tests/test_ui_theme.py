@@ -268,7 +268,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-dashboard-shell-v1", body)
+        self.assertIn(b"local-preview.css?v=20261122-all-panels-shell-v1", body)
         for selector in (b"--app-accent: #F29A52", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
@@ -286,14 +286,15 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn("margin-inline: auto", css)
         self.assertIn("padding-inline: clamp(1rem, 3.2vw, 2.75rem)", css)
 
-    def test_student_dashboard_uses_a_centered_responsive_shell(self):
+    def test_student_dashboard_uses_shared_panel_shell_without_nested_gutters(self):
         source, _, _ = self.app.jinja_env.loader.get_source(
             self.app.jinja_env, "student_dashboard.html"
         )
-        self.assertIn('<div class="dashboard-shell">', source)
-        self.assertTrue(source.rstrip().endswith("{% endblock %}"))
+        self.assertNotIn('<div class="dashboard-shell">', source)
+        body = self.page("/dashboard")
+        self.assertIn(b'class="app-content-shell"', body)
         css = self.stylesheet().decode("utf-8")
-        self.assertIn(".dashboard-shell {", css)
+        self.assertIn(".app-content-shell {", css)
         self.assertIn("width: min(100%, 1480px)", css)
         self.assertIn("padding-inline: clamp(1rem, 3.2vw, 2.75rem)", css)
         self.assertIn("@media (max-width: 767.98px)", css)

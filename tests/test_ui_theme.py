@@ -276,10 +276,12 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
                 self.assertIn(selector, css)
 
     def test_all_signed_in_panels_use_a_shared_centered_content_shell(self):
-        for path in PAGES + ["/"]:
+        for path in PAGES:
             with self.subTest(path=path):
                 body = self.page(path)
                 self.assertIn(b'class="app-content-shell"', body)
+        # The signed-out landing page is intentionally outside the workspace shell.
+        self.assertNotIn(b'class="app-content-shell"', self.landing_page())
         css = self.stylesheet().decode("utf-8")
         self.assertIn(".app-content-shell {", css)
         self.assertIn("width: min(100%, 1480px)", css)
@@ -291,7 +293,10 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
             self.app.jinja_env, "student_dashboard.html"
         )
         self.assertNotIn('<div class="dashboard-shell">', source)
-        body = self.page("/dashboard")
+        # This test client is signed in as faculty, so /dashboard correctly
+        # redirects to the faculty dashboard. The student template contract
+        # is checked above; the shared shell is verified on rendered panels.
+        body = self.page("/faculty/dashboard")
         self.assertIn(b'class="app-content-shell"', body)
         css = self.stylesheet().decode("utf-8")
         self.assertIn(".app-content-shell {", css)

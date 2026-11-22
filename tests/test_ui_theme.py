@@ -138,7 +138,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         self.assertGreater(len(response.data), 1000)
         self.assertEqual(response.mimetype, "text/css")
         self.assertIn(b"Smart Academic Companion", response.data)
-        self.assertIn(b"--app-accent: #f29a52", response.data)
+        self.assertIn(b"--app-accent: #F29A52", response.data)
 
     def test_light_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
@@ -146,8 +146,8 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
             self.assertIn(colour, css.lower())
 
     def test_apricot_light_and_original_navy_dark_themes_are_separate(self):
-        css = self.stylesheet().decode("utf-8")
-        base = self.landing_page()
+        css = self.stylesheet().decode("utf-8").lower()
+        base = self.landing_page().lower()
         for token in ("--app-bg: #fff1df", "--app-surface: #f8e9d8",
                       "--app-accent: #f29a52"):
             self.assertIn(token, css)

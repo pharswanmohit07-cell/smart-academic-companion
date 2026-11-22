@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Admin Overview · Smart Academic Companion{% endblock %}
+{% block title %}Admin Dashboard · Smart Academic Companion{% endblock %}
 
 {% block content %}
 <header class="workspace-hero admin-hero">
     <div class="workspace-hero-copy">
-        <span class="section-kicker">Administrator workspace / Overview</span>
-        <h1>One place to manage the academic workspace.</h1>
-        <p>Review account access, open academic tools, and move between the administration and faculty workspaces.</p>
+        <span class="section-kicker">Administrator workspace / Dashboard</span>
+        <h1>Manage the academic workspace.</h1>
+        <p>Review every account, manage Student and Faculty access, and open the academic tools from one place.</p>
     </div>
     <div class="admin-hero-note">
-        <span>Workspace access</span>
-        <strong>Admin</strong>
-        <small>Role changes apply the next time an account signs in.</small>
+        <span>Signed-in role</span>
+        <strong>Administrator</strong>
+        <small>Account role changes take effect the next time that account signs in.</small>
     </div>
 </header>
 
@@ -38,36 +38,121 @@
     </article>
 </section>
 
+<section class="card tool-faculty admin-directory" id="account-directory" aria-label="Account access directory">
+    <div class="card-header">
+        <div>
+            <span class="section-kicker">Account administration</span>
+            <strong>Manage accounts</strong>
+        </div>
+        <span class="directory-count">{{ profiles|length }} matching accounts</span>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('faculty.admin_dashboard') }}" class="admin-directory-filters">
+            <div class="admin-search-field">
+                <label for="admin-user-search" class="form-label">Search by email or name</label>
+                <input id="admin-user-search" class="form-control" type="search" name="q"
+                       value="{{ search_query }}" placeholder="Enter an email address or name">
+            </div>
+            <div class="admin-role-filter">
+                <label for="admin-role-filter" class="form-label">Filter by account role</label>
+                <select id="admin-role-filter" class="form-select" name="role">
+                    <option value="all" {% if selected_role == 'all' %}selected{% endif %}>All roles</option>
+                    <option value="student" {% if selected_role == 'student' %}selected{% endif %}>Student</option>
+                    <option value="faculty" {% if selected_role == 'faculty' %}selected{% endif %}>Faculty</option>
+                    <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-primary" type="submit">Apply filters</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('faculty.admin_dashboard') }}">Clear</a>
+            </div>
+        </form>
+    </div>
+    {% if directory_error %}
+    <div class="alert alert-danger m-3" role="alert">
+        The account directory is unavailable right now. Refresh the dashboard to try again.
+    </div>
+    {% else %}
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0 align-middle admin-users-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Current role</th>
+                        <th class="text-end">Change role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for profile in profiles %}
+                    <tr>
+                        <td class="admin-user-email">{{ profile.email }}</td>
+                        <td>{{ profile.display_name or '—' }}</td>
+                        <td><span class="badge text-bg-secondary">{{ profile.role|title }}</span></td>
+                        <td class="text-end">
+                            {% if profile.user_id|string != current_user.user_id|string and profile.role != 'admin' %}
+                            <form method="post" action="{{ url_for('faculty.admin_set_role') }}"
+                                  class="admin-role-form"
+                                  onsubmit="return confirm('Change this account role? The account must sign in again for the new access to take effect.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="email" value="{{ profile.email }}">
+                                <input type="hidden" name="q" value="{{ search_query }}">
+                                <input type="hidden" name="filter_role" value="{{ selected_role }}">
+                                <label class="visually-hidden" for="role-{{ loop.index }}">New role for {{ profile.email }}</label>
+                                <select id="role-{{ loop.index }}" class="form-select form-select-sm" name="role">
+                                    <option value="student" {% if profile.role == 'student' %}selected{% endif %}>Student</option>
+                                    <option value="faculty" {% if profile.role == 'faculty' %}selected{% endif %}>Faculty</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Save role</button>
+                            </form>
+                            {% else %}
+                            <span class="text-secondary small">
+                                {% if profile.role == 'admin' %}Protected{% else %}Current account{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-state text-secondary py-4">
+                            No accounts match these filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
 <section class="dashboard-quick-actions admin-quick-actions">
-    <span class="section-kicker">Administration</span>
-    <h2>Manage access and academic operations.</h2>
+    <span class="section-kicker">Academic and faculty tools</span>
+    <h2>Open a workspace</h2>
     <div class="quick-action-grid">
-        <a class="quick-action-card" href="{{ url_for('faculty.admin_users') }}">
-            <span>01 / ACCESS</span><strong>Users directory</strong>
-            <small>Search accounts and manage Student or Faculty access</small><b aria-hidden="true">→</b>
-        </a>
         <a class="quick-action-card" href="{{ url_for('faculty.dashboard') }}">
-            <span>02 / FACULTY</span><strong>Faculty dashboard</strong>
+            <span>01 / FACULTY</span><strong>Faculty dashboard</strong>
             <small>Review attendance, marks and academic indicators</small><b aria-hidden="true">→</b>
         </a>
         <a class="quick-action-card" href="{{ url_for('faculty.manage') }}">
-            <span>03 / RECORDS</span><strong>Manage records</strong>
+            <span>02 / RECORDS</span><strong>Manage records</strong>
             <small>Maintain student records and assessments</small><b aria-hidden="true">→</b>
         </a>
         <a class="quick-action-card" href="{{ url_for('faculty.classes') }}">
-            <span>04 / CLASSES</span><strong>Manage classes</strong>
+            <span>03 / CLASSES</span><strong>Manage classes</strong>
             <small>Review classes and student assignments</small><b aria-hidden="true">→</b>
         </a>
         <a class="quick-action-card" href="{{ url_for('academic.attendance') }}">
-            <span>05 / ATTENDANCE</span><strong>Attendance calculator</strong>
+            <span>04 / ATTENDANCE</span><strong>Attendance calculator</strong>
             <small>Calculate attendance requirements</small><b aria-hidden="true">→</b>
         </a>
         <a class="quick-action-card" href="{{ url_for('academic.classrooms') }}">
-            <span>06 / CAMPUS</span><strong>Classroom finder</strong>
+            <span>05 / CAMPUS</span><strong>Classroom finder</strong>
             <small>Find available classroom slots</small><b aria-hidden="true">→</b>
         </a>
         <a class="quick-action-card" href="{{ url_for('academic.study_planner_page') }}">
-            <span>07 / STUDY</span><strong>Study planner</strong>
+            <span>06 / STUDY</span><strong>Study planner</strong>
             <small>Build a study plan from topic priorities</small><b aria-hidden="true">→</b>
         </a>
     </div>

@@ -99,6 +99,13 @@ class TestAdminUserDirectory(AppTestBase, unittest.TestCase):
         self.assertNotIn(b"learner@example.com", response.data)
         self.assertNotIn(b"admin@example.com", response.data)
 
+    def test_admin_dashboard_combines_search_and_role_filter(self):
+        response = self.client.get("/faculty/admin?q=teacher&role=faculty")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"teacher@example.com", response.data)
+        self.assertNotIn(b"learner@example.com", response.data)
+        self.assertNotIn(b"admin@example.com", response.data)
+
     def test_legacy_users_url_redirects_to_admin_dashboard_with_filters(self):
         response = self.client.get("/faculty/admin/users?q=learner&role=student")
         self.assertEqual(response.status_code, 302)

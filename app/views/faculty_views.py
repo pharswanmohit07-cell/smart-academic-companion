@@ -539,6 +539,33 @@ def _classes_page_data(class_ids, selected_class_id):
 
 
 # ------------------------------------------------------------------ admin
+@bp.route("/admin")
+@auth_module.admin_required
+def admin_dashboard():
+    """Combined Admin landing page backed only by current database records."""
+    try:
+        with closing_connection() as connection:
+            table = profiles_table(connection)
+            role_counts = {row["role"]: row["total"] for row in connection.execute(
+                f"SELECT role, COUNT(*) AS total FROM {table} GROUP BY role"
+            ).fetchall()}
+            class_count = connection.execute(
+                "SELECT COUNT(*) AS total FROM faculty_classes"
+            ).fetchone()["total"]
+    except DatabaseError:
+        log.exception("admin dashboard summary could not be loaded")
+        flash("Some workspace totals are unavailable right now.", "warning")
+        role_counts = {}
+        class_count = None
+    return render_template(
+        "admin/dashboard.html",
+        student_count=role_counts.get("student"),
+        faculty_count=role_counts.get("faculty"),
+        admin_count=role_counts.get("admin"),
+        class_count=class_count,
+    )
+
+
 @bp.route("/admin/users")
 @auth_module.admin_required
 def admin_users():

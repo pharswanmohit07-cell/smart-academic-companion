@@ -82,7 +82,7 @@ def get_faculty_summary(class_id=None, class_ids=None):
             JOIN subjects AS subject ON subject.subject_id = m.subject_id
             WHERE lower(trim(m.exam_name)) = 'midterm'
                OR lower(trim(m.exam_name)) IN ('end term', 'end-term', 'endterm')
-            GROUP BY m.student_id, m.subject_id, exam_type
+            GROUP BY m.student_id, m.subject_id, subject.subject_name, exam_type
             ORDER BY subject.subject_name
             """
         ).fetchall()

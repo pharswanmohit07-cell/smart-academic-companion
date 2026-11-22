@@ -51,6 +51,11 @@
       <input type="hidden" name="demo_role" value="faculty">
       <button class="btn btn-outline-secondary w-100" type="submit">Continue as faculty</button>
     </form>
+    <form method="post" action="{{ url_for('auth.demo_login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="demo_role" value="admin">
+      <button class="btn btn-outline-dark w-100" type="submit">Continue as admin</button>
+    </form>
   </div>
 </div>
 {% endif %}

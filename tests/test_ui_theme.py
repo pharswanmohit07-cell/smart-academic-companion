@@ -147,7 +147,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_dark_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#111b2b", "#17263a", "#20334b", "#fff4e8", "#e7d4c0", "#3a4b60", "#f0ad62"):
+        for colour in ("#382b2c", "#493638", "#5b4140", "#fce8d7", "#f1d2b8", "#74545a", "#d9a0b2", "#f0ad62"):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
@@ -217,10 +217,24 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
                 with self.subTest(path=path, phrase=phrase):
                     self.assertNotIn(phrase, body)
 
+    def test_dark_mode_uses_warm_terracotta_surfaces_and_plum_navy_accents(self):
+        css = self.stylesheet().decode("utf-8").lower()
+        for token in ("--app-bg: #382b2c", "--app-surface: #493638",
+                      "--app-surface-muted: #5b4140", "--app-accent: #d9a0b2",
+                      "--app-accent-soft: #47323d"):
+            with self.subTest(token=token):
+                self.assertIn(token, css)
+
+    def test_login_exposes_a_working_faculty_access_entry(self):
+        response = self.client.get("/auth/login")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'href="/auth/login?next=/faculty/dashboard"', response.data)
+        self.assertIn(b"Faculty access", response.data)
+
     def test_auth_forms_keep_student_and_faculty_on_the_same_sign_in(self):
         login = self.client.get("/auth/login").data
         signup = self.client.get("/auth/signup").data
-        self.assertIn(b"One account", login)
+        self.assertIn(b"Sign in to continue", login)
         self.assertIn(b"Create your student account", signup)
         self.assertNotIn(b'name="role"', signup)
 

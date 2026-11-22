@@ -138,22 +138,22 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
         self.assertGreater(len(response.data), 1000)
         self.assertEqual(response.mimetype, "text/css")
         self.assertIn(b"Smart Academic Companion", response.data)
-        self.assertIn(b"--app-accent: #155eef", response.data)
+        self.assertIn(b"--app-accent: #14243a", response.data)
 
     def test_light_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#f3f6fb", "#ffffff", "#155eef", "#172033", "#526176", "#d5deea"):
+        for colour in ("#fff4e8", "#fffaf4", "#14243a", "#172033", "#5c5148", "#ead7c4"):
             self.assertIn(colour, css.lower())
 
     def test_dark_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#0b1220", "#121d30", "#192840", "#f4f7ff", "#c0cadb", "#30415d"):
+        for colour in ("#111b2b", "#17263a", "#20334b", "#fff4e8", "#e7d4c0", "#3a4b60", "#f0ad62"):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
         css = self.stylesheet().decode("utf-8")
-        for token in ("--app-text: #172033", "--app-text-muted: #526176",
-                      "--app-text: #f4f7ff", "--app-text-muted: #c0cadb",
+        for token in ("--app-text: #172033", "--app-text-muted: #5c5148",
+                      "--app-text: #fff4e8", "--app-text-muted: #e7d4c0",
                       ":focus-visible", "outline: 3px solid var(--app-cyan)",
                       "--bs-btn-color: #fff"):
             with self.subTest(token=token):
@@ -209,11 +209,26 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
             with self.subTest(section=section):
                 self.assertIn(section, body)
 
+    def test_auth_pages_do_not_show_internal_faculty_provisioning_copy(self):
+        for path in ("/auth/login", "/auth/signup"):
+            body = self.client.get(path).data.lower()
+            for phrase in (b"faculty accounts are created by an administrator",
+                           b"faculty access is provisioned by an administrator"):
+                with self.subTest(path=path, phrase=phrase):
+                    self.assertNotIn(phrase, body)
+
+    def test_auth_forms_keep_student_and_faculty_on_the_same_sign_in(self):
+        login = self.client.get("/auth/login").data
+        signup = self.client.get("/auth/signup").data
+        self.assertIn(b"One account", login)
+        self.assertIn(b"Create your student account", signup)
+        self.assertNotIn(b'name="role"', signup)
+
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261120", body)
-        for selector in (b"--app-accent: #155eef", b".app-main",
+        self.assertIn(b"local-preview.css?v=20261122-amber-navy", body)
+        for selector in (b"--app-accent: #14243a", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):
             with self.subTest(selector=selector):

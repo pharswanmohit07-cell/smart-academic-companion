@@ -165,7 +165,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
-        css = self.stylesheet().decode("utf-8")
+        css = self.stylesheet().decode("utf-8").lower()
         for token in ("--app-text: #34263f", "--app-text-muted: #66556a",
                       "--app-text: #f4f7ff", "--app-text-muted: #c0cadb",
                       ":focus-visible", "outline: 3px solid var(--app-cyan)",

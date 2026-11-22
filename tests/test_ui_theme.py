@@ -275,6 +275,17 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
             with self.subTest(selector=selector):
                 self.assertIn(selector, css)
 
+    def test_all_signed_in_panels_use_a_shared_centered_content_shell(self):
+        for path in PAGES + ["/"]:
+            with self.subTest(path=path):
+                body = self.page(path)
+                self.assertIn(b'class="app-content-shell"', body)
+        css = self.stylesheet().decode("utf-8")
+        self.assertIn(".app-content-shell {", css)
+        self.assertIn("width: min(100%, 1480px)", css)
+        self.assertIn("margin-inline: auto", css)
+        self.assertIn("padding-inline: clamp(1rem, 3.2vw, 2.75rem)", css)
+
     def test_student_dashboard_uses_a_centered_responsive_shell(self):
         source, _, _ = self.app.jinja_env.loader.get_source(
             self.app.jinja_env, "student_dashboard.html"

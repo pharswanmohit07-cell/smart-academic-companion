@@ -225,11 +225,12 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, css)
 
-    def test_login_exposes_a_working_faculty_access_entry(self):
+    def test_login_has_no_separate_faculty_entry(self):
         response = self.client.get("/auth/login")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'href="/auth/login?next=/faculty/dashboard"', response.data)
-        self.assertIn(b"Faculty access", response.data)
+        self.assertNotIn(b"Faculty access", response.data)
+        self.assertIn(b"Forgot your password?", response.data)
+        self.assertIn(b"Create an account", response.data)
 
     def test_auth_forms_keep_student_and_faculty_on_the_same_sign_in(self):
         login = self.client.get("/auth/login").data
@@ -237,6 +238,8 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"Sign in to continue", login)
         self.assertIn(b"Create your student account", signup)
         self.assertNotIn(b'name="role"', signup)
+        self.assertIn(b"auth-workspace-preview", login)
+        self.assertIn(b"auth-workspace-preview", signup)
 
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")

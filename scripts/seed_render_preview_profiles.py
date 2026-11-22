@@ -1,5 +1,11 @@
 """Seed non-production role profiles for the hosted Render review app."""
 from contextlib import closing
+from pathlib import Path
+import sys
+
+# Running a file inside scripts/ places that directory, not the repository
+# root, at sys.path[0]. Add the project root for imports of the shared db package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from db import get_connection
 

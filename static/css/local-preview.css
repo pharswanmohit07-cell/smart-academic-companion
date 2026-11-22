@@ -986,3 +986,125 @@ html, body { max-width: 100%; overflow-x: clip; }
 [data-bs-theme="dark"] .attendance-meter span { background: linear-gradient(90deg,#F29A52,#FFB978) !important; }
 [data-bs-theme="dark"] .brand-mark,
 [data-bs-theme="dark"] .nav-link.active { color: #FFB978 !important; }
+
+
+/* Orange + black direction inspired by the supplied SlopCheck reference. */
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0B0A09;
+  --app-surface: #14110F;
+  --app-surface-muted: #211A16;
+  --app-border: #3A2920;
+  --app-text: #FFF3E6;
+  --app-text-muted: #D6C1AE;
+  --app-accent: #F4A261;
+  --app-accent-soft: #2D211B;
+  --app-cyan: #E88945;
+  --app-violet: #E88945;
+  --app-coral: #D96B27;
+  --app-success: #E6B77D;
+  --bs-primary: #F4A261;
+  --bs-primary-rgb: 244,162,97;
+  --bs-link-color: #FFD0A1;
+  --bs-link-hover-color: #FFF3E6;
+  --bs-body-bg: #0B0A09;
+  --bs-body-color: #FFF3E6;
+  --bs-card-bg: #14110F;
+  --bs-card-border-color: #3A2920;
+  --bs-tertiary-bg: #211A16;
+  --bs-secondary-bg: #211A16;
+  --bs-table-color: #FFF3E6;
+  --bs-table-bg: transparent;
+  --bs-table-striped-color: #FFF3E6;
+  --bs-table-striped-bg: rgba(255,243,230,.035);
+  --bs-table-hover-color: #FFF3E6;
+  --bs-table-hover-bg: rgba(244,162,97,.08);
+}
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] .app-main,
+[data-bs-theme="dark"] .app-main-landing,
+[data-bs-theme="dark"] .landing-page {
+  background:
+    radial-gradient(ellipse at 12% 16%, rgba(217,107,39,.22), transparent 34rem),
+    radial-gradient(ellipse at 88% 10%, rgba(244,162,97,.11), transparent 30rem),
+    #0B0A09 !important;
+  color: #FFF3E6;
+}
+[data-bs-theme="dark"] .app-navbar,
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] .dropdown-menu,
+[data-bs-theme="dark"] .list-group-item,
+[data-bs-theme="dark"] .table,
+[data-bs-theme="dark"] .auth-shell,
+[data-bs-theme="dark"] .auth-main {
+  background-color: #14110F !important;
+  color: #FFF3E6;
+  border-color: #3A2920;
+}
+[data-bs-theme="dark"] .auth-aside,
+[data-bs-theme="dark"] .tool-hero,
+[data-bs-theme="dark"] .dashboard-welcome,
+[data-bs-theme="dark"] .attendance-primary-result,
+[data-bs-theme="dark"] .result-stat,
+[data-bs-theme="dark"] .dashboard-stat-card,
+[data-bs-theme="dark"] .feature-card,
+[data-bs-theme="dark"] .landing-feature,
+[data-bs-theme="dark"] .workflow-step,
+[data-bs-theme="dark"] .role-panel {
+  background:
+    radial-gradient(ellipse at 85% 8%, rgba(244,162,97,.14), transparent 23rem),
+    linear-gradient(145deg,#211A16,#14110F 78%) !important;
+  color: #FFF3E6;
+  border-color: #3A2920;
+}
+[data-bs-theme="dark"] .landing-title {
+  background-image: linear-gradient(105deg,#FFF3E6 5%,#F4A261 60%,#D96B27 100%) !important;
+}
+[data-bs-theme="dark"] .landing-feature::before,
+[data-bs-theme="dark"] .role-panel::before,
+[data-bs-theme="dark"] .workflow-step::before {
+  background: linear-gradient(90deg,#D96B27,#F4A261,#FFD0A1) !important;
+}
+[data-bs-theme="dark"] .btn-primary {
+  --bs-btn-bg: #F4A261;
+  --bs-btn-border-color: #F4A261;
+  --bs-btn-hover-bg: #FFD0A1;
+  --bs-btn-hover-border-color: #FFD0A1;
+  --bs-btn-color: #1B120D;
+  --bs-btn-hover-color: #1B120D;
+  box-shadow: 0 5px 18px rgba(244,162,97,.2) !important;
+}
+[data-bs-theme="dark"] .btn-outline-primary,
+[data-bs-theme="dark"] .btn-outline-secondary {
+  --bs-btn-color: #FFD0A1;
+  --bs-btn-border-color: #8C512F;
+  --bs-btn-hover-bg: #D96B27;
+  --bs-btn-hover-border-color: #D96B27;
+  --bs-btn-hover-color: #0B0A09;
+}
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #0B0A09 !important;
+  border-color: #5A3A28 !important;
+  color: #FFF3E6 !important;
+}
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  border-color: #F4A261 !important;
+  box-shadow: 0 0 0 .22rem rgba(244,162,97,.2) !important;
+}
+[data-bs-theme="dark"] .table thead th { background: #211A16 !important; }
+[data-bs-theme="dark"] .progress,
+[data-bs-theme="dark"] .attendance-meter { background: #3A2920 !important; }
+[data-bs-theme="dark"] .progress-bar,
+[data-bs-theme="dark"] .attendance-meter span {
+  background: linear-gradient(90deg,#D96B27,#F4A261,#FFD0A1) !important;
+}
+[data-bs-theme="dark"] .brand-mark,
+[data-bs-theme="dark"] .nav-link.active { color: #F4A261 !important; }
+[data-bs-theme="dark"] .local-preview-ribbon {
+  background: #211A16 !important;
+  color: #FFF3E6 !important;
+  border-color: #3A2920 !important;
+}

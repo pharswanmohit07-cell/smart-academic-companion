@@ -18,6 +18,10 @@ class TestAdminWorkspaceRouting(AppTestBase, unittest.TestCase):
         self.assertEqual(dashboard_endpoint(faculty), "faculty.dashboard")
         self.assertEqual(dashboard_endpoint(student), "student.dashboard")
 
+    def test_admin_dashboard_requires_sign_in(self):
+        response = self.client.get("/faculty/admin", follow_redirects=False)
+        self.assertIn(response.status_code, (301, 302, 303))
+
     def test_admin_dashboard_is_admin_only(self):
         self.make_profile("admin@example.com", role="admin")
         self.make_teacher("faculty@example.com")

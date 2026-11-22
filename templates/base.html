@@ -21,10 +21,10 @@
     <style>
         /* Theme tokens are resolved before paint. All component styling is external. */
         :root, [data-bs-theme="light"] {
-            --app-bg: #fff4e8; --app-surface: #fffaf4; --app-surface-muted: #f8e6d4;
-            --app-border: #ead7c4; --app-text: #172033; --app-text-muted: #5c5148;
-            --app-accent: #14243a; --app-accent-soft: #f3dfca; --app-cyan: #287f78;
-            --app-violet: #14243a; --app-coral: #bd7045; --app-success: #267451;
+            --app-bg: #FFF1DF; --app-surface: #F8E9D8; --app-surface-muted: #FFE2C2;
+            --app-border: #FFD1A3; --app-text: #34263F; --app-text-muted: #66556A;
+            --app-accent: #F29A52; --app-accent-soft: #FFD1A3; --app-cyan: #39999F;
+            --app-violet: #AD53DF; --app-coral: #D9783D; --app-success: #39999F;
             --bs-body-bg: var(--app-bg); --bs-body-color: var(--app-text);
             --bs-border-color: var(--app-border); --bs-secondary-color: var(--app-text-muted);
             --bs-emphasis-color: var(--app-text); --bs-primary: var(--app-accent);
@@ -33,10 +33,10 @@
             --bs-card-border-color: var(--app-border); --bs-tertiary-bg: var(--app-surface-muted);
         }
         [data-bs-theme="dark"] {
-            --app-bg: #4A2C1D; --app-surface: #603A25; --app-surface-muted: #75482B;
-            --app-border: #A66A3F; --app-text: #FFF3E2; --app-text-muted: #F4D1AC;
-            --app-accent: #FFC078; --app-accent-soft: #704126; --app-cyan: #E8B77D;
-            --app-violet: #E8A05A; --app-coral: #F29B5B; --app-success: #B8D59A;
+            --app-bg: #241B2F; --app-surface: #34263F; --app-surface-muted: #4B3556;
+            --app-border: #70577B; --app-text: #FFF1DF; --app-text-muted: #F8E9D8;
+            --app-accent: #FFB978; --app-accent-soft: #4B3556; --app-cyan: #39999F;
+            --app-violet: #AD53DF; --app-coral: #F29A52; --app-success: #73BDB5;
             --bs-body-bg: var(--app-bg); --bs-body-color: var(--app-text);
             --bs-border-color: var(--app-border); --bs-secondary-color: var(--app-text-muted);
             --bs-emphasis-color: var(--app-text); --bs-primary: var(--app-accent);
@@ -49,7 +49,7 @@
             --bs-table-hover-bg: rgba(255,192,120,.12);
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-warm-orange-dark-v2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-apricot-glow-v1">
     {% block page_head %}{% endblock %}
 </head>
 

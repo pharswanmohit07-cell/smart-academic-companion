@@ -34,18 +34,18 @@
 }
 [data-bs-theme="dark"] {
   color-scheme: dark;
-  --app-bg: #241B2F;
-  --app-surface: #34263F;
-  --app-surface-muted: #4B3556;
-  --app-border: #70577B;
-  --app-text: #FFF1DF;
-  --app-text-muted: #F8E9D8;
-  --app-accent: #FFB978;
-  --app-accent-soft: #4B3556;
-  --app-cyan: #39999F;
-  --app-violet: #AD53DF;
-  --app-coral: #F29A52;
-  --app-success: #73BDB5;
+  --app-bg: #0b1220;
+  --app-surface: #121d30;
+  --app-surface-muted: #192840;
+  --app-border: #30415d;
+  --app-text: #f4f7ff;
+  --app-text-muted: #c0cadb;
+  --app-accent: #8bb4ff;
+  --app-accent-soft: #1c3153;
+  --app-cyan: #67d5df;
+  --app-violet: #c2a7ff;
+  --app-coral: #ff9b8f;
+  --app-success: #7ee0ae;
   --app-shadow-sm: 0 2px 8px rgba(0, 0, 0, .16);
   --app-shadow-md: 0 12px 32px rgba(0, 0, 0, .22);
   --bs-body-bg: var(--app-bg);
@@ -918,196 +918,6 @@ html, body { max-width: 100%; overflow-x: clip; }
 [data-bs-theme="light"] .landing-feature::before,
 [data-bs-theme="light"] .workflow-step::before,
 [data-bs-theme="light"] .role-panel::before { background: linear-gradient(90deg,#F29A52,#FFB978,#AD53DF); }
-
-[data-bs-theme="dark"] {
-  color-scheme: dark;
-  --app-bg: #241B2F; --app-surface: #34263F; --app-surface-muted: #4B3556;
-  --app-border: #70577B; --app-text: #FFF1DF; --app-text-muted: #F8E9D8;
-  --app-accent: #FFB978; --app-accent-soft: #4B3556; --app-cyan: #39999F;
-  --app-violet: #AD53DF; --app-coral: #F29A52; --app-success: #73BDB5;
-  --bs-primary: #FFB978; --bs-primary-rgb: 255,185,120;
-  --bs-link-color: #FFD1A3; --bs-link-hover-color: #FFF1DF;
-  --bs-body-bg: #241B2F; --bs-body-color: #FFF1DF;
-  --bs-card-bg: #34263F; --bs-card-border-color: #70577B;
-  --bs-tertiary-bg: #4B3556;
-}
-[data-bs-theme="dark"] body,
-[data-bs-theme="dark"] .app-main,
-[data-bs-theme="dark"] .app-main-landing,
-[data-bs-theme="dark"] .landing-page {
-  background:
-    radial-gradient(ellipse at 78% 7%, rgba(242,154,82,.22), transparent 34rem),
-    linear-gradient(140deg,#241B2F 0%,#34263F 72%,#4B3556 100%) !important;
-  color: #FFF1DF;
-}
-[data-bs-theme="dark"] .app-navbar,
-[data-bs-theme="dark"] .card,
-[data-bs-theme="dark"] .modal-content,
-[data-bs-theme="dark"] .dropdown-menu,
-[data-bs-theme="dark"] .list-group-item,
-[data-bs-theme="dark"] .table,
-[data-bs-theme="dark"] .auth-shell,
-[data-bs-theme="dark"] .auth-main {
-  background-color: #34263F !important; color: #FFF1DF; border-color: #70577B;
-}
-[data-bs-theme="dark"] .auth-aside,
-[data-bs-theme="dark"] .tool-hero,
-[data-bs-theme="dark"] .dashboard-welcome,
-[data-bs-theme="dark"] .attendance-primary-result,
-[data-bs-theme="dark"] .result-stat,
-[data-bs-theme="dark"] .dashboard-stat-card,
-[data-bs-theme="dark"] .feature-card,
-[data-bs-theme="dark"] .landing-feature,
-[data-bs-theme="dark"] .workflow-step,
-[data-bs-theme="dark"] .role-panel {
-  background: linear-gradient(145deg,#4B3556,#34263F 78%) !important;
-  color: #FFF1DF; border-color: #70577B;
-}
-[data-bs-theme="dark"] .landing-title { background-image: linear-gradient(105deg,#FFF1DF 8%,#FFB978 58%,#F29A52) !important; }
-[data-bs-theme="dark"] .btn-primary {
-  --bs-btn-bg: #FFB978; --bs-btn-border-color: #FFB978;
-  --bs-btn-hover-bg: #F29A52; --bs-btn-hover-border-color: #F29A52;
-  --bs-btn-color: #241B2F; --bs-btn-hover-color: #241B2F;
-  box-shadow: 0 5px 18px rgba(255,185,120,.2) !important;
-}
-[data-bs-theme="dark"] .btn-outline-primary {
-  --bs-btn-color: #FFD1A3; --bs-btn-border-color: #D9783D;
-  --bs-btn-hover-bg: #D9783D; --bs-btn-hover-border-color: #D9783D;
-  --bs-btn-hover-color: #241B2F;
-}
-[data-bs-theme="dark"] .form-control,
-[data-bs-theme="dark"] .form-select { background-color: #241B2F !important; color: #FFF1DF !important; border-color: #70577B !important; }
-[data-bs-theme="dark"] .form-control:focus,
-[data-bs-theme="dark"] .form-select:focus { border-color: #FFB978 !important; box-shadow: 0 0 0 .22rem rgba(255,185,120,.2) !important; }
-[data-bs-theme="dark"] .table thead th { background: #4B3556 !important; }
-[data-bs-theme="dark"] .progress,
-[data-bs-theme="dark"] .attendance-meter { background: #70577B !important; }
-[data-bs-theme="dark"] .progress-bar,
-[data-bs-theme="dark"] .attendance-meter span { background: linear-gradient(90deg,#F29A52,#FFB978) !important; }
-[data-bs-theme="dark"] .brand-mark,
-[data-bs-theme="dark"] .nav-link.active { color: #FFB978 !important; }
-
-
-/* Orange + black direction inspired by the supplied SlopCheck reference. */
-[data-bs-theme="dark"] {
-  color-scheme: dark;
-  --app-bg: #0B0A09;
-  --app-surface: #14110F;
-  --app-surface-muted: #211A16;
-  --app-border: #3A2920;
-  --app-text: #FFF3E6;
-  --app-text-muted: #D6C1AE;
-  --app-accent: #F4A261;
-  --app-accent-soft: #2D211B;
-  --app-cyan: #E88945;
-  --app-violet: #E88945;
-  --app-coral: #D96B27;
-  --app-success: #E6B77D;
-  --bs-primary: #F4A261;
-  --bs-primary-rgb: 244,162,97;
-  --bs-link-color: #FFD0A1;
-  --bs-link-hover-color: #FFF3E6;
-  --bs-body-bg: #0B0A09;
-  --bs-body-color: #FFF3E6;
-  --bs-card-bg: #14110F;
-  --bs-card-border-color: #3A2920;
-  --bs-tertiary-bg: #211A16;
-  --bs-secondary-bg: #211A16;
-  --bs-table-color: #FFF3E6;
-  --bs-table-bg: transparent;
-  --bs-table-striped-color: #FFF3E6;
-  --bs-table-striped-bg: rgba(255,243,230,.035);
-  --bs-table-hover-color: #FFF3E6;
-  --bs-table-hover-bg: rgba(244,162,97,.08);
-}
-[data-bs-theme="dark"] body,
-[data-bs-theme="dark"] .app-main,
-[data-bs-theme="dark"] .app-main-landing,
-[data-bs-theme="dark"] .landing-page {
-  background:
-    radial-gradient(ellipse at 12% 16%, rgba(217,107,39,.22), transparent 34rem),
-    radial-gradient(ellipse at 88% 10%, rgba(244,162,97,.11), transparent 30rem),
-    #0B0A09 !important;
-  color: #FFF3E6;
-}
-[data-bs-theme="dark"] .app-navbar,
-[data-bs-theme="dark"] .card,
-[data-bs-theme="dark"] .modal-content,
-[data-bs-theme="dark"] .dropdown-menu,
-[data-bs-theme="dark"] .list-group-item,
-[data-bs-theme="dark"] .table,
-[data-bs-theme="dark"] .auth-shell,
-[data-bs-theme="dark"] .auth-main {
-  background-color: #14110F !important;
-  color: #FFF3E6;
-  border-color: #3A2920;
-}
-[data-bs-theme="dark"] .auth-aside,
-[data-bs-theme="dark"] .tool-hero,
-[data-bs-theme="dark"] .dashboard-welcome,
-[data-bs-theme="dark"] .attendance-primary-result,
-[data-bs-theme="dark"] .result-stat,
-[data-bs-theme="dark"] .dashboard-stat-card,
-[data-bs-theme="dark"] .feature-card,
-[data-bs-theme="dark"] .landing-feature,
-[data-bs-theme="dark"] .workflow-step,
-[data-bs-theme="dark"] .role-panel {
-  background:
-    radial-gradient(ellipse at 85% 8%, rgba(244,162,97,.14), transparent 23rem),
-    linear-gradient(145deg,#211A16,#14110F 78%) !important;
-  color: #FFF3E6;
-  border-color: #3A2920;
-}
-[data-bs-theme="dark"] .landing-title {
-  background-image: linear-gradient(105deg,#FFF3E6 5%,#F4A261 60%,#D96B27 100%) !important;
-}
-[data-bs-theme="dark"] .landing-feature::before,
-[data-bs-theme="dark"] .role-panel::before,
-[data-bs-theme="dark"] .workflow-step::before {
-  background: linear-gradient(90deg,#D96B27,#F4A261,#FFD0A1) !important;
-}
-[data-bs-theme="dark"] .btn-primary {
-  --bs-btn-bg: #F4A261;
-  --bs-btn-border-color: #F4A261;
-  --bs-btn-hover-bg: #FFD0A1;
-  --bs-btn-hover-border-color: #FFD0A1;
-  --bs-btn-color: #1B120D;
-  --bs-btn-hover-color: #1B120D;
-  box-shadow: 0 5px 18px rgba(244,162,97,.2) !important;
-}
-[data-bs-theme="dark"] .btn-outline-primary,
-[data-bs-theme="dark"] .btn-outline-secondary {
-  --bs-btn-color: #FFD0A1;
-  --bs-btn-border-color: #8C512F;
-  --bs-btn-hover-bg: #D96B27;
-  --bs-btn-hover-border-color: #D96B27;
-  --bs-btn-hover-color: #0B0A09;
-}
-[data-bs-theme="dark"] .form-control,
-[data-bs-theme="dark"] .form-select {
-  background-color: #0B0A09 !important;
-  border-color: #5A3A28 !important;
-  color: #FFF3E6 !important;
-}
-[data-bs-theme="dark"] .form-control:focus,
-[data-bs-theme="dark"] .form-select:focus {
-  border-color: #F4A261 !important;
-  box-shadow: 0 0 0 .22rem rgba(244,162,97,.2) !important;
-}
-[data-bs-theme="dark"] .table thead th { background: #211A16 !important; }
-[data-bs-theme="dark"] .progress,
-[data-bs-theme="dark"] .attendance-meter { background: #3A2920 !important; }
-[data-bs-theme="dark"] .progress-bar,
-[data-bs-theme="dark"] .attendance-meter span {
-  background: linear-gradient(90deg,#D96B27,#F4A261,#FFD0A1) !important;
-}
-[data-bs-theme="dark"] .brand-mark,
-[data-bs-theme="dark"] .nav-link.active { color: #F4A261 !important; }
-[data-bs-theme="dark"] .local-preview-ribbon {
-  background: #211A16 !important;
-  color: #FFF3E6 !important;
-  border-color: #3A2920 !important;
-}
 
 
 /* Authentication pages: use the left panel as a compact workspace preview,

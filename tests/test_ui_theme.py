@@ -215,6 +215,15 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
         self.assertIn(b"how prepared you feel", body)
 
 
+    def test_landing_brand_and_showcase_use_the_refined_identity(self):
+        body = self.landing_page()
+        self.assertIn(b'class="brand-name">Smart Academic Companion</span>', body)
+        self.assertNotIn(b'class="brand-mark"', body)
+        self.assertIn(b'class="workspace-showcase"', body)
+        self.assertIn(b'Four tools.', body)
+        for label in (b'Attendance', b'Classroom finder', b'Study planner', b'Academic progress'):
+            self.assertIn(label, body)
+
     def test_landing_page_has_a_complete_product_story(self):
         body = self.landing_page()
         for section in (b"landing-hero", b"product-preview", b"workflow-section",

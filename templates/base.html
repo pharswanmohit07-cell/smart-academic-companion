@@ -17,15 +17,14 @@
             document.documentElement.setAttribute("data-theme", theme);
         })();
     </script>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Theme tokens are resolved before paint. All component styling is external. */
         :root, [data-bs-theme="light"] {
-            --app-bg: #f3f6fb; --app-surface: #ffffff; --app-surface-muted: #edf2f8;
-            --app-border: #d5deea; --app-text: #172033; --app-text-muted: #526176;
-            --app-accent: #155eef; --app-accent-soft: #e8efff; --app-cyan: #087e8b;
-            --app-violet: #6941c6; --app-coral: #c24135; --app-success: #167348;
+            --app-bg: #FFF1DF; --app-surface: #F8E9D8; --app-surface-muted: #FFE2C2;
+            --app-border: #FFD1A3; --app-text: #34263F; --app-text-muted: #66556A;
+            --app-accent: #F29A52; --app-accent-soft: #FFD1A3; --app-cyan: #39999F;
+            --app-violet: #AD53DF; --app-coral: #D9783D; --app-success: #39999F;
             --bs-body-bg: var(--app-bg); --bs-body-color: var(--app-text);
             --bs-border-color: var(--app-border); --bs-secondary-color: var(--app-text-muted);
             --bs-emphasis-color: var(--app-text); --bs-primary: var(--app-accent);
@@ -50,7 +49,7 @@
             --bs-table-hover-bg: rgba(139,180,255,.07);
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-approved-fullbleed-sections">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/local-preview.css') }}?v=20261122-apricot-navy-v2">
     {% block page_head %}{% endblock %}
 </head>
 
@@ -74,7 +73,7 @@
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'dashboard' %}active{% endif %}" {% if endpoint=='dashboard' %}aria-current="page"{% endif %} href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'attendance' %}active{% endif %}" {% if endpoint=='attendance' %}aria-current="page"{% endif %} href="{{ url_for('academic.attendance') }}">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'classrooms' %}active{% endif %}" {% if endpoint=='classrooms' %}aria-current="page"{% endif %} href="{{ url_for('academic.classrooms') }}">Classrooms</a></li>
-                    <li class="nav-item"><a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if endpoint=='study_planner_page' %}aria-current="page"{% endif %} href="{{ url_for('academic.study_planner_page') }}">Study planner</a></li>
+                    <li class="nav-item"><a class="nav-link {% if endpoint == 'study_planner_page' %}active{% endif %}" {% if endpoint=='study_planner_page' %}aria-current="page"{% endif %} href="{{ url_for('academic.study_planner_page') }}">Study Planner</a></li>
                     {% if current_user.is_faculty %}
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_dashboard' %}active{% endif %}" {% if endpoint=='faculty_dashboard' %}aria-current="page"{% endif %} href="{{ url_for('faculty.dashboard') }}">Faculty Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if endpoint == 'faculty_manage' %}active{% endif %}" {% if endpoint=='faculty_manage' %}aria-current="page"{% endif %} href="{{ url_for('faculty.manage') }}">Manage Records</a></li>
@@ -101,7 +100,7 @@
             </div>
         </div>
     </nav>
-    <main class="container app-main py-4 py-lg-5{% if request.endpoint == 'main.home' %} app-main-landing{% endif %}">
+    <main class="container app-main app-main-landing py-4 py-lg-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
         <div class="alert alert-{{ category if category in ['danger', 'success', 'warning', 'info'] else 'info' }} alert-dismissible fade show" role="status">

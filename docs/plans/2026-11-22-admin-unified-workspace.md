@@ -64,8 +64,8 @@ Expected: routing, authorization, and role-specific navbar tests pass.
 
 - [ ] **Step 5: Run the affected integration check**
 
-Run: `python -m unittest tests.test_auth_flow tests.test_ui_theme tests.test_admin_workspace`
-Expected: existing sign-in routing and shared theme tests pass alongside the new Admin tests. If the actual existing auth test module uses a different filename, run the repository's matching discovered test module instead and record the exact command.
+Run: `python -m unittest tests.test_auth_authorization tests.test_ui_theme tests.test_admin_workspace`
+Expected: existing authentication authorization and shared theme tests pass alongside the new Admin tests.
 
 - [ ] **Step 6: Commit the passing deliverable**
 

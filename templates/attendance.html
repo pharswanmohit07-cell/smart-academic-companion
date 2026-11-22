@@ -15,6 +15,7 @@
     <div class="card-body">
       <p class="text-secondary mb-4">Enter your current class record and the number of upcoming classes.</p>
       <form method="POST" class="calculator-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-field">
           <label for="attended" class="form-label">Classes attended</label>
           <input type="number" class="form-control" id="attended" name="attended" min="0" required value="{{ request.form.get('attended', '30') }}">

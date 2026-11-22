@@ -6,9 +6,9 @@ from pathlib import Path
 
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / "templates"
-FORM_PATTERN = re.compile(r"<form\\b(?P<attributes>[^>]*)>(?P<body>.*?)</form\\s*>", re.I | re.S)
-POST_METHOD = re.compile(r"""\\bmethod\\s*=\\s*["']?post["']?\\b""", re.I)
-CSRF_FIELD = re.compile(r"""name\\s*=\\s*["']csrf_token["']""", re.I)
+FORM_PATTERN = re.compile(r"<form\b(?P<attributes>[^>]*)>(?P<body>.*?)</form\s*>", re.I | re.S)
+POST_METHOD = re.compile(r"""\bmethod\s*=\s*["']?post["']?\b""", re.I)
+CSRF_FIELD = re.compile(r"""name\s*=\s*["']csrf_token["']""", re.I)
 
 
 class TestCsrfTemplateCoverage(unittest.TestCase):

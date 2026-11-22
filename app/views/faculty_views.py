@@ -666,14 +666,25 @@ def admin_set_role():
                     (profile["user_id"],),
                 ).fetchone()
                 if existing is None:
-                    connection.execute(
-                        """INSERT INTO teachers (auth_user_id, name, email)
-                           VALUES (?, ?, ?)
-                           ON CONFLICT (auth_user_id) DO NOTHING""",
-                        (profile["user_id"],
-                         profile["display_name"] or profile["email"],
-                         profile["email"]),
-                    )
+                    unlinked = connection.execute(
+                        "SELECT teacher_id FROM teachers "
+                        "WHERE auth_user_id IS NULL AND lower(email) = lower(?)",
+                        (profile["email"],),
+                    ).fetchone()
+                    if unlinked is not None:
+                        connection.execute(
+                            "UPDATE teachers SET auth_user_id = ? WHERE teacher_id = ?",
+                            (profile["user_id"], unlinked["teacher_id"]),
+                        )
+                    else:
+                        connection.execute(
+                            """INSERT INTO teachers (auth_user_id, name, email)
+                               VALUES (?, ?, ?)
+                               ON CONFLICT (auth_user_id) DO NOTHING""",
+                            (profile["user_id"],
+                             profile["display_name"] or profile["email"],
+                             profile["email"]),
+                        )
                 connection.execute(
                     f"UPDATE {table} SET role = ? WHERE user_id = ?",
                     (role, profile["user_id"]),

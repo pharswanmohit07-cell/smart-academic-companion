@@ -23,6 +23,7 @@
     </p>
 
     <form method="post" id="study-plan-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="table-responsive stack-table">
         <table class="table align-middle">
           <thead>

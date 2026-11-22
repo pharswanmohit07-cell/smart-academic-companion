@@ -35,6 +35,7 @@
     <section class="card tool-faculty h-100"><div class="card-body">
       <span class="form-step">01 · Student</span><h2 class="h5 mb-3">Add student</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="add_student">
         <div class="col-12"><label class="form-label" for="student-name">Full name</label><input class="form-control" id="student-name" name="name" required maxlength="120"></div>
         <div class="col-12"><label class="form-label" for="student-email">Email (optional)</label><input class="form-control" id="student-email" type="email" name="email" maxlength="254"></div>
@@ -49,6 +50,7 @@
     <section class="card tool-faculty h-100"><div class="card-body">
       <h2 class="h5 mb-3">Edit student details</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="edit_student">
         <div class="col-12"><label class="form-label" for="edit-student">Student</label><div class="student-picker-wrap position-relative">
           <input class="form-control student-picker" id="edit-student-search" placeholder="Search student..." autocomplete="off" required aria-label="Search student by name or ID">
@@ -68,6 +70,7 @@
     <section class="card tool-faculty h-100"><div class="card-body">
       <h2 class="h5 mb-3">Add subject</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create_subject">
         <div class="col-12"><label class="form-label" for="subject-name">Subject name</label><input class="form-control" id="subject-name" name="subject_name" required maxlength="120"></div>
         <div class="col-12"><label class="form-label" for="subject-code">Subject code (optional)</label><input class="form-control" id="subject-code" name="subject_code" maxlength="30"></div>
@@ -80,6 +83,7 @@
     <section class="card tool-attendance h-100"><div class="card-body">
       <h2 class="h5 mb-3">Record attendance</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save_attendance">
         <div class="col-12"><label class="form-label" for="attendance-student">Student</label><div class="student-picker-wrap position-relative">
           <input class="form-control student-picker" id="attendance-student-search" placeholder="Search student..." autocomplete="off" required aria-label="Search student by name or ID">
@@ -98,6 +102,7 @@
     <section class="card tool-progress h-100"><div class="card-body">
       <h2 class="h5 mb-3">Record exam marks</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save_marks">
         <div class="col-12"><label class="form-label" for="marks-student">Student</label><div class="student-picker-wrap position-relative">
           <input class="form-control student-picker" id="marks-student-search" placeholder="Search student..." autocomplete="off" required aria-label="Search student by name or ID">
@@ -117,6 +122,7 @@
     <section class="card tool-study h-100"><div class="card-body">
       <h2 class="h5 mb-3">Create assignment or term work</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create_assessment">
         <div class="col-12"><label class="form-label" for="assessment-type">Type</label><select class="form-select" id="assessment-type" name="assessment_type" required><option value="assignment">Assignment</option><option value="term_work">Term Work</option></select></div>
         <div class="col-12"><label class="form-label" for="assessment-title">Title / number</label><input class="form-control" id="assessment-title" name="title" placeholder="Assignment 1" maxlength="120" required></div>
@@ -132,6 +138,7 @@
       <span class="form-step">07 · Follow-up</span><h2 class="h5 mb-3">Update submission status</h2>
       {% if assessments and students %}
       <form method="post" class="row g-3 align-items-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save_submission">
         <div class="col-12 col-md-5"><label class="form-label" for="submission-assessment">Assessment</label><select class="form-select" id="submission-assessment" name="assessment_id" required><option value="">Choose assessment</option>{% for assessment in assessments %}<option value="{{ assessment.assessment_id }}">{{ assessment.subject_name }} · {{ assessment.title }} ({{ 'Term Work' if assessment.assessment_type == 'term_work' else 'Assignment' }})</option>{% endfor %}</select></div>
         <div class="col-12 col-md-4"><label class="form-label" for="submission-student">Student</label><div class="student-picker-wrap position-relative">

@@ -27,6 +27,7 @@
     <section class="card tool-faculty h-100 create-class-panel"><div class="card-body">
       <span class="form-step">Create</span><h2 class="h5 mb-3">Create a custom class</h2>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="create_class">
         <div class="col-12"><label class="form-label" for="class-name">Class name</label><input class="form-control" id="class-name" name="class_name" placeholder="e.g. BCA AI & DS - A1" maxlength="120" required></div>
         <div class="col-12"><label class="form-label" for="class-program">Program / course</label><input class="form-control" id="class-program" name="program" placeholder="e.g. BCA AI & Data Science" maxlength="100" required></div>
@@ -61,6 +62,7 @@
       <h2 class="h5 mb-1">Add student to {{ selected_class.class_name }}</h2>
       <p class="text-secondary small">New students are added only to this selected class.</p>
       <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="add_student_to_class">
         <input type="hidden" name="class_id" value="{{ selected_class.class_id }}">
         <div class="col-12"><label class="form-label" for="new-student-name">Student name</label><input class="form-control" id="new-student-name" name="name" maxlength="120" required></div>
@@ -70,6 +72,7 @@
       {% if unassigned_students %}
       <hr><h3 class="h6">Assign an existing unassigned student</h3>
       <form method="post" class="row g-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="move_student">
         <input type="hidden" name="class_id" value="{{ selected_class.class_id }}">
         <div class="col-8"><select class="form-select" name="student_id" required><option value="">Choose student</option>{% for student in unassigned_students %}<option value="{{ student.student_id }}">{{ student.name }} (#{{ student.student_id }})</option>{% endfor %}</select></div>

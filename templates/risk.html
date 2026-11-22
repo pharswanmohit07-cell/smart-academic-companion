@@ -17,10 +17,6 @@
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Low marks in either exam</p><h2 class="h3 mb-0">{{ summary.low_marks }}</h2></div></div></div>
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><p class="text-muted small mb-1">Incomplete records</p><h2 class="h3 mb-0">{{ summary.incomplete_records }}</h2></div></div></div>
 </div>
-<p class="small text-secondary mb-3" role="note">
-  Risk estimates are for guidance only.
-  {% if risk_lookup_error %}<span class="text-danger d-block">{{ risk_lookup_error }}</span>{% endif %}
-</p>
 <div class="card tool-faculty"><div class="card-body">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h2 class="h5 mb-0">Student academic overview</h2><span class="small text-muted" id="student-result-count" aria-live="polite">Showing {{ summary.total_students }} of {{ summary.total_students }} students</span></div>
   <div class="row g-2 mb-3">
@@ -67,7 +63,7 @@
           <strong>{{ "%.1f"|format(prediction.risk_percent) }}%</strong>
           <div class="small text-secondary">Main factor: {{ prediction.top_factor_label }}</div>
           {% else %}
-          <span class="text-secondary small" title="Attendance, marks and assignment data are all required">Not available (incomplete data)</span>
+          <span class="text-secondary small" aria-label="No estimate available">—</span>
           {% endif %}
         </td>
       </tr>

@@ -84,7 +84,6 @@ def dashboard():
     )
 
     risk_predictions = {}
-    risk_lookup_error = None
     if summary["students"]:
         try:
             # Load the numerical/ML stack only when a faculty dashboard is opened.
@@ -96,11 +95,7 @@ def dashboard():
                 class_ids=auth_module.owned_class_ids(),
             )
         except Exception:  # noqa: BLE001 - a model error must not crash the page
-            risk_lookup_error = (
-                "Risk estimates are unavailable right now because there is not "
-                "enough data to calculate them. The academic records above are "
-                "unaffected."
-            )
+            log.exception("Could not calculate faculty risk estimates")
 
     return render_template(
         "risk.html",
@@ -110,7 +105,6 @@ def dashboard():
         selected_class_id=selected_class_id,
         error=None,
         risk_predictions=risk_predictions,
-        risk_lookup_error=risk_lookup_error,
     )
 
 

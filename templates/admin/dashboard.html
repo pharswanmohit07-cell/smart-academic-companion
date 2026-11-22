@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Admin Overview · Smart Academic Companion{% endblock %}
+
+{% block content %}
+<header class="workspace-hero admin-hero">
+    <div class="workspace-hero-copy">
+        <span class="section-kicker">Administrator workspace / Overview</span>
+        <h1>One place to manage the academic workspace.</h1>
+        <p>Review account access, open academic tools, and move between the administration and faculty workspaces.</p>
+    </div>
+    <div class="admin-hero-note">
+        <span>Workspace access</span>
+        <strong>Admin</strong>
+        <small>Role changes apply the next time an account signs in.</small>
+    </div>
+</header>
+
+<section class="dashboard-stat-grid admin-stat-grid" aria-label="Workspace account summary">
+    <article class="dashboard-stat-card attendance-stat">
+        <span>Student accounts</span>
+        <strong>{% if student_count is not none %}{{ student_count }}{% else %}—{% endif %}</strong>
+        <small>Profiles with Student access</small>
+    </article>
+    <article class="dashboard-stat-card subject-stat">
+        <span>Faculty accounts</span>
+        <strong>{% if faculty_count is not none %}{{ faculty_count }}{% else %}—{% endif %}</strong>
+        <small>Profiles with Faculty access</small>
+    </article>
+    <article class="dashboard-stat-card marks-stat">
+        <span>Administrator accounts</span>
+        <strong>{% if admin_count is not none %}{{ admin_count }}{% else %}—{% endif %}</strong>
+        <small>Protected administrator profiles</small>
+    </article>
+    <article class="dashboard-stat-card pending-stat">
+        <span>Faculty classes</span>
+        <strong>{% if class_count is not none %}{{ class_count }}{% else %}—{% endif %}</strong>
+        <small>Classes currently recorded</small>
+    </article>
+</section>
+
+<section class="dashboard-quick-actions admin-quick-actions">
+    <span class="section-kicker">Administration</span>
+    <h2>Manage access and academic operations.</h2>
+    <div class="quick-action-grid">
+        <a class="quick-action-card" href="{{ url_for('faculty.admin_users') }}">
+            <span>01 / ACCESS</span><strong>Users directory</strong>
+            <small>Search accounts and manage Student or Faculty access</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('faculty.dashboard') }}">
+            <span>02 / FACULTY</span><strong>Faculty dashboard</strong>
+            <small>Review attendance, marks and academic indicators</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('faculty.manage') }}">
+            <span>03 / RECORDS</span><strong>Manage records</strong>
+            <small>Maintain student records and assessments</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('faculty.classes') }}">
+            <span>04 / CLASSES</span><strong>Manage classes</strong>
+            <small>Review classes and student assignments</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('academic.attendance') }}">
+            <span>05 / ATTENDANCE</span><strong>Attendance calculator</strong>
+            <small>Calculate attendance requirements</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('academic.classrooms') }}">
+            <span>06 / CAMPUS</span><strong>Classroom finder</strong>
+            <small>Find available classroom slots</small><b aria-hidden="true">→</b>
+        </a>
+        <a class="quick-action-card" href="{{ url_for('academic.study_planner_page') }}">
+            <span>07 / STUDY</span><strong>Study planner</strong>
+            <small>Build a study plan from topic priorities</small><b aria-hidden="true">→</b>
+        </a>
+    </div>
+</section>
+{% endblock %}

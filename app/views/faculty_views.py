@@ -618,9 +618,12 @@ def admin_dashboard():
 def admin_users():
     """Compatibility redirect; account management now lives on Admin Dashboard."""
     query, selected_role = _admin_directory_filters()
-    return redirect(
-        url_for("faculty.admin_dashboard", q=query, role=selected_role)
-    )
+    redirect_args = {}
+    if query:
+        redirect_args["q"] = query
+    if "role" in request.args:
+        redirect_args["role"] = selected_role
+    return redirect(url_for("faculty.admin_dashboard", **redirect_args))
 
 
 @bp.route("/admin/set-role", methods=["POST"])

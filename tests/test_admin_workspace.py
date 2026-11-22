@@ -46,7 +46,7 @@ class TestAdminWorkspaceRouting(AppTestBase, unittest.TestCase):
 
         self.as_user("admin@example.com")
         admin_page = self.client.get("/faculty/admin").data
-        for label in (b"Faculty Dashboard", b"Manage Records", b"Manage Classes", b"Users"):
+        for label in (b"Admin Overview", b"Faculty Dashboard", b"Manage Records", b"Manage Classes", b"Users"):
             self.assertIn(label, admin_page)
 
         self.client = self.app.test_client()

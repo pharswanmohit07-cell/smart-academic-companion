@@ -142,12 +142,12 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
 
     def test_light_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#fff4e8", "#fffaf4", "#14243a", "#172033", "#5c5148", "#ead7c4"):
+        for colour in ("#fff1df", "#f8e9d8", "#f29a52", "#34263f", "#66556a", "#ffd1a3"):
             self.assertIn(colour, css.lower())
 
     def test_dark_theme_uses_the_requested_palette(self):
         css = self.stylesheet().decode("utf-8")
-        for colour in ("#382b2c", "#493638", "#5b4140", "#fce8d7", "#f1d2b8", "#74545a", "#d9a0b2", "#f0ad62"):
+        for colour in ("#241b2f", "#34263f", "#4b3556", "#fff1df", "#f8e9d8", "#70577b", "#ffb978", "#ad53df"):
             self.assertIn(colour, css.lower())
 
     def test_text_contrast_and_focus_states_are_explicit(self):
@@ -219,9 +219,9 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
 
     def test_dark_mode_uses_warm_terracotta_surfaces_and_plum_navy_accents(self):
         css = self.stylesheet().decode("utf-8").lower()
-        for token in ("--app-bg: #4a2c1d", "--app-surface: #603a25",
-                      "--app-surface-muted: #75482b", "--app-accent: #ffc078",
-                      "--app-accent-soft: #704126"):
+        for token in ("--app-bg: #241b2f", "--app-surface: #34263f",
+                      "--app-surface-muted: #4b3556", "--app-accent: #ffb978",
+                      "--app-accent-soft: #4b3556"):
             with self.subTest(token=token):
                 self.assertIn(token, css)
 
@@ -241,7 +241,7 @@ class TestPagesAreNotTechnical(ThemeTestBase, unittest.TestCase):
     def test_shared_layout_uses_the_refined_design_system(self):
         body = self.page("/attendance")
         css = self.stylesheet()
-        self.assertIn(b"local-preview.css?v=20261122-warm-orange-dark-v2", body)
+        self.assertIn(b"local-preview.css?v=20261122-apricot-glow-v1", body)
         for selector in (b"--app-accent: #14243a", b".app-main",
                          b".section-kicker", b".page-heading",
                          b".auth-shell"):

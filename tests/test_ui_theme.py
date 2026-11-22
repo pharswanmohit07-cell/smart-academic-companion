@@ -156,7 +156,7 @@ class TestThemeIsCentralised(ThemeTestBase, unittest.TestCase):
                       "--app-violet: #c2a7ff"):
             self.assertIn(token, css)
         self.assertIn(b"--app-bg: #0b1220", base)
-        self.assertIn(b"--app-bg: #FFF1DF", base)
+        self.assertIn(b"--app-bg: #fff1df", base)
 
     def test_dark_theme_uses_the_original_navy_palette(self):
         css = self.stylesheet().decode("utf-8")
